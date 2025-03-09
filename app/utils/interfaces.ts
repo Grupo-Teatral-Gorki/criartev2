@@ -23,3 +23,15 @@ export interface AuthContextType {
   login: (data: LoginResponse) => void;
   logout: () => void;
 }
+
+export interface Project {
+  numeroInscricao: string;
+  nomeProjeto: string;
+  numeroEdital: string;
+  tituloEdital: string;
+  modalidade: string;
+  proponente: string;
+  status: string;
+  dataInicial: string;
+  dataFinal: string;
+}

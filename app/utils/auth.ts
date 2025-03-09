@@ -1,4 +1,5 @@
 import { LoginResponse } from "./interfaces";
+import { setCookie, deleteCookie } from "cookies-next";
 
 export const loginUser = async (
   email: string,
@@ -24,6 +25,18 @@ export const loginUser = async (
     const data: LoginResponse = await response.json();
 
     if (data.token) {
+      setCookie("token", data.token, {
+        maxAge: 60 * 60 * 24, // 1 day
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+      setCookie("userDetails", data.user.data, {
+        maxAge: 60 * 60 * 24, // 1 day
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
       return data; // Retorna o objeto `LoginResponse`
     } else {
       console.error("Falha no login:", data);
@@ -65,5 +78,14 @@ export const registerUser = async (
   } catch (error) {
     console.error("Erro ao registrar usuário:", error);
     return null;
+  }
+};
+
+export const logoutUser = () => {
+  try {
+    deleteCookie("token"); // Remove o token armazenado no cookie
+    console.log("Logout realizado com sucesso.");
+  } catch (error) {
+    console.error("Erro ao fazer logout:", error);
   }
 };

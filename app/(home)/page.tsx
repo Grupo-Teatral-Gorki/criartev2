@@ -1,18 +1,25 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { useAuth } from "./context/AuthContext";
-import { loginUser, registerUser } from "./utils/auth";
-import LoginForm from "./components/LoginForm";
-import RegisterForm from "./components/RegisterForm";
+import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
-import InputError from "./components/InputError";
-import ThemeToggle from "./components/ThemeToggle";
+import { loginUser, registerUser } from "../utils/auth";
+import LoginForm from "../components/LoginForm";
+import RegisterForm from "../components/RegisterForm";
+import ThemeToggle from "../components/ThemeToggle";
+import Modal from "../components/Modal";
+import TermsAndConditions from "../components/TermsAndConditions";
+import InputError from "../components/InputError";
+import Footer from "../components/Footer";
+import Image from "next/image";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Home() {
   const { login } = useAuth(); // Auth Context
+  const { theme } = useTheme(); // Theme Context
   const [tab, setTab] = useState<"login" | "register">("login");
   const [error, setError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(true);
   const router = useRouter();
 
   const handleLogin = useCallback(
@@ -65,11 +72,27 @@ export default function Home() {
   }, [tab, handleLogin, handleRegister]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-300 dark:bg-primary text-primary dark:text-light">
+    <div className="flex items-center justify-center min-h-screen">
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
-      <div className="p-8 rounded-lg shadow-lg bg-white dark:bg-gray-900 w-96">
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} terms>
+        <TermsAndConditions onClose={() => setIsOpen(false)} />
+      </Modal>
+      <div className="p-8 rounded-lg shadow-lg bg-slate-200 dark:bg-gray-900 w-96">
+        <div className="flex-grow flex justify-center mb-4">
+          <Image
+            src={
+              theme === "dark"
+                ? "https://styxx-public.s3.sa-east-1.amazonaws.com/logo-criarte.png"
+                : "https://styxx-public.s3.sa-east-1.amazonaws.com/logo_criarte_black.png"
+            }
+            alt="Logo"
+            width={120}
+            height={40}
+            className="object-contain"
+          />
+        </div>
         <div className="flex justify-around mb-4">
           {["login", "register"].map((type) => (
             <button
@@ -90,10 +113,11 @@ export default function Home() {
 
         {error && (
           <div className="mt-4">
-            <InputError message={error} />{" "}
+            <InputError message={error} />
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

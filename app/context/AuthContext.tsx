@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType, LoginResponse } from "../utils/interfaces";
+import { logoutUser } from "../utils/auth";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -9,7 +10,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<LoginResponse["user"]["data"] | null>(null);
 
-  // Load token and user from localStorage when the app starts
+  // Carrega o usuário do localStorage ao iniciar
   useEffect(() => {
     try {
       const savedToken = localStorage.getItem("token");
@@ -24,7 +25,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  // Save token and user to localStorage when logging in
+  // Salva o usuário no localStorage ao fazer login
   const login = (data: LoginResponse) => {
     setToken(data.token);
     setUser(data.user.data);
@@ -33,8 +34,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem("user", JSON.stringify(data.user.data));
   };
 
-  // Clear token and user from state and localStorage on logout
+  // Remove o usuário do localStorage ao fazer logout
   const logout = () => {
+    logoutUser();
     setToken(null);
     setUser(null);
     localStorage.removeItem("token");
@@ -48,7 +50,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Custom hook to use the AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

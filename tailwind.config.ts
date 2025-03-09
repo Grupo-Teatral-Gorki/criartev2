@@ -11,8 +11,10 @@ const config: Config = {
     extend: {
       colors: {
         primary: "#1d4a5d",
+        bgDark: "#0f2a36",
         light: "#ffffff",
-        navy: "#111827",
+        navy: "#1f2937",
+        orange: "#f7a251",
       },
     },
   },
