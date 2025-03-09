@@ -1,15 +1,16 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Fomento from "./tipos/fomento";
 import Button from "@/app/components/Button";
-import { useRouter } from "next/navigation";
 import Premiacao from "./tipos/premiacao";
 import CulturaViva from "./tipos/culturaviva";
 import AreasPerifericas from "./tipos/areasperifericas";
 import Subsidio from "./tipos/subsidio";
 
-const Criar = () => {
+const CriarContent = () => {
   const searchParams = useSearchParams();
   const type = searchParams.get("state");
   const router = useRouter();
@@ -40,6 +41,14 @@ const Criar = () => {
       {type === "areasPerifericas" && <AreasPerifericas />}
       {type === "subsidio" && <Subsidio />}
     </div>
+  );
+};
+
+const Criar = () => {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <CriarContent />
+    </Suspense>
   );
 };
 
