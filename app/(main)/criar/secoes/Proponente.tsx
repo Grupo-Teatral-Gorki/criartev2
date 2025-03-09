@@ -1,24 +1,28 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Button from "@/app/components/Button";
 import Modal from "@/app/components/Modal";
 import { SelectInput } from "@/app/components/SelectInput";
 import Tabs from "@/app/components/Tabs";
 import { TextInput } from "@/app/components/TextInput";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const Proponent = () => {
-  const [selectedValue, setSelectedValue] = useState<string>("");
-  const [modalOpen, setModalOpen] = useState<boolean>(false);
-
-  // This function will be called when the selection changes
-  const handleSelectChange = (value: string) => {
-    setSelectedValue(value); // Update the state with the new value
-  };
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedValue, setSelectedValue] = useState("");
 
   const options = [
-    { value: "option1", label: "Option 1" },
-    { value: "option2", label: "Option 2" },
-    { value: "option3", label: "Option 3" },
+    { value: "option1", label: "Proponente 1" },
+    { value: "option2", label: "Proponente 2" },
+    { value: "option3", label: "Proponente 3" },
   ];
+
+  const handleChange = (e: any) => {
+    setSelectedValue(e.target.value);
+  };
+
+  useEffect(() => {
+    console.log("selected", selectedValue);
+  }, [selectedValue]);
 
   return (
     <>
@@ -35,8 +39,7 @@ const Proponent = () => {
         <SelectInput
           options={options}
           value={selectedValue}
-          label="Proponentes"
-          onChange={handleSelectChange}
+          onChange={(e) => handleChange(e)}
         />
       </div>
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>

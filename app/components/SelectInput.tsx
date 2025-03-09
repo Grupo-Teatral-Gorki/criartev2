@@ -16,8 +16,7 @@ export function SelectInput({
   ...props
 }: SelectProps) {
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { value } = e.target; // Get the value from the event target
-    onChange(value); // Pass the value to the onChange function
+    onChange(e);
   };
 
   return (
