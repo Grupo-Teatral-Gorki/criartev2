@@ -1,4 +1,4 @@
-import { InfoGeraisProps } from "../(main)/criar/secoes/InfoGerais";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { citiesConstant } from "./constants";
 
 export const findCityLabel = (value: string): string => {
@@ -6,11 +6,11 @@ export const findCityLabel = (value: string): string => {
   return city ? city.label : "cidade não encontrada";
 };
 
-export function separateByType(infoList: InfoGeraisProps[]) {
-  const textFields: InfoGeraisProps[] = [];
-  const selectFields: InfoGeraisProps[] = [];
+export function separateByType(infoList: any) {
+  const textFields: any = [];
+  const selectFields: any = [];
 
-  infoList.forEach((item) => {
+  infoList.forEach((item: any) => {
     if (item.type === "text") {
       textFields.push(item);
     } else if (item.type === "select") {
