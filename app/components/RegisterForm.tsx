@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { TextInput } from "./TextInput";
 import { SelectInput } from "./SelectInput";
 import InputError from "./InputError";
@@ -24,12 +25,16 @@ export default function RegisterForm({ handleRegister }: RegisterFormProps) {
 
   const [passwordError, setPasswordError] = useState("");
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleChange = (e: any, name: string) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData, // Keep existing values
+      [name]: e.target.value, // Update only this field
+    }));
   };
+
+  useEffect(() => {
+    console.log("formData", formData);
+  }, [formData]);
 
   const validatePassword = useCallback((): boolean => {
     const { password, confirmPassword } = formData;
@@ -85,34 +90,30 @@ export default function RegisterForm({ handleRegister }: RegisterFormProps) {
           name="email"
           placeholder="Email"
           value={formData.email}
-          onChange={handleChange}
+          onChange={(e) => handleChange(e, "email")}
         />
-
         <TextInput
           type="password"
           name="password"
           placeholder="Senha"
           value={formData.password}
-          onChange={handleChange}
+          onChange={(e) => handleChange(e, "password")}
           onBlur={validatePassword}
         />
-
         <TextInput
           type="password"
           name="confirmPassword"
           placeholder="Confirme a senha"
           value={formData.confirmPassword}
-          onChange={handleChange}
+          onChange={(e) => handleChange(e, "confirmPassword")}
           onBlur={validatePassword}
         />
-
         <SelectInput
           name="selectedCityCode"
           options={citiesConstant}
           value={formData.selectedCityCode}
-          onChange={handleChange}
+          onChange={(e) => handleChange(e, "selectedCityCode")}
         />
-
         {passwordError && <InputError message={passwordError} />}
       </div>
       <button
