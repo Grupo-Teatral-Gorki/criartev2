@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SelectInput } from "@/app/components/SelectInput";
 import { TextAreaInput } from "@/app/components/TextAreaInput";
 import React, { useState } from "react";
@@ -98,7 +99,7 @@ const InfoGerais = () => {
           label={field.label}
           options={field.options}
           value={formValues[field.key] || ""}
-          onChange={(e) => handleChange(field.key, e)}
+          onChange={(e: any) => handleChange(field.key, e)}
         />
       ))}
     </div>
