@@ -105,14 +105,14 @@ export default function RegisterForm({ handleRegister }: RegisterFormProps) {
           name="confirmPassword"
           placeholder="Confirme a senha"
           value={formData.confirmPassword}
-          onChange={(e) => handleChange(e, "confirmPassword")}
+          onChange={(e: any) => handleChange(e, "confirmPassword")}
           onBlur={validatePassword}
         />
         <SelectInput
           name="selectedCityCode"
           options={citiesConstant}
           value={formData.selectedCityCode}
-          onChange={(e) => handleChange(e, "selectedCityCode")}
+          onChange={(e: any) => handleChange(e, "selectedCityCode")}
         />
         {passwordError && <InputError message={passwordError} />}
       </div>
