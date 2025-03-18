@@ -25,7 +25,10 @@ export default function Header() {
         </button>
 
         {/* Logo */}
-        <div className="flex-grow flex justify-center">
+        <div
+          className="flex-grow flex justify-center cursor-pointer"
+          onClick={() => router.push("/home")}
+        >
           <Image
             src="https://styxx-public.s3.sa-east-1.amazonaws.com/logo-criarte.png"
             alt="Logo"

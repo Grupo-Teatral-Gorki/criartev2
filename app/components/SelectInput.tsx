@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 
-type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
+type SelectProps = any & {
   options: { value: string; label: string }[];
   label?: string;
   value: string;
@@ -29,7 +30,7 @@ export function SelectInput({
       <option value="" disabled hidden>
         {label}
       </option>
-      {options.map((option) => (
+      {options.map((option: any) => (
         <option key={option.value} value={option.value}>
           {option.label}
         </option>

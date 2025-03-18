@@ -49,3 +49,34 @@ export const api = {
   del: <TResponse>(url: string, token: string) =>
     request<TResponse>(url, "DELETE", token),
 };
+
+const i = {
+  projeto: {
+    id_area: 1,
+    ingresso: false,
+    id_edital: 1,
+    classificacao_indicativa: "Livre",
+    nome_modalidade: "",
+    id_modalidade: 1,
+    resumo_projeto: "Resumo do projeto",
+    descricao: "Descrição detalhada do projeto",
+    objetivos: "Objetivos do projeto",
+    justificativa_projeto: "Justificativa para o projeto",
+    contrapartida_projeto: "Contrapartida oferecida pelo projeto",
+    plano_democratizacao: "Plano de democratização",
+    outras_informacoes: "Outras informações relevantes",
+
+    valor_ingresso: "0.00",
+
+    status: null,
+    id_usuario: 333,
+    relevancia_pertinencia: "Relevância e pertinência do projeto",
+    perfil_publico: "Perfil do público-alvo",
+
+    qtd_publico: "100",
+    proposta_contrapartida: "Proposta de contrapartida detalhada",
+    plano_divulgacao: "Plano de divulgação do projeto",
+    nome_modalidade: "",
+    is_cotista: false,
+  },
+};

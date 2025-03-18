@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { loginUser, registerUser } from "../utils/auth";
@@ -19,8 +19,15 @@ export default function Home() {
   const { theme } = useTheme(); // Theme Context
   const [tab, setTab] = useState<"login" | "register">("login");
   const [error, setError] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState<boolean>(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const hasAccepted = localStorage.getItem("termsAccepted");
+    if (hasAccepted) {
+      setIsOpen(false);
+    }
+  }, []);
 
   const handleLogin = useCallback(
     async (email: string, password: string) => {
@@ -71,13 +78,18 @@ export default function Home() {
     );
   }, [tab, handleLogin, handleRegister]);
 
+  const handleClose = () => {
+    setIsOpen(false);
+    localStorage.setItem("termsAccepted", "true");
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} terms>
-        <TermsAndConditions onClose={() => setIsOpen(false)} />
+      <Modal isOpen={isOpen} onClose={() => handleClose()} terms>
+        <TermsAndConditions onClose={() => handleClose()} />
       </Modal>
       <div className="p-8 rounded-lg shadow-lg bg-slate-200 dark:bg-gray-900 w-96">
         <div className="flex-grow flex justify-center mb-4">
