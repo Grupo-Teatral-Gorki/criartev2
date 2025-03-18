@@ -39,7 +39,7 @@ const Proponent = () => {
         <SelectInput
           options={options}
           value={selectedValue}
-          onChange={(e) => handleChange(e)}
+          onChange={(e: any) => handleChange(e)}
         />
       </div>
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
