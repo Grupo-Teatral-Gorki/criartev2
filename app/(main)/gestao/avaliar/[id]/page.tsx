@@ -11,6 +11,7 @@ import EvaluationTable from "@/app/components/EvaluationTable";
 import { useState } from "react";
 
 const AvaliarProjeto = () => {
+  const [evaluationToSend, setEvaluationToSend] = useState();
   const router = useRouter();
 
   const projeto = {
@@ -54,6 +55,10 @@ const AvaliarProjeto = () => {
     is_cotista: true, // Indica que o projeto oferece vagas para cotistas (alunos de baixa renda ou em situação de vulnerabilidade)
   };
 
+  const handleSendEvaluation = () => {
+    console.log("evaluationToSend", evaluationToSend);
+  };
+
   return (
     <div className="w-full overflow-y-auto flex flex-col items-center justify-center px-36 gap-8">
       {/* Header */}
@@ -64,7 +69,11 @@ const AvaliarProjeto = () => {
           size="medium"
         />
         <h2 className="text-2xl font-bold">Avaliar Projeto</h2>
-        <Button label={"Enviar Avaliação"} size="medium" />
+        <Button
+          label={"Enviar Avaliação"}
+          size="medium"
+          onClick={() => handleSendEvaluation()}
+        />
       </div>
       <div className="bg-slate-100 w-full flex flex-col items-center justify-center px-8">
         <p className="text-2xl p-4 mt-6 dark:text-bgDark">
@@ -83,7 +92,11 @@ const AvaliarProjeto = () => {
             },
             {
               label: "Ficha Avaliativa",
-              content: <RenderFichaAvaliativa />,
+              content: (
+                <RenderFichaAvaliativa
+                  setEvaluationToSend={setEvaluationToSend}
+                />
+              ),
             },
           ]}
         />
@@ -245,8 +258,18 @@ const RenderDocumentos = () => {
   );
 };
 
-const RenderFichaAvaliativa = () => {
+const RenderFichaAvaliativa = ({ setEvaluationToSend }: any) => {
   const [average, setAverage] = useState<number>(0);
+  const [techText, setTechText] = useState("");
+  const [scores, setScores] = useState<any[]>([
+    { id: "", description: "", score: 0 },
+  ]);
+
+  type Criteria = {
+    id: string;
+    description: string;
+    score: number;
+  };
 
   const calculateAverage = (scores: any[]) => {
     const totalScores = scores.reduce(
@@ -261,8 +284,26 @@ const RenderFichaAvaliativa = () => {
 
   const handleScoresUpdate = (updatedScores: any[]) => {
     // Calculate the average of the updated scores
+    setScores(updatedScores);
     const calculation = calculateAverage(updatedScores);
     setAverage(calculation);
+    handleEvaluate();
+  };
+
+  function transformArrayToObjects(
+    data: [string, string, number][]
+  ): Criteria[] {
+    return data.map(([id, description, score]) => ({ id, description, score }));
+  }
+
+  const handleEvaluate = () => {
+    const evaluation = {
+      evaluated: true,
+      scores: transformArrayToObjects(scores),
+      average,
+      techText,
+    };
+    setEvaluationToSend(evaluation);
   };
 
   const HEADERS = ["Critério", "Descrição do Critério", "Pontuação"];
@@ -285,15 +326,23 @@ const RenderFichaAvaliativa = () => {
 
   return (
     <div>
+      <div className="w-full flex items-center justify-end p-4">
+        <h2 className="text-2xl mr-4">
+          Avaliação Final: {average ? average : ""}
+        </h2>
+      </div>
+
       <EvaluationTable
         headers={HEADERS}
         rows={ROWS}
         onScoresUpdate={handleScoresUpdate}
       />
-      <div className="w-full flex items-center justify-end p-4">
-        <h2 className="text-2xl mr-4">
-          Avaliação Final: {average ? average : ""}
-        </h2>
+      <div className="p-4">
+        <h2 className="text-xl mb-4">Parecer Técnico</h2>
+        <TextAreaInput
+          value={techText}
+          onChange={(e) => setTechText(e.target.value)}
+        />
       </div>
     </div>
   );

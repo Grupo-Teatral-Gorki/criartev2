@@ -18,8 +18,6 @@ const EvaluationTable: React.FC<EvaluationTableProps> = ({
     const updatedRows = [...tableData];
     updatedRows[rowIndex][cellIndex] = value ? parseFloat(value) : "";
     setTableData(updatedRows);
-
-    // Send the updated scores to the parent
     onScoresUpdate(updatedRows);
   };
 
