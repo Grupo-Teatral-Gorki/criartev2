@@ -3,18 +3,28 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, User, LogOut } from "lucide-react";
+import { Menu, User, LogOut, ShieldCheck } from "lucide-react";
 import Drawer from "./Drawer";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "../context/AuthContext";
 import { findCityLabel } from "../utils/validators";
 import { logoutUser } from "../utils/auth";
 import { useRouter } from "next/navigation";
+import Modal from "./Modal";
+import { SelectInput } from "./SelectInput";
 
 export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [selectedCity, setSelectedCity] = useState("");
   const { dbUser } = useAuth();
   const router = useRouter();
+
+  const handleCityChange = (cityId: string) => {
+    setSelectedCity(cityId);
+    //set city in the context
+    console.log("City changed to:", cityId);
+  };
 
   return (
     <>
@@ -57,10 +67,37 @@ export default function Header() {
         {/* Drawer */}
         <Drawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
       </header>
-      <div className="w-full flex bg-white px-6 py-2 font-semibold dark:bg-navy dark:text-white">
-        <p>Versão: 2.0</p>
-        <p className="ml-4">Cidade: {findCityLabel(dbUser?.cityId ?? "")}</p>
+      <div className="w-full flex items-center justify-between bg-white px-6 py-2 font-semibold dark:bg-navy dark:text-white">
+        <div className="flex flex-row items-center gap-4">
+          <p>Versão: 2.0</p>
+          <p className="ml-4">Cidade: {findCityLabel(dbUser?.cityId ?? "")}</p>
+        </div>
+        {dbUser?.userRole === "admin" && (
+          <div
+            className="flex flex-row items-center gap-4 cursor-pointer"
+            onClick={() => setModalIsOpen(true)}
+          >
+            <p>Trocar Cidade</p>
+            <div className="flex flex-row items-center gap-2 bg-red-600 p-1 rounded-md text-white">
+              <ShieldCheck />
+              <p>Supervisor</p>
+            </div>
+          </div>
+        )}
       </div>
+      <Modal isOpen={modalIsOpen} onClose={() => setModalIsOpen(false)}>
+        <div className="flex flex-col items-center justify-center p-14">
+          <SelectInput
+            label={"Selecione a cidade"}
+            options={[
+              { label: "São Paulo", value: "sp" },
+              { label: "Rio de Janeiro", value: "rj" },
+            ]}
+            value={selectedCity}
+            onChange={(e: any) => handleCityChange(e.target.value)}
+          />
+        </div>
+      </Modal>
     </>
   );
 }

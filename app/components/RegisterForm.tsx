@@ -77,6 +77,7 @@ export default function RegisterForm() {
       await setDoc(userRef, {
         cityId: formData.selectedCityCode,
         email: formData.email,
+        userRole: "user",
         createdAt: new Date(),
       });
 
