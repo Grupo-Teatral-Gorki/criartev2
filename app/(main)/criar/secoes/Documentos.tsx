@@ -1,112 +1,102 @@
 import Button from "@/app/components/Button";
 import UploadFiles from "@/app/components/UploadFiles";
-import React, { useState } from "react";
+import { useCity } from "@/app/context/CityConfigContext";
+import { useSearchParams } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
+import React, { useEffect, useState } from "react";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { db, storage } from "@/app/config/firebaseconfig";
+import { doc, updateDoc } from "firebase/firestore";
+import Toast from "@/app/components/Toast";
 
 const Documentos = () => {
+  const { city } = useCity();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
+  const projectType = searchParams.get("state");
+  const [showToast, setShowToast] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<{ [key: string]: File[] }>(
     {}
   );
+  const [projectDocsState, setProjectDocsState] = useState<any>([]);
+  const [uploading, setUploading] = useState(false);
 
-  const files = [
-    {
-      name: "doc-photo-id-1",
-      label: "Cópia digitalizada de um único documento com foto...",
-      required: true,
-    },
-    {
-      name: "proof-address-pontal-2",
-      label: "Comprovante de endereço há, pelo menos, 2 anos...",
-      required: true,
-    },
-    {
-      name: "proof-address-current-3",
-      label: "Comprovante de endereço atual, datado a partir de junho de 2024.",
-      required: true,
-    },
-    {
-      name: "self-declaration-residence-4",
-      label: "Autodeclaração de residência (Anexo II).",
-    },
-    {
-      name: "curriculum-proponente",
-      label: "Currículo do proponente",
-      required: true,
-    },
-    {
-      name: "curriculum-portfolio-collective",
-      label: "Currículo ou portfólio de Coletivo ou idealizador",
-      required: true,
-    },
-    {
-      name: "technical-sheet-participants",
-      label: "Ficha técnica com a relação dos participantes...",
-      required: true,
-    },
-    {
-      name: "commitment-terms",
-      label:
-        "Termos de Compromissos assinados pelos principais integrantes do projeto (Anexo V)",
-      required: true,
-    },
-    {
-      name: "copyright-declaration",
-      label: "Declaração de opção de cessão de direitos autorais...",
-      required: true,
-    },
-    {
-      name: "execution-schedule",
-      label: "Cronograma de execução",
-      required: true,
-    },
-    {
-      name: "additional-information",
-      label: "Demais informações",
-      required: true,
-    },
-    {
-      name: "ethnic-declaration",
-      label:
-        "Quando for o caso inserir Declaração Étnico-racial (Anexo VII)...",
-    },
-    {
-      name: "representation-declaration",
-      label:
-        "Declaração de representação, se for um coletivo sem CNPJ (Anexo VI)",
-    },
-    {
-      name: "other-documents",
-      label: "Outros documentos que o agente cultural julgar necessário...",
-    },
-  ];
+  useEffect(() => {
+    const projectDetails = city.typesOfProjects.find(
+      (project: { name: string | null }) => project.name === projectType
+    );
+    const projectDocs = projectDetails.fields.find(
+      (obj: { projectDocs: any }) => obj.projectDocs
+    );
+    setProjectDocsState(projectDocs.projectDocs);
+  }, [city]);
 
   const handleFileChange = (name: string, files: File[]) => {
     setSelectedFiles((prev) => ({ ...prev, [name]: files }));
   };
 
   const handleUpload = async () => {
-    console.log("Uploading files:", selectedFiles);
+    setUploading(true);
+    if (!projectId) {
+      console.error("Missing user projectId.");
+      return;
+    }
+
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (const files of Object.values(selectedFiles)) {
+        for (const file of files) {
+          const path = `project-docs/${projectId}/${uuidv4()}-${file.name}`;
+          const imageRef = ref(storage, path);
+
+          await uploadBytes(imageRef, file);
+          const downloadURL = await getDownloadURL(imageRef);
+
+          uploadedUrls.push(downloadURL);
+        }
+      }
+
+      const userDocRef = doc(db, "projects", projectId);
+      await updateDoc(userDocRef, {
+        projectDocs: uploadedUrls, // You can use another field name if needed
+      });
+      setShowToast(true); // Show the toast message
+    } catch (error) {
+      console.error("Upload error:", error);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
     <div className="flex flex-col mt-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2">
-        {files.map((file) => (
-          <UploadFiles
-            key={file.name}
-            name={file.name}
-            label={file.label}
-            onFilesChange={(files) => handleFileChange(file.name, files)}
-          />
-        ))}
-      </div>
-      <div className="max-w-80">
+      <div className="mt-4 w-full flex justify-end">
         <Button
-          variant="inverted"
-          label={"Enviar"}
+          className="mr-4"
+          size="medium"
+          label={"Enviar Documentos"}
           onClick={handleUpload}
           disabled={Object.keys(selectedFiles).length === 0}
         />
       </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2">
+        {!uploading &&
+          projectDocsState.map((file: { name: string; label: string }) => (
+            <UploadFiles
+              key={file.name}
+              name={file.name}
+              label={file.label}
+              onFilesChange={(files) => handleFileChange(file.name, files)}
+            />
+          ))}
+      </div>
+      <Toast
+        message="Arquivos enviados com sucesso!"
+        show={showToast}
+        type="success"
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

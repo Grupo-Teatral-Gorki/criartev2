@@ -1,15 +1,16 @@
 import React from "react";
 import Button from "./Button";
 
-interface Projeto {
-  nomeProjeto: string;
-  status?: string;
-  numeroInscricao?: string;
-  titulo?: string;
+export interface Project {
+  projectId: string;
+  projectName: string;
+  projectStatus: string;
+  projectTitle: string;
+  userId: string;
 }
 
 interface ProjectCardProps {
-  projeto: Projeto;
+  project: Project;
 }
 
 const getStatusStyles = (status?: string) => {
@@ -36,33 +37,33 @@ const getStatusStyles = (status?: string) => {
   );
 };
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ projeto }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   return (
     <div
       className="bg-white dark:bg-primary p-6 rounded-lg shadow-md dark:shadow-lg"
-      key={projeto.numeroInscricao}
+      key={project.projectId}
     >
       <div className="flex justify-between gap-1 items-center">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          {projeto.nomeProjeto}
+          {project.projectName}
         </h2>
         <span
           className={`px-3 py-1 text-sm font-medium rounded-md ${getStatusStyles(
-            projeto.status
+            project.projectStatus
           )}`}
         >
-          {projeto.status
-            ? projeto.status.charAt(0).toUpperCase() +
-              projeto.status.slice(1).toLowerCase()
+          {project.projectStatus
+            ? project.projectStatus.charAt(0).toUpperCase() +
+              project.projectStatus.slice(1).toLowerCase()
             : ""}
         </span>
       </div>
       <div className="mt-4 space-y-2 text-gray-700 dark:text-gray-300">
         <p>
-          <strong>Nº de inscrição:</strong> {projeto.numeroInscricao}
+          <strong>Nº de inscrição:</strong> {project.projectId}
         </p>
         <p>
-          <strong>Título do edital:</strong> {projeto.titulo}
+          <strong>Título do edital:</strong> {project.projectTitle}
         </p>
         <p>
           <strong>Modalidade:</strong> {"Pessoa Física"}

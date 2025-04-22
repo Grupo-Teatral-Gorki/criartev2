@@ -7,6 +7,7 @@ interface ButtonProps {
   size?: "small" | "medium" | "full";
   disabled?: boolean;
   submit?: boolean;
+  className?: string;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -16,6 +17,7 @@ const Button: React.FC<ButtonProps> = ({
   size = "full",
   disabled = false,
   submit = false,
+  className = "",
 }) => {
   const baseStyles =
     "inline-block rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-[1.02] focus:ring-2 outline-none text-center font-semibold disabled:opacity-50 disabled:cursor-not-allowed";
@@ -41,7 +43,7 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]}`}
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
       disabled={disabled}
       type={submit ? "submit" : "button"}
     >

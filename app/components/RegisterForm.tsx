@@ -1,86 +1,97 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { TextInput } from "./TextInput";
 import { SelectInput } from "./SelectInput";
 import InputError from "./InputError";
 import { citiesConstant } from "../utils/constants";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { auth } from "../config/firebaseconfig";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../config/firebaseconfig";
+import { useRouter } from "next/navigation";
 
-interface RegisterFormProps {
-  handleRegister: (
-    email: string,
-    password: string,
-    selectedCityCode: string
-  ) => void;
-}
-
-export default function RegisterForm({ handleRegister }: RegisterFormProps) {
+export default function RegisterForm() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     confirmPassword: "",
     selectedCityCode: "",
   });
+  const [errors, setErrors] = useState({
+    password: "",
+    register: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
-  const [passwordError, setPasswordError] = useState("");
-
-  const handleChange = (e: any, name: string) => {
-    setFormData((prevFormData) => ({
-      ...prevFormData, // Keep existing values
-      [name]: e.target.value, // Update only this field
-    }));
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  useEffect(() => {
-    console.log("formData", formData);
-  }, [formData]);
-
-  const validatePassword = useCallback((): boolean => {
+  const validatePassword = () => {
     const { password, confirmPassword } = formData;
-    const minLength = 8;
-    const isSafe = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const isValid = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 
     if (!password || !confirmPassword) {
-      setPasswordError("Os campos de senha são obrigatórios.");
-      return false;
+      return "Os campos de senha são obrigatórios.";
     }
 
-    if (password.length < minLength) {
-      setPasswordError("A senha deve ter pelo menos 8 caracteres.");
-      return false;
-    }
-
-    if (!isSafe.test(password)) {
-      setPasswordError(
-        "A senha deve conter pelo menos uma letra maiúscula, um número e um caractere especial."
-      );
-      return false;
+    if (!isValid.test(password)) {
+      return "A senha deve conter pelo menos uma letra maiúscula, um número e um caractere especial.";
     }
 
     if (password !== confirmPassword) {
-      setPasswordError("As senhas não coincidem.");
-      return false;
+      return "As senhas não coincidem.";
     }
 
-    setPasswordError("");
-    return true;
-  }, [formData]);
+    return "";
+  };
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      if (validatePassword()) {
-        console.log("Cadastro enviado", formData);
-        handleRegister(
-          formData.email,
-          formData.password,
-          formData.selectedCityCode
-        );
-      }
-    },
-    [formData, handleRegister, validatePassword]
-  );
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({ password: "", register: "" });
+
+    const passwordError = validatePassword();
+    if (passwordError) {
+      setErrors((prev) => ({ ...prev, password: passwordError }));
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      const userRef = doc(db, "users", userCredential.user.uid);
+
+      await setDoc(userRef, {
+        cityId: formData.selectedCityCode,
+        email: formData.email,
+        createdAt: new Date(),
+      });
+
+      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+
+      router.push("/home");
+    } catch (err: any) {
+      setErrors((prev) => ({
+        ...prev,
+        register: err.message || "Erro ao tentar registrar.",
+      }));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -90,37 +101,51 @@ export default function RegisterForm({ handleRegister }: RegisterFormProps) {
           name="email"
           placeholder="Email"
           value={formData.email}
-          onChange={(e) => handleChange(e, "email")}
+          onChange={handleChange}
         />
         <TextInput
           type="password"
           name="password"
           placeholder="Senha"
           value={formData.password}
-          onChange={(e) => handleChange(e, "password")}
-          onBlur={validatePassword}
+          onChange={handleChange}
+          onBlur={() =>
+            setErrors((prev) => ({
+              ...prev,
+              password: validatePassword(),
+            }))
+          }
         />
         <TextInput
           type="password"
           name="confirmPassword"
           placeholder="Confirme a senha"
           value={formData.confirmPassword}
-          onChange={(e: any) => handleChange(e, "confirmPassword")}
-          onBlur={validatePassword}
+          onChange={handleChange}
+          onBlur={() =>
+            setErrors((prev) => ({
+              ...prev,
+              password: validatePassword(),
+            }))
+          }
         />
         <SelectInput
           name="selectedCityCode"
           options={citiesConstant}
           value={formData.selectedCityCode}
-          onChange={(e: any) => handleChange(e, "selectedCityCode")}
+          onChange={handleChange}
         />
-        {passwordError && <InputError message={passwordError} />}
+
+        {errors.password && <InputError message={errors.password} />}
+        {errors.register && <InputError message={errors.register} />}
       </div>
+
       <button
         type="submit"
         className="w-full p-2 bg-primary text-light rounded"
+        disabled={isSubmitting}
       >
-        Cadastrar
+        {isSubmitting ? "Cadastrando..." : "Cadastrar"}
       </button>
     </form>
   );

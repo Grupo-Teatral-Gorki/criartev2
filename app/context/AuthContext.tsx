@@ -1,50 +1,60 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
-import { AuthContextType, LoginResponse } from "../utils/interfaces";
-import { logoutUser } from "../utils/auth";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { auth } from "../config/firebaseconfig";
+import { getDoc, doc } from "firebase/firestore";
+import { db } from "../config/firebaseconfig";
+import { UserProfile } from "../utils/interfaces";
+
+interface AuthContextType {
+  user: User | null;
+  dbUser: UserProfile | null;
+  loading: boolean;
+  logout: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<LoginResponse["user"]["data"] | null>(null);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [dbUser, setDbUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Carrega o usuário do localStorage ao iniciar
   useEffect(() => {
-    try {
-      const savedToken = localStorage.getItem("token");
-      const savedUser = localStorage.getItem("user");
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        const userDocRef = doc(db, "users", firebaseUser.uid);
+        const userDoc = await getDoc(userDocRef);
 
-      if (savedToken && savedUser) {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+        if (userDoc.exists()) {
+          const userData = userDoc.data() as UserProfile;
+          const fullUserData = { ...userData, id: firebaseUser.uid };
+          setDbUser(fullUserData);
+        }
+      } else {
+        setUser(null);
+        setDbUser(null);
       }
-    } catch (error) {
-      console.error("Erro ao carregar usuário do localStorage:", error);
-    }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  // Salva o usuário no localStorage ao fazer login
-  const login = (data: LoginResponse) => {
-    setToken(data.token);
-    setUser(data.user.data);
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user.data));
-  };
-
-  // Remove o usuário do localStorage ao fazer logout
-  const logout = () => {
-    logoutUser();
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  const logout = async () => {
+    await signOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ user, dbUser, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -52,8 +62,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };

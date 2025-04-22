@@ -28,7 +28,6 @@ const Fomento = () => {
     <div className="w-full flex flex-col justify-center bg-slate-100 rounded-lg dark:bg-navy p-1 sm:p-4 mt-4 gap-8">
       <div className="flex w-full items-center justify-between mt-2 px-4 gap-8">
         <TextInput placeholder="Nome do Projeto" className="flex-1" />
-        <p className="font-bold whitespace-nowrap flex items-center">ID: 210</p>
       </div>
       <div className="w-full flex justify-center items-center cursor-pointer ">
         <p

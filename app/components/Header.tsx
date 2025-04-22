@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 
 export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { user } = useAuth();
+  const { dbUser } = useAuth();
   const router = useRouter();
 
   return (
@@ -59,10 +59,7 @@ export default function Header() {
       </header>
       <div className="w-full flex bg-white px-6 py-2 font-semibold dark:bg-navy dark:text-white">
         <p>Versão: 2.0</p>
-        <p className="ml-4">
-          Cidade: {findCityLabel(user?.idCidade ?? "")} (
-          {user?.idCidade ?? "N/A"})
-        </p>
+        <p className="ml-4">Cidade: {findCityLabel(dbUser?.cityId ?? "")}</p>
       </div>
     </>
   );

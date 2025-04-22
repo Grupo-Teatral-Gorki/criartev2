@@ -17,6 +17,31 @@ export interface User {
   role?: string;
 }
 
+export interface ProjectTypesType {
+  available: boolean;
+  description: string;
+  name: string;
+  label: string;
+}
+
+export interface City {
+  id: string;
+  name: string;
+  typesOfProjects?: ProjectTypesType[];
+}
+
+export interface UserProfile {
+  id: string; // "123456789" (string)
+  cityId: string; // "3842" (string)
+  createdAt: string; // "18 de abril de 2025 às 10:35:36 UTC-3" (timestamp as string)
+  email: string; // "teste@teste2.com" (string)
+  firstName: string; // "firstName" (string)
+  lastName: string; // "lastName" (string)
+  phoneNumber: string; // "99-99999-9999" (string)
+  userType: number;
+  photoUrl: string; // "https://robohash.org/placeholder.png" (string)
+}
+
 export interface AuthContextType {
   token: string | null;
   user: LoginResponse["user"]["data"] | null;

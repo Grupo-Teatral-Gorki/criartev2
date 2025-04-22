@@ -22,11 +22,11 @@ export default function Tabs({ tabs }: TabsProps) {
             key={tab.label}
             onClick={() => setActiveTab(tab.label)}
             className={`w-full sm:w-auto px-4 py-3 text-sm sm:text-base font-medium rounded-t-md transition-colors duration-200 
-              ${
-                activeTab === tab.label
-                  ? "bg-[#1d4a5d] text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-              }`}
+            ${
+              activeTab === tab.label
+                ? "bg-[#1d4a5d] text-white"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-100  hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
           >
             {tab.label}
           </button>

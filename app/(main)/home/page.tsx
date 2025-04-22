@@ -1,4 +1,5 @@
 "use client";
+
 import Button from "@/app/components/Button";
 import HomeCard from "@/app/components/HomeCard";
 import { useAuth } from "@/app/context/AuthContext";
@@ -7,11 +8,10 @@ import Image from "next/image";
 import React from "react";
 
 const Home = () => {
-  const { user } = useAuth();
+  const { dbUser } = useAuth();
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-350px)]">
-      {" "}
-      {/* Adjust height considering header and footer */}
       <div className="flex justify-around items-center w-3/4 gap-5">
         {/* Left Section */}
         <div className="flex flex-col space-y-4">
@@ -25,13 +25,6 @@ const Home = () => {
             description={"Veja como usar a plataforma e tire suas dúvidas"}
             href={"/ajuda"}
           />
-          {user?.tipoUsuario === 3 && (
-            <HomeCard
-              title={"Gestão"}
-              description={"Acesso às ferramentas de administração"}
-              href={"/gestao/projetos"}
-            />
-          )}
         </div>
 
         {/* Right Section */}
@@ -43,7 +36,7 @@ const Home = () => {
             height={0}
           />
           <h2 className="text-2xl font-bold">
-            Editais de {findCityLabel(user?.idCidade ?? "")}
+            Editais de {findCityLabel(dbUser?.cityId ?? "")}
           </h2>
           <Button label="Ver Editais" variant="inverted" />
         </div>

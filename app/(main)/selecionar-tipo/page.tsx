@@ -1,52 +1,44 @@
 "use client";
 import { useRouter } from "next/navigation";
-import React from "react";
 import Button from "@/app/components/Button";
 import TypeProjectCard from "@/app/components/TypeProjectCard";
+import { collection, doc, setDoc } from "firebase/firestore";
+import { db } from "@/app/config/firebaseconfig";
+import { useAuth } from "@/app/context/AuthContext";
+import { useEffect, useState } from "react";
+import { ProjectTypesType } from "@/app/utils/interfaces";
+import { useCity } from "@/app/context/CityConfigContext";
 
 const SelecionarTipoProjeto = () => {
+  const [projectTypes, setProjectTypes] = useState<ProjectTypesType[]>([]);
   const router = useRouter();
+  const { dbUser } = useAuth();
+  const { city } = useCity();
 
-  const handleNavigate = (type: string) => {
-    router.push(`/criar?state=${type}`);
+  useEffect(() => {
+    if (!city) return;
+    setProjectTypes(city.typesOfProjects);
+  }, [city]);
+
+  const createEmptyProjectForUser = async (type: string) => {
+    if (!dbUser) {
+      console.error("User not authenticated");
+      return { success: false, error: "User not authenticated" };
+    }
+    try {
+      const newDocRef = doc(collection(db, "projects"));
+      const projectId = newDocRef.id;
+      await setDoc(newDocRef, {
+        userId: dbUser!.id,
+        projectId,
+      });
+      router.push(`/criar?state=${type}&projectId=${projectId}`);
+      return { success: true, projectId };
+    } catch (error) {
+      console.error("Error creating project:", error);
+      return { success: false, error };
+    }
   };
-
-  // Define the types of projects
-  const tipos = [
-    {
-      type: "Fomento",
-      url: "fomento",
-      description: `Os programas de fomento da Secretaria de Cultura e Economia Criativa
-        têm o objetivo de apoiar a realização de projetos culturais, por meio
-        da concessão de incentivos financeiros para artistas, grupos,
-        instituições e coletivos.`,
-      available: false,
-    },
-    {
-      type: "Premiação de Mestres E Mestras",
-      url: "premiacao",
-      description: `O objeto deste Edital é a Premiação de Mestres e Mestras e Grupos e Coletivos das Culturas Tradicionais e Populares que tenham prestado relevante contribuição ao desenvolvimento artístico ou cultural do Município.`,
-      available: true,
-    },
-    {
-      type: "FOMENTO A PROJETOS CONTINUADOS DE PONTOS DE CULTURA (CULTURA VIVA)",
-      url: "culturaViva",
-      description: `O Município de São José do Rio Pardo - SP torna público o presente Edital para o desenvolvimento da “REDE MUNICIPAL DE PONTOS DE CULTURA DE SÃO JOSÉ DO RIO PARDO – SP por meio da Política Nacional de Cultura Viva (PNCV), instituída pela Lei nº 13.018, de 22 de julho de 2014.`,
-      available: true,
-    },
-    {
-      type: "Áreas Periféricas",
-      url: "areasPerifericas",
-      description: "Atividades artísticas voltadas para zonas periféricas",
-      available: true,
-    },
-    {
-      type: "Subsídio",
-      url: "subsidio",
-      description: `SELEÇÃO ESPAÇO, AMBIENTES E INICIATIVAS ARTÍSTICO-CULTURAIS PARA RECEBER SUBSÍDIO PARA MANUTENÇÃO COM RECURSOS DA POLÍTICA NACIONAL ALDIR BLANC DE FOMENTO À CULTURA – PNAB (LEI Nº 14.399/2022)`,
-      available: true,
-    },
-  ];
 
   return (
     <div className="w-full overflow-y-auto flex flex-col items-center justify-center px-36 gap-8">
@@ -61,13 +53,14 @@ const SelecionarTipoProjeto = () => {
         </h2>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {tipos.map((tipo) => (
+        {projectTypes.map((type) => (
           <TypeProjectCard
-            key={tipo.url}
-            onClick={() => handleNavigate(tipo.url)}
-            available={tipo.available}
-            type={tipo.type}
-            description={tipo.description}
+            key={type.name}
+            available={type.available}
+            description={type.description}
+            label={type.label}
+            name={type.name}
+            onClick={() => createEmptyProjectForUser(type.name)}
           />
         ))}
       </div>

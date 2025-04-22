@@ -110,7 +110,6 @@ const AvaliarProjeto = () => {
 export default AvaliarProjeto;
 
 const RenderProjeto = (projeto: any) => {
-  console.log("projeto", projeto);
   return (
     <>
       <div className="w-full grid grid-cols-4 gap-8 mt-5">
