@@ -91,7 +91,7 @@ const Habilitacao = () => {
       <div className="w-full flex gap-12 bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}
-          onClick={() => router.push("/meusProjetos")}
+          onClick={() => router.push("/meusprojetos")}
           size="medium"
         />
         <h2 className="text-2xl font-bold">Habilitação</h2>

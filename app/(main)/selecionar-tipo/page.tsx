@@ -30,6 +30,7 @@ const SelecionarTipoProjeto = () => {
       const projectId = newDocRef.id;
       await setDoc(newDocRef, {
         userId: dbUser!.id,
+        projectStatus: "Rascunho",
         projectId,
       });
       router.push(`/criar?state=${type}&projectId=${projectId}`);

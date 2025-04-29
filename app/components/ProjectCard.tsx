@@ -24,14 +24,21 @@ const getStatusStyles = (status?: string) => {
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
 
-  const statusClasses: Record<string, string> = {
-    enviado:
-      "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-    habilitacao:
-      "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-    recurso:
-      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+  const rawStatusClasses = {
+    Enviado:
+      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+    Habilitação:
+      "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+    Recurso: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+    Rascunho: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
   };
+
+  const statusClasses: Record<string, string> = {};
+  for (const key in rawStatusClasses) {
+    const normalizedKey = normalizeStatus(key);
+    statusClasses[normalizedKey] =
+      rawStatusClasses[key as keyof typeof rawStatusClasses];
+  }
 
   const normalizedStatus = status ? normalizeStatus(status) : "";
 
@@ -44,6 +51,8 @@ const getStatusStyles = (status?: string) => {
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const router = useRouter();
+
+  console.log("project", project);
 
   const handleDelete = async (id: string) => {
     try {
