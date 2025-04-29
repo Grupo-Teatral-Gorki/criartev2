@@ -1,30 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu, User, LogOut, ShieldCheck } from "lucide-react";
 import Drawer from "./Drawer";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "../context/AuthContext";
-import { findCityLabel } from "../utils/validators";
+import { findCityLabel, separateByType } from "../utils/validators";
 import { logoutUser } from "../utils/auth";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import { SelectInput } from "./SelectInput";
+import Button from "./Button";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../config/firebaseconfig";
+
+type CityOption = {
+  value: string;
+  label: string;
+};
+
+type CityDoc = {
+  idCidade: string;
+  name: string;
+};
 
 export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [citiesOptions, setCitiesOptions] = useState<CityOption[]>([]);
   const [selectedCity, setSelectedCity] = useState("");
-  const { dbUser } = useAuth();
+  const { dbUser, updateCityId } = useAuth();
   const router = useRouter();
 
   const handleCityChange = (cityId: string) => {
     setSelectedCity(cityId);
-    //set city in the context
-    console.log("City changed to:", cityId);
+    updateCityId(cityId);
   };
+
+  const fetchAllCities = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "cities"));
+
+      const docs = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as CityDoc),
+      }));
+
+      const options = docs.map((item) => ({
+        value: item.idCidade,
+        label: item.name,
+      }));
+      setCitiesOptions(options);
+      return docs;
+    } catch (error) {
+      console.error("Error fetching documents: ", error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    fetchAllCities();
+  }, []);
 
   return (
     <>
@@ -71,6 +109,7 @@ export default function Header() {
         <div className="flex flex-row items-center gap-4">
           <p>Versão: 2.0</p>
           <p className="ml-4">Cidade: {findCityLabel(dbUser?.cityId ?? "")}</p>
+          <p className="ml-4">Cidade: {dbUser?.cityId}</p>
         </div>
         {dbUser?.userRole === "admin" && (
           <div
@@ -89,13 +128,19 @@ export default function Header() {
         <div className="flex flex-col items-center justify-center p-14">
           <SelectInput
             label={"Selecione a cidade"}
-            options={[
-              { label: "São Paulo", value: "sp" },
-              { label: "Rio de Janeiro", value: "rj" },
-            ]}
+            options={citiesOptions}
             value={selectedCity}
-            onChange={(e: any) => handleCityChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+              handleCityChange(e.target.value)
+            }
           />
+          <div className="w-full flex justify-end mt-4">
+            <Button
+              label={"Selecionar"}
+              size="medium"
+              onClick={() => setModalIsOpen(false)}
+            />
+          </div>
         </div>
       </Modal>
     </>

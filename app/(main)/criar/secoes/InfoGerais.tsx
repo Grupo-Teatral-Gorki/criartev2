@@ -4,7 +4,14 @@ import { SelectInput } from "@/app/components/SelectInput";
 import { TextAreaInput } from "@/app/components/TextAreaInput";
 import { db } from "@/app/config/firebaseconfig";
 import { useCity } from "@/app/context/CityConfigContext";
-import { doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -73,6 +80,11 @@ const InfoGerais = () => {
     }));
   }, [city]);
 
+  useEffect(() => {
+    if (!projectId) return;
+    getProjectFromDb(projectId);
+  }, []);
+
   const handleChange = (
     key: keyof FormValues,
     event: string | React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>
@@ -87,6 +99,35 @@ const InfoGerais = () => {
     await updateDoc(projectRef, {
       infoGerais: formValues,
     });
+  };
+
+  const getProjectFromDb = async (projectId: string) => {
+    if (!projectId) return;
+
+    try {
+      const projectQuery = query(
+        collection(db, "projects"),
+        where("projectId", "==", projectId)
+      );
+
+      const projectSnapshot = await getDocs(projectQuery);
+      const projectDoc = projectSnapshot.docs[0];
+
+      if (!projectDoc) {
+        return null;
+      }
+
+      const data = projectDoc.data();
+      if (data.infoGerais) {
+        setFormValues((prev) => ({
+          ...prev,
+          ...data.infoGerais,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching project:", error);
+      return null;
+    }
   };
 
   const camposSelect = [

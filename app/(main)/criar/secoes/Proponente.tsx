@@ -10,6 +10,7 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   updateDoc,
@@ -47,15 +48,60 @@ const Proponent = () => {
     await updateDoc(projectRef, { proponentId });
   };
 
+  const getDbProponent = async (projectId: string) => {
+    if (!projectId) return;
+
+    try {
+      const projectQuery = query(
+        collection(db, "projects"),
+        where("projectId", "==", projectId)
+      );
+
+      const projectSnapshot = await getDocs(projectQuery);
+      const projectDoc = projectSnapshot.docs[0];
+
+      if (!projectDoc) {
+        console.log("Project not found.");
+        return null;
+      }
+
+      const { proponentId } = projectDoc.data();
+
+      if (!proponentId) {
+        console.log("No proponentId in project document.");
+        return null;
+      }
+
+      const proponentSnap = await getDoc(doc(db, "proponents", proponentId));
+
+      if (!proponentSnap.exists()) {
+        console.log("Proponent not found.");
+        return null;
+      }
+
+      const proponentData = proponentSnap.data();
+
+      setSelectedProponent(proponentId); // or format however you want
+      return proponentData;
+    } catch (error) {
+      console.error("Error fetching proponent:", error);
+      return null;
+    }
+  };
+
   useEffect(() => {
+    if (projectId) {
+      getDbProponent(projectId);
+    }
+
     getUserProponents();
   }, []);
 
   return (
     <>
       <div className="w-full mt-4">
-        {proponents.length === 0 && (
-          <div className="w-full flex justify-end mb-4">
+        {
+          /* proponents.length === 0 && */ <div className="w-full flex justify-end mb-4">
             <Button
               label={"Novo Proponente"}
               size="medium"
@@ -63,7 +109,7 @@ const Proponent = () => {
               onClick={() => setModalOpen(true)}
             />
           </div>
-        )}
+        }
         <h2 className="mb-4 text-lg">Selecione um Proponente:</h2>
         <SelectInput
           options={proponents}

@@ -2,13 +2,16 @@
 
 import Button from "@/app/components/Button";
 import HomeCard from "@/app/components/HomeCard";
-import { useAuth } from "@/app/context/AuthContext";
-import { findCityLabel } from "@/app/utils/validators";
+import { useCity } from "@/app/context/CityConfigContext";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect } from "react";
 
 const Home = () => {
-  const { dbUser } = useAuth();
+  const { city } = useCity();
+
+  useEffect(() => {
+    console.log("city", city.name);
+  }, [city]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-350px)]">
@@ -35,9 +38,11 @@ const Home = () => {
             width={200}
             height={0}
           />
-          <h2 className="text-2xl font-bold">
-            Editais de {findCityLabel(dbUser?.cityId ?? "")}
-          </h2>
+          {city && (
+            <h2 className="text-2xl font-bold text-center">
+              Editais de {city.name}
+            </h2>
+          )}
           <Button label="Ver Editais" variant="inverted" />
         </div>
       </div>

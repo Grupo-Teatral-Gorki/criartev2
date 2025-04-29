@@ -39,7 +39,7 @@ const MeusProjetos = () => {
   }, [dbUser]);
 
   return (
-    <div className="w-full overflow-y-auto flex flex-col items-center justify-center px-36">
+    <div className="w-full overflow-y-auto flex flex-col items-center justify-center sm:px-36">
       {/* Header */}
       <div className="w-full flex justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button

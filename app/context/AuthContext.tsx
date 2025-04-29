@@ -9,7 +9,7 @@ import {
 } from "react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth } from "../config/firebaseconfig";
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../config/firebaseconfig";
 import { UserProfile } from "../utils/interfaces";
 
@@ -18,6 +18,7 @@ interface AuthContextType {
   dbUser: UserProfile | null;
   loading: boolean;
   logout: () => Promise<void>;
+  updateCityId: (newCityId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,8 +54,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signOut(auth);
   };
 
+  const updateCityId = async (newCityId: string) => {
+    if (!user) return;
+
+    const userDocRef = doc(db, "users", user.uid);
+    try {
+      // Update Firestore
+      await updateDoc(userDocRef, { cityId: newCityId });
+
+      // Replace state with a new object
+      setDbUser((prev) => (prev ? { ...prev, cityId: newCityId } : prev));
+    } catch (error) {
+      console.error("Failed to update cityId", error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, dbUser, loading, logout }}>
+    <AuthContext.Provider
+      value={{ user, dbUser, loading, logout, updateCityId }}
+    >
       {children}
     </AuthContext.Provider>
   );

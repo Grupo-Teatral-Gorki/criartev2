@@ -1,5 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import Button from "./Button";
+import { deleteDoc, doc } from "firebase/firestore";
+import { db } from "../config/firebaseconfig";
+import Modal from "./Modal";
+import { useRouter } from "next/navigation";
 
 export interface Project {
   projectId: string;
@@ -38,6 +42,20 @@ const getStatusStyles = (status?: string) => {
 };
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const router = useRouter();
+
+  const handleDelete = async (id: string) => {
+    try {
+      const projectRef = doc(db, "projects", id);
+      await deleteDoc(projectRef);
+      setConfirmDelete(false);
+      window.location.reload();
+      console.log("Project deleted successfully");
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    }
+  };
   return (
     <div
       className="bg-white dark:bg-primary p-6 rounded-lg shadow-md dark:shadow-lg"
@@ -70,11 +88,40 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         </p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2 justify-end">
-        <Button label="Habilitação" variant="outlined" size="small" />
-        <Button label="Recurso" variant="outlined" size="small" />
-        <Button label="Excluir" variant="danger" size="small" />
+        <Button
+          label="Habilitação"
+          variant="outlined"
+          size="small"
+          onClick={() => router.push(`/habilitacao?id=${project.projectId}`)}
+        />
+        <Button
+          label="Recurso"
+          variant="outlined"
+          size="small"
+          onClick={() => router.push(`/recurso?id=${project.projectId}`)}
+        />
+        <Button
+          label="Excluir"
+          variant="danger"
+          size="small"
+          onClick={() => setConfirmDelete(true)}
+        />
         <Button label="Editar" variant="outlined" size="small" />
       </div>
+      {confirmDelete && (
+        <Modal isOpen={confirmDelete} onClose={() => setConfirmDelete(false)}>
+          <div className="flex flex-col items-center justify-center gap-4 p-2 sm:p-8 m-8 ">
+            <p className="text-2xl sm:text-3xl text-center">
+              Tem certeza que deseja excluir esse projeto?
+            </p>
+            <Button
+              label="Excluir"
+              variant="danger"
+              onClick={() => handleDelete(project.projectId)}
+            />
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

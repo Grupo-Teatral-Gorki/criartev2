@@ -6,8 +6,29 @@ import { v4 as uuidv4 } from "uuid";
 import React, { useEffect, useState } from "react";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { db, storage } from "@/app/config/firebaseconfig";
-import { doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import Toast from "@/app/components/Toast";
+
+interface ProjectDoc {
+  name: string;
+  label: string;
+}
+
+interface UploadedDoc {
+  name: string;
+  url: string;
+}
+
+interface ProjectDocs {
+  projectDocs: ProjectDoc[];
+}
 
 const Documentos = () => {
   const { city } = useCity();
@@ -15,21 +36,28 @@ const Documentos = () => {
   const projectId = searchParams.get("projectId");
   const projectType = searchParams.get("state");
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
   const [selectedFiles, setSelectedFiles] = useState<{ [key: string]: File[] }>(
     {}
   );
-  const [projectDocsState, setProjectDocsState] = useState<any>([]);
+  const [projectDocs, setProjectDocs] = useState<ProjectDoc[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [projectDocsMessage, setProjectDocsMessage] = useState("");
+  const [uploadedDocs, setUploadedDocs] = useState<UploadedDoc[]>([]);
 
   useEffect(() => {
     const projectDetails = city.typesOfProjects.find(
       (project: { name: string | null }) => project.name === projectType
     );
-    const projectDocs = projectDetails.fields.find(
-      (obj: { projectDocs: any }) => obj.projectDocs
-    );
-    setProjectDocsState(projectDocs.projectDocs);
-  }, [city]);
+    const projectDocsField = projectDetails?.fields.find(
+      (obj: any) => obj.projectDocs
+    ) as ProjectDocs | undefined;
+
+    if (projectDocsField) {
+      setProjectDocs(projectDocsField.projectDocs);
+    }
+  }, [city, projectType]);
 
   const handleFileChange = (name: string, files: File[]) => {
     setSelectedFiles((prev) => ({ ...prev, [name]: files }));
@@ -38,51 +66,143 @@ const Documentos = () => {
   const handleUpload = async () => {
     setUploading(true);
     if (!projectId) {
-      console.error("Missing user projectId.");
+      setToastMessage("Missing project ID");
+      setToastType("error");
+      setShowToast(true);
+      setUploading(false);
       return;
     }
 
     try {
-      const uploadedUrls: string[] = [];
+      const uploadPromises: Promise<UploadedDoc>[] = [];
 
-      for (const files of Object.values(selectedFiles)) {
+      for (const [docName, files] of Object.entries(selectedFiles)) {
+        const docDefinition = projectDocs.find((doc) => doc.name === docName);
+        if (!docDefinition) continue;
+
         for (const file of files) {
-          const path = `project-docs/${projectId}/${uuidv4()}-${file.name}`;
-          const imageRef = ref(storage, path);
+          const path = `project-docs/${projectId}/${docName}-${uuidv4()}-${
+            file.name
+          }`;
+          const fileRef = ref(storage, path);
 
-          await uploadBytes(imageRef, file);
-          const downloadURL = await getDownloadURL(imageRef);
-
-          uploadedUrls.push(downloadURL);
+          uploadPromises.push(
+            uploadBytes(fileRef, file)
+              .then(() => getDownloadURL(fileRef))
+              .then((url) => ({
+                name: docName,
+                url,
+              }))
+          );
         }
       }
 
+      const newUploads = await Promise.all(uploadPromises);
+
+      // Merge old and new uploads, keeping only the latest file per document name
+      const combined = [...uploadedDocs, ...newUploads];
+      const deduplicatedDocsMap = new Map<string, UploadedDoc>();
+      combined.forEach((doc) => {
+        deduplicatedDocsMap.set(doc.name, doc); // keeps latest
+      });
+      const deduplicatedDocs = Array.from(deduplicatedDocsMap.values());
+
       const userDocRef = doc(db, "projects", projectId);
       await updateDoc(userDocRef, {
-        projectDocs: uploadedUrls, // You can use another field name if needed
+        projectDocs: deduplicatedDocs,
       });
-      setShowToast(true); // Show the toast message
+
+      const updatedProjectSnapshot = await getDocs(
+        query(collection(db, "projects"), where("projectId", "==", projectId))
+      );
+      const updatedProjectDoc = updatedProjectSnapshot.docs[0]?.data();
+
+      console.log("Updated project document:", updatedProjectDoc);
+      setUploadedDocs(deduplicatedDocs);
+
+      const allDocsHaveFiles = projectDocs.every((doc) =>
+        deduplicatedDocs.some((uploaded) => uploaded.name === doc.name)
+      );
+
+      if (allDocsHaveFiles) {
+        setProjectDocsMessage(
+          "Todos os documentos obrigatórios já foram enviados"
+        );
+      }
+
+      setToastMessage("Arquivos enviados com sucesso!");
+      setToastType("success");
+      setShowToast(true);
+      setSelectedFiles({});
     } catch (error) {
       console.error("Upload error:", error);
+      setToastMessage("Erro ao enviar arquivos");
+      setToastType("error");
+      setShowToast(true);
     } finally {
       setUploading(false);
     }
   };
 
+  const getProjectFromDb = async (projectId: string) => {
+    if (!projectId) return;
+
+    try {
+      const projectQuery = query(
+        collection(db, "projects"),
+        where("projectId", "==", projectId)
+      );
+
+      const projectSnapshot = await getDocs(projectQuery);
+      const projectDoc = projectSnapshot.docs[0];
+
+      if (projectDoc) {
+        const data = projectDoc.data();
+        const savedDocs: UploadedDoc[] = data.projectDocs || [];
+        setUploadedDocs(savedDocs);
+
+        const allDocsHaveFiles = projectDocs.every((doc) =>
+          savedDocs.some((uploaded) => uploaded.name === doc.name)
+        );
+
+        if (allDocsHaveFiles) {
+          setProjectDocsMessage(
+            "Todos os documentos obrigatórios já foram enviados"
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching project:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (projectId && projectDocs.length > 0) {
+      getProjectFromDb(projectId);
+    }
+  }, [projectId, projectDocs]);
+
   return (
     <div className="flex flex-col mt-4">
+      {projectDocsMessage && (
+        <p className="col-span-full text-white-600 mt-4 text-2xl">
+          {projectDocsMessage}
+        </p>
+      )}
       <div className="mt-4 w-full flex justify-end">
         <Button
           className="mr-4"
           size="medium"
-          label={"Enviar Documentos"}
+          label={
+            projectDocsMessage ? "Substituir Documento" : "Enviar Documentos"
+          }
           onClick={handleUpload}
-          disabled={Object.keys(selectedFiles).length === 0}
+          disabled={Object.keys(selectedFiles).length === 0 || uploading}
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2">
         {!uploading &&
-          projectDocsState.map((file: { name: string; label: string }) => (
+          projectDocs.map((file) => (
             <UploadFiles
               key={file.name}
               name={file.name}
@@ -92,9 +212,9 @@ const Documentos = () => {
           ))}
       </div>
       <Toast
-        message="Arquivos enviados com sucesso!"
+        message={toastMessage}
         show={showToast}
-        type="success"
+        type={toastType}
         onClose={() => setShowToast(false)}
       />
     </div>

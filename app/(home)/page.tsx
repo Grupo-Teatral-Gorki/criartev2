@@ -30,7 +30,7 @@ export default function Home() {
                 ? "https://styxx-public.s3.sa-east-1.amazonaws.com/logo-criarte.png"
                 : "https://styxx-public.s3.sa-east-1.amazonaws.com/logo_criarte_black.png"
             }
-            alt="Logo"
+            alt="Logo Criarte"
             width={120}
             height={40}
             className="object-contain"
