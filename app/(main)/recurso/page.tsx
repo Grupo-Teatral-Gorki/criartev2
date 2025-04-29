@@ -76,7 +76,7 @@ const Recurso = () => {
       <div className="w-full flex gap-12 bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}
-          onClick={() => router.push("/home")}
+          onClick={() => router.push("/meusProjetos")}
           size="medium"
         />
         <h2 className="text-2xl font-bold">Recurso</h2>
