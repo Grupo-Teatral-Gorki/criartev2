@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { citiesConstant } from "./constants";
-
+import cities from "@/data/cities.json";
 export const findCityLabel = (value: string): string => {
-  const city = citiesConstant.find((city) => city.value === String(value)); // Convert value to string
-  return city ? city.label : "cidade não encontrada";
+  const city = cities.find((city) => city.id === Number(value)); // Convert value to string
+  return city ? `${city.nome} -  ${city?.uf}` : "cidade não encontrada";
 };
 
 export function separateByType(infoList: any) {
