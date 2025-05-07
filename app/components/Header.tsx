@@ -8,7 +8,6 @@ import Drawer from "./Drawer";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "../context/AuthContext";
 import { findCityLabel } from "../utils/validators";
-import { logoutUser } from "../utils/auth";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import { SelectInput } from "./SelectInput";
@@ -94,7 +93,6 @@ export default function Header() {
           </Link>
           <button
             onClick={() => {
-              logoutUser();
               router.push("/");
             }}
           >
