@@ -4,14 +4,10 @@ import Button from "@/app/components/Button";
 import HomeCard from "@/app/components/HomeCard";
 import { useCity } from "@/app/context/CityConfigContext";
 import Image from "next/image";
-import React, { useEffect } from "react";
+import React from "react";
 
 const Home = () => {
   const { city } = useCity();
-
-  useEffect(() => {
-    console.log("city", city.name);
-  }, [city]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-350px)]">

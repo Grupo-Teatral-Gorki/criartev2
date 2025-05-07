@@ -52,8 +52,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const router = useRouter();
 
-  console.log("project", project);
-
   const handleDelete = async (id: string) => {
     try {
       const projectRef = doc(db, "projects", id);

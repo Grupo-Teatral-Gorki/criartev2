@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import cities from "@/data/cities.json";
 import { SelectInput } from "@/app/components/SelectInput";
 import { addDoc, collection } from "firebase/firestore";
@@ -125,10 +125,6 @@ const DynamicProjectForm = () => {
     }));
     setNewFieldItem({ name: "", label: "" });
   };
-
-  useEffect(() => {
-    console.log("form", form);
-  }, [form]);
 
   return (
     <div className="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-lg">
