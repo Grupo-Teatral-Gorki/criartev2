@@ -18,7 +18,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [user, loading, router]);
 
   if (loading) {
-    return <Spinner loading={true} />;
+    return <Spinner />;
   }
 
   return <>{children}</>;
