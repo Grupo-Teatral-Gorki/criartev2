@@ -7,7 +7,7 @@ import { Menu, User, LogOut, ShieldCheck } from "lucide-react";
 import Drawer from "./Drawer";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "../context/AuthContext";
-import { findCityLabel, separateByType } from "../utils/validators";
+import { findCityLabel } from "../utils/validators";
 import { logoutUser } from "../utils/auth";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
@@ -109,7 +109,7 @@ export default function Header() {
         <div className="flex flex-row items-center gap-4">
           <p>Versão: 2.0</p>
           <p className="ml-4">Cidade: {findCityLabel(dbUser?.cityId ?? "")}</p>
-          <p className="ml-4">Cidade: {dbUser?.cityId}</p>
+          <p className="ml-4">ID: {dbUser?.cityId}</p>
         </div>
         {dbUser?.userRole === "admin" && (
           <div

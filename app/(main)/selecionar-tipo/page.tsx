@@ -54,17 +54,23 @@ const SelecionarTipoProjeto = () => {
         </h2>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {projectTypes.map((type) => (
-          <TypeProjectCard
-            key={type.name}
-            available={type.available}
-            description={type.description}
-            label={type.label}
-            name={type.name}
-            onClick={() => createEmptyProjectForUser(type.name)}
-          />
-        ))}
+        {projectTypes &&
+          projectTypes.map((type) => (
+            <TypeProjectCard
+              key={type.name}
+              available={type.available}
+              description={type.description}
+              label={type.label}
+              name={type.name}
+              onClick={() => createEmptyProjectForUser(type.name)}
+            />
+          ))}
       </div>
+      {!projectTypes && (
+        <p className="text-2xl">
+          Nenhum tipo de projeto configurado, entre em contato com o suporte.
+        </p>
+      )}
     </div>
   );
 };
