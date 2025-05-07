@@ -62,16 +62,12 @@ const InfoGerais = () => {
     const projectDetails = city.city.typesOfProjects.find(
       (project: { name: string | null }) => project.name === projectType
     );
-    const generalInfoFields = projectDetails.fields.find(
-      (obj: { generalInfo: any }) => obj.generalInfo
-    );
-    setDetalhesProjetos(generalInfoFields.generalInfo);
+    const generalInfoFields = projectDetails.fields.generalInfo;
+
+    setDetalhesProjetos(generalInfoFields);
 
     const newFields = Object.fromEntries(
-      generalInfoFields.generalInfo.map((field: { name: any }) => [
-        field.name,
-        "",
-      ])
+      generalInfoFields.map((field: { name: any }) => [field.name, ""])
     ); // Log the new fields
     setFormValues((prev) => ({
       categoria: prev.categoria || "",

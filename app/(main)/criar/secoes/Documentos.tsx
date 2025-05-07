@@ -26,10 +26,6 @@ interface UploadedDoc {
   url: string;
 }
 
-interface ProjectDocs {
-  projectDocs: ProjectDoc[];
-}
-
 const Documentos = () => {
   const { city } = useCity();
   const searchParams = useSearchParams();
@@ -50,12 +46,10 @@ const Documentos = () => {
     const projectDetails = city.typesOfProjects.find(
       (project: { name: string | null }) => project.name === projectType
     );
-    const projectDocsField = projectDetails?.fields.find(
-      (obj: any) => obj.projectDocs
-    ) as ProjectDocs | undefined;
+    const projectDocsField = projectDetails.fields.projectDocs;
 
     if (projectDocsField) {
-      setProjectDocs(projectDocsField.projectDocs);
+      setProjectDocs(projectDocsField);
     }
   }, [city, projectType]);
 
