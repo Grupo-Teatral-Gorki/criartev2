@@ -31,7 +31,7 @@ interface FormState {
 }
 
 const DynamicProjectForm = () => {
-  const [selectedUF, setSelectedUF] = useState<string>("");
+  const [selectedUF, setSelectedUF] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
 
   const [form, setForm] = useState<FormState>({
@@ -130,7 +130,7 @@ const DynamicProjectForm = () => {
     <div className="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-lg">
       <h2 className="text-2xl font-bold mb-4 text-navy">Nova Configuração</h2>
 
-      {/* UF and Cidade Select */}
+      {/* UF e Cidade */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <SelectInput
           label={"Selecione UF"}
@@ -165,18 +165,22 @@ const DynamicProjectForm = () => {
         />
       </div>
 
-      {/* New Project Config */}
+      {/* Novo Projeto */}
       <div className="border-t pt-4 mt-4">
-        <h3 className="text-xl font-semibold mb-2 text-navy">Novo Tipo</h3>
+        <h3 className="text-xl font-semibold mb-2 text-navy">
+          Novo Tipo Edital
+        </h3>
         <div className="grid grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Nome Interno"
+          <SelectInput
+            options={[
+              { value: "fomento", label: "Fomento" },
+              { value: "premiacao", label: "Premiação" },
+            ]}
+            label="Nome Interno"
             value={newProject.name}
-            onChange={(e) =>
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
               setNewProject((prev) => ({ ...prev, name: e.target.value }))
             }
-            className="border p-2 rounded w-full text-navy"
           />
           <input
             type="text"
@@ -201,89 +205,94 @@ const DynamicProjectForm = () => {
           rows={3}
         />
 
-        {/* Dynamic Fields Section */}
-        <div className="mt-6 border-t pt-4">
-          <h4 className="font-semibold text-navy mb-2">
-            Campos Personalizados
-          </h4>
-          <div className="flex gap-2 mb-4">
-            <input
-              type="text"
-              placeholder="Nova Chave (ex: generalInfo)"
-              value={newFieldKey}
-              onChange={(e) => setNewFieldKey(e.target.value)}
-              className="border p-2 rounded text-navy w-full"
-            />
-            <button
-              onClick={handleAddFieldKey}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            >
-              Adicionar Chave
-            </button>
-          </div>
-
-          {Object.keys(newProject.fields).length > 0 && (
-            <div className="mb-4">
+        {/* Campos Dinâmicos */}
+        <div className="container mx-auto p-4">
+          <div className="mt-6 border-t pt-4">
+            <h4 className="font-semibold text-navy mb-2">Seções do Projeto</h4>
+            <div className="flex gap-2 mb-4">
               <select
-                value={selectedFieldKey}
-                onChange={(e) => setSelectedFieldKey(e.target.value)}
-                className="border p-2 rounded text-navy w-full"
+                value={newFieldKey}
+                onChange={(e) => setNewFieldKey(e.target.value)}
+                className="border p-2 rounded w-full text-navy"
               >
-                <option value="">Selecione uma chave</option>
-                {Object.keys(newProject.fields).map((key) => (
-                  <option key={key} value={key}>
-                    {key}
-                  </option>
-                ))}
+                <option value="">Selecione uma seção</option>
+                {/* Add options here dynamically or statically */}
+                <option value="generalInfo">Informações Gerais</option>
+                <option value="projectDocs">Documentos do Projeto</option>
               </select>
-            </div>
-          )}
-
-          {selectedFieldKey && (
-            <div className="space-y-2">
-              <input
-                type="text"
-                placeholder="Nome do Campo"
-                value={newFieldItem.name}
-                onChange={(e) =>
-                  setNewFieldItem((prev) => ({
-                    ...prev,
-                    name: e.target.value,
-                  }))
-                }
-                className="border p-2 rounded w-full text-navy"
-              />
-              <input
-                type="text"
-                placeholder="Rótulo do Campo"
-                value={newFieldItem.label}
-                onChange={(e) =>
-                  setNewFieldItem((prev) => ({
-                    ...prev,
-                    label: e.target.value,
-                  }))
-                }
-                className="border p-2 rounded w-full text-navy"
-              />
               <button
-                onClick={handleAddFieldItem}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                onClick={handleAddFieldKey}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
               >
-                Adicionar Campo
+                Adicionar Chave
               </button>
-
-              {/* Visual List of Added Items */}
-              <ul className="list-disc pl-5 mt-2">
-                {newProject.fields[selectedFieldKey]?.map((item, idx) => (
-                  <li key={idx} className="text-sm text-gray-700">
-                    <span className="font-medium">{item.label}</span>{" "}
-                    <span className="text-xs text-gray-500">({item.name})</span>
-                  </li>
-                ))}
-              </ul>
             </div>
-          )}
+
+            {Object.keys(newProject.fields).length > 0 && (
+              <div className="mb-4">
+                <select
+                  value={selectedFieldKey}
+                  onChange={(e) => setSelectedFieldKey(e.target.value)}
+                  className="border p-2 rounded text-navy w-full"
+                >
+                  <option value="">Selecione uma chave</option>
+                  {Object.keys(newProject.fields).map((key) => (
+                    <option key={key} value={key}>
+                      {key}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {selectedFieldKey && (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  placeholder="Nome do Campo"
+                  value={newFieldItem.name}
+                  onChange={(e) =>
+                    setNewFieldItem((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  className="border p-2 rounded w-full text-navy"
+                />
+                <input
+                  type="text"
+                  placeholder="Rótulo do Campo"
+                  value={newFieldItem.label}
+                  onChange={(e) =>
+                    setNewFieldItem((prev) => ({
+                      ...prev,
+                      label: e.target.value,
+                    }))
+                  }
+                  className="border p-2 rounded w-full text-navy"
+                />
+                <button
+                  onClick={handleAddFieldItem}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Adicionar Campo
+                </button>
+                <ul className="list-disc pl-5 mt-2">
+                  {newProject.fields[selectedFieldKey]?.map((item, idx) => (
+                    <li key={idx} className="text-sm text-gray-700">
+                      <span className="font-medium">{item.label}</span>{" "}
+                      <span className="text-xs text-gray-500">
+                        ({item.name})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Botões de ação */}
         <div className="flex gap-4">
           <button
             className="mt-6 bg-navy text-white px-4 py-2 rounded hover:bg-blue-800 transition"
@@ -298,38 +307,6 @@ const DynamicProjectForm = () => {
             Salvar
           </button>
         </div>
-      </div>
-
-      {/* List of Current Projects */}
-      <div className="mt-6 border-t pt-4">
-        <h3 className="text-xl font-semibold mb-4 text-navy">
-          Projetos Atuais
-        </h3>
-        <ul className="space-y-4">
-          {form.typesOfProjects.map((proj, idx) => (
-            <li key={idx} className="border p-4 rounded shadow-sm bg-gray-50">
-              <h4 className="font-bold text-lg text-navy">{proj.label}</h4>
-              <p className="text-sm text-gray-700 mb-1">{proj.description}</p>
-              <p className="text-xs text-gray-500">ID: {proj.name}</p>
-              <div className="mt-2">
-                {Object.entries(proj.fields).map(([key, items]) => (
-                  <div key={key} className="mb-2">
-                    <p className="text-sm font-semibold text-navy">
-                      Chave: {key}
-                    </p>
-                    <ul className="ml-4 list-disc text-sm text-gray-700">
-                      {items.map((item, i) => (
-                        <li key={i}>
-                          {item.label} ({item.name})
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );
