@@ -155,10 +155,11 @@ const DynamicProjectForm = () => {
           onChange={(e: any) => {
             const cityId = e.target.value;
             const cityLabel = getCityNameById(cityId);
+            const formattedCityId = cityId.toString().padStart(4, "0");
             setSelectedCity(cityId);
             setForm((prev) => ({
               ...prev,
-              idCidade: cityId,
+              cityId: formattedCityId,
               name: cityLabel,
             }));
           }}

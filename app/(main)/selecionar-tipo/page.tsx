@@ -18,6 +18,7 @@ const SelecionarTipoProjeto = () => {
   useEffect(() => {
     if (!city) return;
     setProjectTypes(city.typesOfProjects);
+    console.log("City:", city);
   }, [city]);
 
   const createEmptyProjectForUser = async (type: string) => {
@@ -41,6 +42,7 @@ const SelecionarTipoProjeto = () => {
 
       // Format the projectId to be a 4-digit number with leading zeros
       const formattedProjectId = newProjectId.toString().padStart(4, "0");
+      const formattedCityId = city.idCidade.toString().padStart(4, "0");
 
       // Create a new project document in the "projects" collection
       const newDocRef = doc(collection(db, "projects"));
@@ -50,6 +52,7 @@ const SelecionarTipoProjeto = () => {
         projectId: newDocRef.id,
         registrationNumber: formattedProjectId,
         projectType: type,
+        cityId: formattedCityId,
       });
 
       console.log("Project created:", {
