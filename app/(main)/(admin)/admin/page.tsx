@@ -1,20 +1,23 @@
 "use client";
+
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React from "react";
 
 const AdminHome = () => {
   const { dbUser } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!dbUser) return;
+  if (!dbUser) return null;
 
-    if (dbUser.userRole !== "admin") {
-      router.push("/home");
-    }
-  }, [dbUser]);
+  const isAdmin =
+    Array.isArray(dbUser.userRole) && dbUser.userRole.includes("admin");
+
+  if (!isAdmin) {
+    router.push("/home");
+    return null;
+  }
 
   return (
     <div className="flex flex-col w-full gap-6">

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
+import { Criteria } from "./RenderEvaluationForm";
 
 type EvaluationTableProps = {
   headers: string[];
@@ -16,16 +17,24 @@ const EvaluationTable: React.FC<EvaluationTableProps> = ({
 
   const handleChange = (value: string, rowIndex: number, cellIndex: number) => {
     const updatedRows = [...tableData];
-    updatedRows[rowIndex][cellIndex] = value ? parseFloat(value) : "";
+    updatedRows[rowIndex][cellIndex] = value ? parseFloat(value) : 0;
+
     setTableData(updatedRows);
-    onScoresUpdate(updatedRows);
+    const criteriaArray: Criteria[] = updatedRows.map((row) => ({
+      id: row[0] as string,
+      description: row[1] as string,
+      score: typeof row[2] === "number" ? row[2] : 0,
+    }));
+
+    console.log("Structured scores:", criteriaArray);
+    onScoresUpdate(criteriaArray);
   };
 
   return (
     <div className="overflow-x-auto p-4">
       <table className="w-full border-collapse rounded-lg shadow-lg">
         <thead>
-          <tr className="bg-[#1d4f5d] text-white">
+          <tr className="bg-primary text-white">
             {headers.map((header, index) => (
               <th key={index} className="p-3 text-left">
                 {header}
@@ -35,7 +44,10 @@ const EvaluationTable: React.FC<EvaluationTableProps> = ({
         </thead>
         <tbody>
           {tableData.map((row, rowIndex) => (
-            <tr key={rowIndex} className="odd:bg-gray-100 even:bg-white">
+            <tr
+              key={rowIndex}
+              className="odd:bg-gray-100 even:bg-white text-black"
+            >
               {row.map((cell, cellIndex) => (
                 <td key={cellIndex} className="p-3 border">
                   {cellIndex === row.length - 1 ? (

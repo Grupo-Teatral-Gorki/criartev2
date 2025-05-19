@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import Button from "@/app/components/Button";
 import TypeProjectCard from "@/app/components/TypeProjectCard";
-import { collection, doc, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext";
 import { useEffect, useState } from "react";
@@ -25,16 +25,45 @@ const SelecionarTipoProjeto = () => {
       console.error("User not authenticated");
       return { success: false, error: "User not authenticated" };
     }
+
     try {
+      // Reference to the collection where we store the last project ID
+      const lastIdRef = doc(db, "system", "lastProjectId");
+      const lastIdDoc = await getDoc(lastIdRef);
+
+      let newProjectId = 1; // Default projectId if no ID is stored
+      if (lastIdDoc.exists()) {
+        newProjectId = lastIdDoc.data().lastId + 1; // Increment the last projectId
+      }
+
+      // Update the last used project ID in the system document
+      await setDoc(lastIdRef, { lastId: newProjectId });
+
+      // Format the projectId to be a 4-digit number with leading zeros
+      const formattedProjectId = newProjectId.toString().padStart(4, "0");
+
+      // Create a new project document in the "projects" collection
       const newDocRef = doc(collection(db, "projects"));
-      const projectId = newDocRef.id;
       await setDoc(newDocRef, {
         userId: dbUser!.id,
-        projectStatus: "Rascunho",
-        projectId,
+        projectStatus: "rascunho",
+        projectId: newDocRef.id,
+        registrationNumber: formattedProjectId,
+        projectType: type,
       });
-      router.push(`/criar?state=${type}&projectId=${projectId}`);
-      return { success: true, projectId };
+
+      console.log("Project created:", {
+        projectId: newDocRef.id,
+        userId: dbUser!.id,
+        projectStatus: "rascunho",
+        registrationNumber: formattedProjectId,
+        projectType: type,
+      });
+
+      // Redirect to the project creation page with the type and projectId
+      router.push(`/criar?state=${type}&projectId=${newDocRef.id}`);
+
+      return { success: true, projectId: formattedProjectId };
     } catch (error) {
       console.error("Error creating project:", error);
       return { success: false, error };
@@ -42,7 +71,7 @@ const SelecionarTipoProjeto = () => {
   };
 
   return (
-    <div className="w-full overflow-y-auto flex flex-col items-center justify-center px-36 gap-8">
+    <div className="w-full overflow-y-auto flex flex-col items-center justify-center px-8 md:px-36 gap-8">
       <div className="w-full flex items-center justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}
@@ -53,7 +82,7 @@ const SelecionarTipoProjeto = () => {
           Selecione o tipo de projeto
         </h2>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
         {projectTypes &&
           projectTypes.map((type) => (
             <TypeProjectCard

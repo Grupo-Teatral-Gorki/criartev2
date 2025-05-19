@@ -22,10 +22,10 @@ export function TextInput({
           {label}
         </label>
       )}
-      <div className="relative w-full">
+      <div className="relative w-full flex items-center justify-center">
         <input
           type={isPassword && showPassword ? "text" : type}
-          className={`w-full p-2 mb-2 border rounded text-primary dark:text-light bg-white dark:bg-gray-800 ${className}`}
+          className={`w-full p-2 border rounded text-primary dark:text-light bg-white dark:bg-gray-800 ${className}`}
           placeholder={label}
           {...props}
         />

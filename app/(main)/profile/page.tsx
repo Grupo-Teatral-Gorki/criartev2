@@ -89,7 +89,7 @@ const Profile: React.FC = () => {
           <div className="flex flex-col gap-4 text-center  text-white dark:text-navy text-2xl">
             <p>Usuário: {dbUser?.firstName}</p>
             <p>Cidade: {findCityLabel(dbUser?.cityId ?? "")}</p>
-            <p>Tipo de Usuário: {dbUser?.userType}</p>
+            <p>Tipo de Usuário: {dbUser?.userRole}</p>
           </div>
         </div>
       </div>

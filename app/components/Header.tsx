@@ -63,10 +63,6 @@ export default function Header() {
     fetchAllCities();
   }, []);
 
-  useEffect(() => {
-    console.log(dbUser);
-  }, [dbUser]);
-
   return (
     <>
       <header className="flex items-center justify-between px-4 py-3 bg-primary shadow-md relative">
@@ -107,13 +103,13 @@ export default function Header() {
         {/* Drawer */}
         <Drawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
       </header>
-      <div className="w-full flex items-center justify-between bg-white px-6 py-2 font-semibold dark:bg-navy dark:text-white">
+      <div className="w-full hidden sm:flex items-center justify-between bg-white px-6 py-2 font-semibold dark:bg-navy dark:text-white">
         <div className="flex flex-row items-center gap-4">
           <p>Versão: 2.0</p>
           <p className="ml-4">Cidade: {findCityLabel(dbUser?.cityId ?? "")}</p>
           <p className="ml-4">ID: {dbUser?.cityId}</p>
         </div>
-        {dbUser?.userRole === "admin" && (
+        {dbUser?.userRole?.includes("admin") && (
           <div
             className="flex flex-row items-center gap-4 cursor-pointer"
             onClick={() => setModalIsOpen(true)}

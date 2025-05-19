@@ -93,7 +93,7 @@ const InfoGerais = () => {
     if (!projectId) return console.error("Projeto não encontrado");
     const projectRef = doc(db, "projects", projectId);
     await updateDoc(projectRef, {
-      infoGerais: formValues,
+      generalInfo: formValues,
     });
   };
 
@@ -114,10 +114,10 @@ const InfoGerais = () => {
       }
 
       const data = projectDoc.data();
-      if (data.infoGerais) {
+      if (data.generalInfo) {
         setFormValues((prev) => ({
           ...prev,
-          ...data.infoGerais,
+          ...data.generalInfo,
         }));
       }
     } catch (error) {
@@ -125,6 +125,10 @@ const InfoGerais = () => {
       return null;
     }
   };
+
+  useEffect(() => {
+    console.log("Form Values:", formValues);
+  }, [formValues]);
 
   const camposSelect = [
     { key: "modalidade", label: "Modalidade do Projeto", options: modalidade },

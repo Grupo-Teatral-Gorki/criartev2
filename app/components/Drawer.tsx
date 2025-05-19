@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Home, X } from "lucide-react";
+import { BadgeHelp, Bolt, Home, LayoutDashboard, X } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 interface DrawerProps {
   isOpen: boolean;
@@ -11,6 +12,8 @@ interface DrawerProps {
 
 export default function Drawer({ isOpen, onClose }: DrawerProps) {
   const [visible, setVisible] = useState(isOpen);
+  const { dbUser } = useAuth();
+  const userRole = dbUser?.userRole || [];
 
   useEffect(() => {
     if (isOpen) {
@@ -36,6 +39,37 @@ export default function Drawer({ isOpen, onClose }: DrawerProps) {
 
   if (!visible) return null;
 
+  const links = [
+    {
+      href: "/home",
+      label: "Home",
+      icon: <Home className="w-5 h-5" />,
+      rolesAllowed: ["user", "secretary", "reviewer", "staff", "admin"],
+    },
+    {
+      href: "/admin",
+      label: "Configurações",
+      icon: <Bolt className="w-5 h-5" />,
+      rolesAllowed: ["staff", "admin"],
+    },
+    {
+      href: "/management",
+      label: "Gestão",
+      icon: <LayoutDashboard className="w-5 h-5" />,
+      rolesAllowed: ["secretary", "staff", "admin"],
+    },
+    {
+      href: "/ajuda",
+      label: "Ajuda",
+      icon: <BadgeHelp className="w-5 h-5" />,
+      rolesAllowed: ["user", "secretary", "reviewer", "staff", "admin"],
+    },
+  ];
+
+  const filteredLinks = links.filter((link) =>
+    link.rolesAllowed.some((role) => userRole.includes(role))
+  );
+
   return (
     <div
       className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ${
@@ -59,12 +93,16 @@ export default function Drawer({ isOpen, onClose }: DrawerProps) {
 
         {/* Drawer Links */}
         <nav className="flex flex-col gap-4">
-          <Link
-            href="/home"
-            className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-navy"
-          >
-            <Home className="w-5 h-5" /> Home
-          </Link>
+          {filteredLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-navy transition-colors duration-200"
+            >
+              {link.icon}
+              <span>{link.label}</span>
+            </Link>
+          ))}
         </nav>
       </div>
     </div>

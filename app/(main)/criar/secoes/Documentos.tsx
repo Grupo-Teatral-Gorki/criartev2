@@ -4,11 +4,17 @@ import { useCity } from "@/app/context/CityConfigContext";
 import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import React, { useEffect, useState } from "react";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
 import { db, storage } from "@/app/config/firebaseconfig";
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   updateDoc,
@@ -21,10 +27,11 @@ interface ProjectDoc {
   label: string;
 }
 
-interface UploadedDoc {
+type UploadedDocWithPath = {
   name: string;
   url: string;
-}
+  storagePath: string;
+};
 
 const Documentos = () => {
   const { city } = useCity();
@@ -40,7 +47,8 @@ const Documentos = () => {
   const [projectDocs, setProjectDocs] = useState<ProjectDoc[]>([]);
   const [uploading, setUploading] = useState(false);
   const [projectDocsMessage, setProjectDocsMessage] = useState("");
-  const [uploadedDocs, setUploadedDocs] = useState<UploadedDoc[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [uploadedDocs, setUploadedDocs] = useState<UploadedDocWithPath[]>([]);
 
   useEffect(() => {
     const projectDetails = city.typesOfProjects.find(
@@ -59,6 +67,7 @@ const Documentos = () => {
 
   const handleUpload = async () => {
     setUploading(true);
+
     if (!projectId) {
       setToastMessage("Missing project ID");
       setToastType("error");
@@ -68,57 +77,80 @@ const Documentos = () => {
     }
 
     try {
-      const uploadPromises: Promise<UploadedDoc>[] = [];
+      const projectRef = doc(db, "projects", projectId);
+      const projectSnap = await getDoc(projectRef);
+
+      if (!projectSnap.exists()) {
+        throw new Error("Project not found");
+      }
+
+      const projectData = projectSnap.data();
+      const registrationNumber = projectData.registrationNumber;
+
+      if (!registrationNumber) {
+        throw new Error("Project is missing a registration number");
+      }
+
+      const currentDocs: UploadedDocWithPath[] = projectData.projectDocs || [];
+
+      const uploadPromises: Promise<UploadedDocWithPath>[] = [];
 
       for (const [docName, files] of Object.entries(selectedFiles)) {
         const docDefinition = projectDocs.find((doc) => doc.name === docName);
-        if (!docDefinition) continue;
+        if (!docDefinition) {
+          console.warn(`No docDefinition found for: ${docName}`);
+          continue;
+        }
+
+        // 🔁 Delete previous file if it exists for this docName
+        const existing = currentDocs.find((d) => d.name === docName);
+        if (existing && existing.storagePath) {
+          try {
+            const oldRef = ref(storage, existing.storagePath);
+            await deleteObject(oldRef);
+            console.log(`Deleted previous file: ${existing.storagePath}`);
+          } catch (err) {
+            console.warn("Could not delete previous file:", err);
+          }
+        }
 
         for (const file of files) {
-          const path = `project-docs/${projectId}/${docName}-${uuidv4()}-${
-            file.name
-          }`;
-          const fileRef = ref(storage, path);
+          const storagePath = `project-docs/${registrationNumber}/${docName}/${uuidv4()}`;
+          const fileRef = ref(storage, storagePath);
 
-          uploadPromises.push(
-            uploadBytes(fileRef, file)
-              .then(() => getDownloadURL(fileRef))
-              .then((url) => ({
-                name: docName,
-                url,
-              }))
-          );
+          const uploadPromise = uploadBytes(fileRef, file)
+            .then(() => getDownloadURL(fileRef))
+            .then((url) => ({
+              name: docName,
+              url,
+              storagePath,
+            }));
+
+          uploadPromises.push(uploadPromise);
         }
       }
 
       const newUploads = await Promise.all(uploadPromises);
+      const combined = [...currentDocs, ...newUploads];
 
-      // Merge old and new uploads, keeping only the latest file per document name
-      const combined = [...uploadedDocs, ...newUploads];
-      const deduplicatedDocsMap = new Map<string, UploadedDoc>();
-      combined.forEach((doc) => {
-        deduplicatedDocsMap.set(doc.name, doc); // keeps latest
-      });
-      const deduplicatedDocs = Array.from(deduplicatedDocsMap.values());
+      // ✅ Deduplicate: Keep only the latest per docName
+      const dedupedMap = new Map<string, UploadedDocWithPath>();
+      combined.forEach((doc) => dedupedMap.set(doc.name, doc));
 
-      const userDocRef = doc(db, "projects", projectId);
-      await updateDoc(userDocRef, {
+      const deduplicatedDocs = Array.from(dedupedMap.values());
+
+      await updateDoc(projectRef, {
         projectDocs: deduplicatedDocs,
       });
 
-      const updatedProjectSnapshot = await getDocs(
-        query(collection(db, "projects"), where("projectId", "==", projectId))
-      );
-      const updatedProjectDoc = updatedProjectSnapshot.docs[0]?.data();
-
-      console.log("Updated project document:", updatedProjectDoc);
       setUploadedDocs(deduplicatedDocs);
+      setSelectedFiles({});
 
-      const allDocsHaveFiles = projectDocs.every((doc) =>
+      const allRequiredUploaded = projectDocs.every((doc) =>
         deduplicatedDocs.some((uploaded) => uploaded.name === doc.name)
       );
 
-      if (allDocsHaveFiles) {
+      if (allRequiredUploaded) {
         setProjectDocsMessage(
           "Todos os documentos obrigatórios já foram enviados"
         );
@@ -127,7 +159,6 @@ const Documentos = () => {
       setToastMessage("Arquivos enviados com sucesso!");
       setToastType("success");
       setShowToast(true);
-      setSelectedFiles({});
     } catch (error) {
       console.error("Upload error:", error);
       setToastMessage("Erro ao enviar arquivos");
@@ -152,7 +183,7 @@ const Documentos = () => {
 
       if (projectDoc) {
         const data = projectDoc.data();
-        const savedDocs: UploadedDoc[] = data.projectDocs || [];
+        const savedDocs: UploadedDocWithPath[] = data.projectDocs || [];
         setUploadedDocs(savedDocs);
 
         const allDocsHaveFiles = projectDocs.every((doc) =>

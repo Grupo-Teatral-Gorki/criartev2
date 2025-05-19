@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Button from "./Button";
 import { deleteDoc, doc } from "firebase/firestore";
 import { db } from "../config/firebaseconfig";
@@ -7,10 +7,12 @@ import { useRouter } from "next/navigation";
 
 export interface Project {
   projectId: string;
+  registrationNumber: string;
   projectName: string;
   projectStatus: string;
   projectTitle: string;
   userId: string;
+  projectType: string;
 }
 
 interface ProjectCardProps {
@@ -52,6 +54,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    console.log("project", project);
+  }, [project]);
+
   const handleDelete = async (id: string) => {
     try {
       const projectRef = doc(db, "projects", id);
@@ -70,7 +76,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     >
       <div className="flex justify-between gap-1 items-center">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          {project.projectName}
+          {project.projectTitle}
         </h2>
         <span
           className={`px-3 py-1 text-sm font-medium rounded-md ${getStatusStyles(
@@ -85,10 +91,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       </div>
       <div className="mt-4 space-y-2 text-gray-700 dark:text-gray-300">
         <p>
-          <strong>Nº de inscrição:</strong> {project.projectId}
-        </p>
-        <p>
-          <strong>Título do edital:</strong> {project.projectTitle}
+          <strong>Nº de inscrição:</strong> {project.registrationNumber}
         </p>
         <p>
           <strong>Modalidade:</strong> {"Pessoa Física"}
@@ -113,7 +116,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           size="small"
           onClick={() => setConfirmDelete(true)}
         />
-        <Button label="Editar" variant="outlined" size="small" />
+        <Button
+          label="Editar"
+          variant="outlined"
+          size="small"
+          onClick={() =>
+            router.push(
+              `criar?edit=true&projectId=${project.projectId}&state=${project.projectType}`
+            )
+          }
+        />
       </div>
       {confirmDelete && (
         <Modal isOpen={confirmDelete} onClose={() => setConfirmDelete(false)}>

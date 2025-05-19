@@ -40,7 +40,7 @@ export interface UserProfile {
   phoneNumber: string; // "99-99999-9999" (string)
   userType: number;
   photoUrl: string; // "https://robohash.org/placeholder.png" (string)
-  userRole: string;
+  userRole: string[];
 }
 
 export interface AuthContextType {
