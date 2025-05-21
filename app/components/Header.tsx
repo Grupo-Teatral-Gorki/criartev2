@@ -21,7 +21,7 @@ type CityOption = {
 };
 
 type CityDoc = {
-  idCidade: string;
+  cityId: string;
   name: string;
 };
 
@@ -48,7 +48,7 @@ export default function Header() {
       }));
 
       const options = docs.map((item) => ({
-        value: item.idCidade,
+        value: item.cityId,
         label: item.name,
       }));
       setCitiesOptions(options);
@@ -109,15 +109,16 @@ export default function Header() {
           <p className="ml-4">Cidade: {findCityLabel(dbUser?.cityId ?? "")}</p>
           <p className="ml-4">ID: {dbUser?.cityId}</p>
         </div>
-        {dbUser?.userRole?.includes("admin") && (
-          <div
-            className="flex flex-row items-center gap-4 cursor-pointer"
-            onClick={() => setModalIsOpen(true)}
-          >
-            <p>Trocar Cidade</p>
+        {["admin", "staff"].some((role) =>
+          dbUser?.userRole?.includes(role)
+        ) && (
+          <div className="flex flex-row items-center gap-4 ">
+            <p className="cursor-pointer" onClick={() => setModalIsOpen(true)}>
+              Trocar Cidade
+            </p>
             <div className="flex flex-row items-center gap-2 bg-red-600 p-1 rounded-md text-white">
               <ShieldCheck />
-              <p>Supervisor</p>
+              <p className="text-lg">Supervisor</p>
             </div>
           </div>
         )}

@@ -38,7 +38,7 @@ export const CityProvider = ({ children }: { children: React.ReactNode }) => {
 
       const q = query(
         collection(db, "cities"),
-        where("idCidade", "==", dbUser.cityId)
+        where("cityId", "==", dbUser.cityId)
       );
       const snapshot = await getDocs(q);
 

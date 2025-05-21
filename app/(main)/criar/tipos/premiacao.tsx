@@ -1,11 +1,24 @@
+import Tabs from "@/app/components/Tabs";
+import Documentos from "../secoes/Documentos";
+import PlanilhaOrcamentaria from "../secoes/PlanilhaOrcamentaria";
+import Proponente from "../secoes/Proponente";
+
 const Premiacao = () => {
-  return (
-    <div className="w-full flex justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
-      <h2 className="text-2xl font-bold">
-        Criar Projeto de Premiacao de Mestres e Mestras
-      </h2>
-    </div>
-  );
+  const tabs = [
+    {
+      label: "Proponente",
+      content: <Proponente />,
+    },
+    {
+      label: "Documentos",
+      content: <Documentos />,
+    },
+    {
+      label: "Planilha Orçamentária",
+      content: <PlanilhaOrcamentaria />,
+    },
+  ];
+  return <Tabs tabs={tabs} />;
 };
 
 export default Premiacao;

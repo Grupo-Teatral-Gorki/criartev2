@@ -59,11 +59,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const userDocRef = doc(db, "users", user.uid);
     try {
-      // Update Firestore
       await updateDoc(userDocRef, { cityId: newCityId });
 
-      // Replace state with a new object
-      setDbUser((prev) => (prev ? { ...prev, cityId: newCityId } : prev));
+      const updatedDoc = await getDoc(userDocRef);
+      if (updatedDoc.exists()) {
+        const updatedData = updatedDoc.data() as UserProfile;
+        const fullUserData = { ...updatedData, id: user.uid };
+        setDbUser(fullUserData);
+      }
     } catch (error) {
       console.error("Failed to update cityId", error);
     }

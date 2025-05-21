@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import { SelectInput } from "@/app/components/SelectInput";
+import Toast from "@/app/components/Toast";
 
 interface Project {
   projectId: string;
@@ -19,6 +20,9 @@ interface Project {
 
 const ProjectList: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
   const [users, setUsers] = useState<{ value: string; label: string }[]>([]);
   const [selectedReviewers, setSelectedReviewers] = useState<
     Record<string, string>
@@ -35,9 +39,14 @@ const ProjectList: React.FC = () => {
       await updateDoc(projectRef, {
         reviewer: userId,
       });
-      console.log(`Reviewer ${userId} assigned to project ${projectId}`);
+      setToastType("success");
+      setToastMessage("Parecerista atribuído com sucesso!");
+      setShowToast(true);
     } catch (error) {
-      console.error("Error assigning reviewer:", error);
+      console.error("Erro ao atribuir parecerista:", error);
+      setToastType("error");
+      setToastMessage("Erro ao atribuir parecerista.");
+      setShowToast(true);
     }
   };
 
@@ -119,6 +128,12 @@ const ProjectList: React.FC = () => {
           </div>
         ))}
       </div>
+      <Toast
+        message={toastMessage}
+        show={showToast}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

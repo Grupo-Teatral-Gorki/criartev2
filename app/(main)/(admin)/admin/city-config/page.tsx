@@ -127,7 +127,7 @@ const DynamicProjectForm = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-lg">
+    <div className="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-lg mt-8">
       <h2 className="text-2xl font-bold mb-4 text-navy">Nova Configuração</h2>
 
       {/* UF e Cidade */}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Button from "./Button";
 import { deleteDoc, doc } from "firebase/firestore";
 import { db } from "../config/firebaseconfig";
@@ -53,10 +53,6 @@ const getStatusStyles = (status?: string) => {
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    console.log("project", project);
-  }, [project]);
 
   const handleDelete = async (id: string) => {
     try {

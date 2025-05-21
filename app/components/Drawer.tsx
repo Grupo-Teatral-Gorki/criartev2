@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BadgeHelp, Bolt, Home, LayoutDashboard, X } from "lucide-react";
+import {
+  BadgeHelp,
+  Bolt,
+  ClipboardList,
+  Home,
+  LayoutDashboard,
+  X,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 interface DrawerProps {
@@ -57,6 +64,12 @@ export default function Drawer({ isOpen, onClose }: DrawerProps) {
       label: "Gestão",
       icon: <LayoutDashboard className="w-5 h-5" />,
       rolesAllowed: ["secretary", "staff", "admin"],
+    },
+    {
+      href: "/admin/review",
+      label: "Avaliar Projetos",
+      icon: <ClipboardList className="w-5 h-5" />,
+      rolesAllowed: ["reviewer", "admin"],
     },
     {
       href: "/ajuda",

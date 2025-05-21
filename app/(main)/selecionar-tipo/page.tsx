@@ -2,24 +2,58 @@
 import { useRouter } from "next/navigation";
 import Button from "@/app/components/Button";
 import TypeProjectCard from "@/app/components/TypeProjectCard";
-import { collection, doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext";
 import { useEffect, useState } from "react";
 import { ProjectTypesType } from "@/app/utils/interfaces";
-import { useCity } from "@/app/context/CityConfigContext";
 
 const SelecionarTipoProjeto = () => {
   const [projectTypes, setProjectTypes] = useState<ProjectTypesType[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { dbUser } = useAuth();
-  const { city } = useCity();
+  const cityId = dbUser?.cityId;
 
   useEffect(() => {
-    if (!city) return;
-    setProjectTypes(city.typesOfProjects);
-    console.log("City:", city);
-  }, [city]);
+    console.log("City:", cityId);
+  }, [dbUser]);
+
+  useEffect(() => {
+    const fetchCity = async () => {
+      if (!cityId) return;
+
+      try {
+        const citiesRef = collection(db, "cities");
+
+        // Query for documents where the field 'cityId' equals the passed cityId
+        const q = query(citiesRef, where("cityId", "==", cityId));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const cityDoc = querySnapshot.docs[0];
+          const data = cityDoc.data();
+          setProjectTypes(data.typesOfProjects || []);
+        } else {
+          console.warn("No city found with that cityId field.");
+        }
+      } catch (error) {
+        console.error("Error fetching city:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCity();
+  }, [cityId]);
 
   const createEmptyProjectForUser = async (type: string) => {
     if (!dbUser) {
@@ -42,7 +76,7 @@ const SelecionarTipoProjeto = () => {
 
       // Format the projectId to be a 4-digit number with leading zeros
       const formattedProjectId = newProjectId.toString().padStart(4, "0");
-      const formattedCityId = city.idCidade.toString().padStart(4, "0");
+      const formattedCityId = dbUser.cityId.toString().padStart(4, "0");
 
       // Create a new project document in the "projects" collection
       const newDocRef = doc(collection(db, "projects"));
@@ -86,16 +120,19 @@ const SelecionarTipoProjeto = () => {
         </h2>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+        {loading && <p className="text-2xl">Carregando tipos de projeto...</p>}
         {projectTypes &&
           projectTypes.map((type) => (
-            <TypeProjectCard
-              key={type.name}
-              available={type.available}
-              description={type.description}
-              label={type.label}
-              name={type.name}
-              onClick={() => createEmptyProjectForUser(type.name)}
-            />
+            <>
+              <TypeProjectCard
+                key={type.name}
+                available={type.available}
+                description={type.description}
+                label={type.label}
+                name={type.name}
+                onClick={() => createEmptyProjectForUser(type.name)}
+              />
+            </>
           ))}
       </div>
       {!projectTypes && (
