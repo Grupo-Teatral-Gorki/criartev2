@@ -12,18 +12,14 @@ import RenderDocuments from "./RenderDocument";
 import RenderBudget from "./RenderBudget";
 import RenderEvaluationForm, { Evaluation } from "./RenderEvaluationForm";
 
-interface EvaluateProjectClientProps {
-  projectId: string;
-}
-
-const EvaluateProjectClient: React.FC<EvaluateProjectClientProps> = ({
-  projectId,
-}) => {
+const EvaluateProjectClient = () => {
   const [project, setProject] = useState<any>(null);
   const [evaluationToSend, setEvaluationToSend] = useState<Evaluation | null>(
     null
   );
   const router = useRouter();
+  const pathParts = window.location.pathname.split("/");
+  const projectId = pathParts[pathParts.length - 1];
 
   useEffect(() => {
     const fetchProject = async () => {
