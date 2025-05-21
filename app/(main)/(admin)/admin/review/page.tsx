@@ -43,7 +43,7 @@ const Avaliar = () => {
   }, [user]);
 
   return (
-    <div className="p-32">
+    <div className="px-32 py-8">
       <h2 className="text-2xl font-semibold mb-6">Projetos a Avaliar</h2>
       {projects.length === 0 ? (
         <p>Nenhum projeto atribuído.</p>
@@ -52,7 +52,7 @@ const Avaliar = () => {
           {projects.map((project) => (
             <li
               key={project.projectId}
-              className="border rounded p-4 cursor-pointer hover:bg-gray-100"
+              className="border rounded p-4 cursor-pointer hover:bg-navy hover:text-white transition-colors"
               onClick={() => router.push(`/admin/review/${project.projectId}`)}
             >
               <p className="font-bold text-lg">{project.projectTitle}</p>
