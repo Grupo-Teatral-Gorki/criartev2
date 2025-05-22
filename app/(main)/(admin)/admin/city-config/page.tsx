@@ -5,6 +5,7 @@ import cities from "@/data/cities.json";
 import { SelectInput } from "@/app/components/SelectInput";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
+import Toast from "@/app/components/Toast";
 
 interface FieldItem {
   name: string;
@@ -33,6 +34,9 @@ interface FormState {
 const DynamicProjectForm = () => {
   const [selectedUF, setSelectedUF] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
 
   const [form, setForm] = useState<FormState>({
     idCidade: "",
@@ -75,10 +79,14 @@ const DynamicProjectForm = () => {
   const handleSubmitToFirebase = async () => {
     try {
       const docRef = await addDoc(collection(db, "cities"), form);
-      alert(`Documento salvo com ID: ${docRef.id}`);
+      setShowToast(true);
+      setToastType("success");
+      setToastMessage(`Documento salvo com ID: ${docRef.id}`);
     } catch (error) {
       console.error("Erro ao adicionar documento:", error);
-      alert("Erro ao salvar no Firebase.");
+      setShowToast(true);
+      setToastType("error");
+      setToastMessage("Erro ao salvar.");
     }
   };
 
@@ -143,7 +151,6 @@ const DynamicProjectForm = () => {
             setForm((prev) => ({
               ...prev,
               uf,
-              idCidade: "",
               name: "",
             }));
           }}
@@ -308,7 +315,51 @@ const DynamicProjectForm = () => {
             Salvar
           </button>
         </div>
+        {/* Lista de Projetos Adicionados */}
+        {form.typesOfProjects.length > 0 && (
+          <div className="mt-8 border-t pt-4">
+            <h4 className="text-lg font-semibold text-navy mb-2">
+              Projetos Adicionados
+            </h4>
+            <ul className="space-y-3">
+              {form.typesOfProjects.map((proj, idx) => (
+                <li
+                  key={idx}
+                  className="border p-3 rounded shadow-sm bg-gray-50"
+                >
+                  <div className="font-bold text-navy">{proj.label}</div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    {proj.description}
+                  </div>
+                  {Object.entries(proj.fields).map(([sectionKey, fields]) => (
+                    <div key={sectionKey} className="ml-4 mb-2">
+                      <div className="text-sm font-semibold text-gray-700">
+                        {sectionKey}
+                      </div>
+                      <ul className="list-disc pl-5 text-sm text-gray-800">
+                        {fields.map((field, fieldIdx) => (
+                          <li key={fieldIdx}>
+                            {field.label}{" "}
+                            <span className="text-gray-500">
+                              ({field.name})
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
+      <Toast
+        message={toastMessage}
+        show={showToast}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };
