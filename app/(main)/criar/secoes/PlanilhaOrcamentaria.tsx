@@ -3,6 +3,7 @@ import Button from "@/app/components/Button";
 import Toast from "@/app/components/Toast";
 import UploadFiles from "@/app/components/UploadFiles";
 import { db, storage } from "@/app/config/firebaseconfig";
+import { useAuth } from "@/app/context/AuthContext";
 import { doc, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useSearchParams } from "next/navigation";
@@ -17,14 +18,7 @@ const PlanilhaOrcamentaria = () => {
   );
   const [uploading, setUploading] = useState(false);
   const projectId = searchParams.get("projectId");
-
-  const files = [
-    {
-      name: "planilha-orcamentaria",
-      label: "Planilha Orçamentária",
-      required: true,
-    },
-  ];
+  const { dbUser } = useAuth();
 
   const handleFileChange = (name: string, files: File[]) => {
     setSelectedFiles((prev) => ({ ...prev, [name]: files }));
@@ -56,7 +50,9 @@ const PlanilhaOrcamentaria = () => {
 
       const userDocRef = doc(db, "projects", projectId);
       await updateDoc(userDocRef, {
-        planilhaOrcamentaria: uploadedUrls, // You can use another field name if needed
+        planilhaOrcamentaria: uploadedUrls,
+        updatedAt: new Date(),
+        updatedBy: dbUser?.id, // You can use another field name if needed
       });
       setShowToast(true); // Show the toast message
     } catch (error) {

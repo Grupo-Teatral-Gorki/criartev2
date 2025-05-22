@@ -46,6 +46,10 @@ const CriarContent = () => {
         updateData.projectStatus = updateStatus;
       }
 
+      if (updateStatus === "enviado") {
+        updateData.sentDate = new Date();
+      }
+
       if (Object.keys(updateData).length > 0) {
         await updateDoc(projectRef, updateData);
 

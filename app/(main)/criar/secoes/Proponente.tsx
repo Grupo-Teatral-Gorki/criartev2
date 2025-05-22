@@ -45,7 +45,11 @@ const Proponent = () => {
     setSelectedProponent(proponentId);
     if (!projectId) return console.error("Projeto não encontrado");
     const projectRef = doc(db, "projects", projectId);
-    await updateDoc(projectRef, { proponentId });
+    await updateDoc(projectRef, {
+      proponentId,
+      updatedAt: new Date(),
+      updatedBy: dbUser?.id,
+    });
   };
 
   const getDbProponent = async (projectId: string) => {
@@ -212,6 +216,8 @@ const PessoaFisica = ({ onClose }: { onClose: () => void }) => {
 
       await updateDoc(doc(db, "proponents", docRef.id), {
         proponentId: docRef.id,
+        updatedAt: new Date(),
+        updatedBy: dbUser?.id,
       });
       alert("Proponente adicionado com sucesso!");
       onClose();
@@ -326,6 +332,8 @@ const PessoaJuridica = ({ onClose }: { onClose: () => void }) => {
 
       await updateDoc(doc(db, "proponents", docRef.id), {
         proponentId: docRef.id,
+        updatedAt: new Date(),
+        updatedBy: dbUser?.id,
       });
       alert("Proponente adicionado com sucesso!");
       onClose();

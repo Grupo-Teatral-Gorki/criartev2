@@ -3,6 +3,7 @@ import Button from "@/app/components/Button";
 import { SelectInput } from "@/app/components/SelectInput";
 import { TextAreaInput } from "@/app/components/TextAreaInput";
 import { db } from "@/app/config/firebaseconfig";
+import { useAuth } from "@/app/context/AuthContext";
 import { useCity } from "@/app/context/CityConfigContext";
 import {
   collection,
@@ -55,6 +56,7 @@ const InfoGerais = () => {
   });
   const searchParams = useSearchParams();
   const city = useCity();
+  const { dbUser } = useAuth();
   const projectId = searchParams.get("projectId");
   const projectType = searchParams.get("state");
 
@@ -94,6 +96,8 @@ const InfoGerais = () => {
     const projectRef = doc(db, "projects", projectId);
     await updateDoc(projectRef, {
       generalInfo: formValues,
+      updatedAt: new Date(),
+      updatedBy: dbUser?.id,
     });
   };
 

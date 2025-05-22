@@ -51,6 +51,8 @@ const Profile: React.FC = () => {
       const userDocRef = doc(db, "users", dbUser.id);
       await updateDoc(userDocRef, {
         photoUrl: downloadURL,
+        updatedAt: new Date(),
+        updatedBy: dbUser?.id,
       });
     } catch (error) {
       console.error("Upload error:", error);

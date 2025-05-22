@@ -3,6 +3,7 @@ import Button from "@/app/components/Button";
 import Toast from "@/app/components/Toast";
 import UploadFiles from "@/app/components/UploadFiles";
 import { db, storage } from "@/app/config/firebaseconfig";
+import { useAuth } from "@/app/context/AuthContext";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -13,6 +14,7 @@ const Recurso = () => {
   const searchParams = useSearchParams();
   const projectId = searchParams.get("id");
   const router = useRouter();
+  const { dbUser } = useAuth();
   const [showToast, setShowToast] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<{ [key: string]: File[] }>(
@@ -53,6 +55,8 @@ const Recurso = () => {
       // Replace the recurso field with a new array containing one file object
       await updateDoc(userDocRef, {
         recurso: [{ fileName: fieldName, url: downloadURL }],
+        updatedAt: new Date(),
+        updatedBy: dbUser?.id,
       });
 
       setShowToast(true);

@@ -11,6 +11,7 @@ import {
 import { db } from "@/app/config/firebaseconfig";
 import { SelectInput } from "@/app/components/SelectInput";
 import Toast from "@/app/components/Toast";
+import { useAuth } from "@/app/context/AuthContext";
 
 interface Project {
   projectId: string;
@@ -28,6 +29,8 @@ const ProjectList: React.FC = () => {
     Record<string, string>
   >({});
 
+  const { dbUser } = useAuth();
+
   const handleReviewerChange = async (projectId: string, userId: string) => {
     setSelectedReviewers((prev) => ({
       ...prev,
@@ -38,6 +41,8 @@ const ProjectList: React.FC = () => {
       const projectRef = doc(db, "projects", projectId);
       await updateDoc(projectRef, {
         reviewer: userId,
+        updatedAt: new Date(),
+        updatedBy: dbUser?.id,
       });
       setToastType("success");
       setToastMessage("Parecerista atribuído com sucesso!");

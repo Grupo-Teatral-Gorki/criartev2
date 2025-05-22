@@ -59,7 +59,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const userDocRef = doc(db, "users", user.uid);
     try {
-      await updateDoc(userDocRef, { cityId: newCityId });
+      await updateDoc(userDocRef, {
+        cityId: newCityId,
+        updatedAt: new Date(),
+        updatedBy: dbUser?.id,
+      });
 
       const updatedDoc = await getDoc(userDocRef);
       if (updatedDoc.exists()) {

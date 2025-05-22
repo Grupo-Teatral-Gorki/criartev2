@@ -21,6 +21,7 @@ import {
   where,
 } from "firebase/firestore";
 import Toast from "@/app/components/Toast";
+import { useAuth } from "@/app/context/AuthContext";
 
 interface ProjectDoc {
   name: string;
@@ -49,6 +50,7 @@ const Documentos = () => {
   const [projectDocsMessage, setProjectDocsMessage] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [uploadedDocs, setUploadedDocs] = useState<UploadedDocWithPath[]>([]);
+  const { dbUser } = useAuth();
 
   useEffect(() => {
     const projectDetails = city.typesOfProjects.find(
@@ -141,6 +143,8 @@ const Documentos = () => {
 
       await updateDoc(projectRef, {
         projectDocs: deduplicatedDocs,
+        updatedAt: new Date(),
+        updatedBy: dbUser?.id,
       });
 
       setUploadedDocs(deduplicatedDocs);

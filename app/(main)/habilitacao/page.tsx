@@ -3,6 +3,7 @@ import Button from "@/app/components/Button";
 import Toast from "@/app/components/Toast";
 import UploadFiles from "@/app/components/UploadFiles";
 import { db, storage } from "@/app/config/firebaseconfig";
+import { useAuth } from "@/app/context/AuthContext";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -13,6 +14,7 @@ const Habilitacao = () => {
   const searchParams = useSearchParams();
   const projectId = searchParams.get("id");
   const router = useRouter();
+  const { dbUser } = useAuth();
   const [showToast, setShowToast] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<{ [key: string]: File[] }>(
     {}
@@ -64,6 +66,8 @@ const Habilitacao = () => {
       // Update Firestore document
       await updateDoc(userDocRef, {
         habilitacao: updatedFiles,
+        updatedAt: new Date(),
+        updatedBy: dbUser?.id,
       });
 
       setShowToast(true);

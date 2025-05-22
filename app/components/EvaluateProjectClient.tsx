@@ -11,6 +11,7 @@ import RenderProject from "./RenderProject";
 import RenderDocuments from "./RenderDocument";
 import RenderBudget from "./RenderBudget";
 import RenderEvaluationForm, { Evaluation } from "./RenderEvaluationForm";
+import { useAuth } from "../context/AuthContext";
 
 const EvaluateProjectClient = () => {
   const [project, setProject] = useState<any>(null);
@@ -20,6 +21,7 @@ const EvaluateProjectClient = () => {
   const router = useRouter();
   const pathParts = window.location.pathname.split("/");
   const projectId = pathParts[pathParts.length - 1];
+  const { dbUser } = useAuth();
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -49,6 +51,7 @@ const EvaluateProjectClient = () => {
       await updateDoc(projectRef, {
         evaluation: evaluationToSend,
         updatedAt: new Date(),
+        updatedBy: dbUser?.id,
       });
     } catch (error) {
       console.error("Error updating document:", error);

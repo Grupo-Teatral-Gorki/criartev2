@@ -87,6 +87,8 @@ const SelecionarTipoProjeto = () => {
         registrationNumber: formattedProjectId,
         projectType: type,
         cityId: formattedCityId,
+        updatedAt: new Date(),
+        updatedBy: dbUser?.id,
       });
 
       console.log("Project created:", {
