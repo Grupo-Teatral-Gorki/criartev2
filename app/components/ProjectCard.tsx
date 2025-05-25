@@ -4,6 +4,7 @@ import { deleteDoc, doc } from "firebase/firestore";
 import { db } from "../config/firebaseconfig";
 import Modal from "./Modal";
 import { useRouter } from "next/navigation";
+import { useCity } from "../context/CityConfigContext";
 
 export interface Project {
   projectId: string;
@@ -13,6 +14,7 @@ export interface Project {
   projectTitle: string;
   userId: string;
   projectType: string;
+  processStage: string;
 }
 
 interface ProjectCardProps {
@@ -53,6 +55,18 @@ const getStatusStyles = (status?: string) => {
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const router = useRouter();
+  const city = useCity().city;
+
+  const formatType = (type: string) => {
+    switch (type) {
+      case "premiacao":
+        return "Premiação";
+      case "fomento":
+        return "Fomento";
+      default:
+        return type;
+    }
+  };
 
   const handleDelete = async (id: string) => {
     try {
@@ -60,7 +74,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       await deleteDoc(projectRef);
       setConfirmDelete(false);
       window.location.reload();
-      console.log("Project deleted successfully");
     } catch (error) {
       console.error("Error deleting project:", error);
     }
@@ -90,7 +103,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           <strong>Nº de inscrição:</strong> {project.registrationNumber}
         </p>
         <p>
-          <strong>Modalidade:</strong> {"Pessoa Física"}
+          <strong>Modalidade:</strong> {formatType(project.projectType)}
         </p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2 justify-end">
@@ -98,12 +111,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           label="Habilitação"
           variant="outlined"
           size="small"
+          disabled={city.processStage !== "habilitacao"}
           onClick={() => router.push(`/habilitacao?id=${project.projectId}`)}
         />
         <Button
           label="Recurso"
           variant="outlined"
           size="small"
+          disabled={city.processStage !== "recurso"}
           onClick={() => router.push(`/recurso?id=${project.projectId}`)}
         />
         <Button
@@ -116,6 +131,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           label="Editar"
           variant="outlined"
           size="small"
+          disabled={project.projectStatus == "enviado"}
           onClick={() =>
             router.push(
               `criar?edit=true&projectId=${project.projectId}&state=${project.projectType}`

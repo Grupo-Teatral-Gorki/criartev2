@@ -7,12 +7,14 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
+import { useCity } from "@/app/context/CityConfigContext";
 
 const MeusProjetos = () => {
   const [projectsFromApi, setProjectsFromApi] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { dbUser } = useAuth();
+  const city = useCity().city;
 
   const getUserProjects = async (userId: string) => {
     const q = query(collection(db, "projects"), where("userId", "==", userId));
@@ -52,6 +54,7 @@ const MeusProjetos = () => {
           label={"CRIAR PROJETO"}
           onClick={() => router.push("/selecionar-tipo")}
           size="medium"
+          disabled={city?.processStage !== "open"}
         />
       </div>
 

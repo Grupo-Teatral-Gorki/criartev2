@@ -110,7 +110,6 @@ const Documentos = () => {
           try {
             const oldRef = ref(storage, existing.storagePath);
             await deleteObject(oldRef);
-            console.log(`Deleted previous file: ${existing.storagePath}`);
           } catch (err) {
             console.warn("Could not delete previous file:", err);
           }

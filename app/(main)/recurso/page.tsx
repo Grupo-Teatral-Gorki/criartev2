@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import Button from "@/app/components/Button";
 import Toast from "@/app/components/Toast";
@@ -62,11 +63,6 @@ const Recurso = () => {
       setShowToast(true);
 
       const updatedDoc = await getDoc(userDocRef);
-      if (updatedDoc.exists()) {
-        console.log("Updated document data:", updatedDoc.data());
-      } else {
-        console.log("No such document!");
-      }
     } catch (error) {
       console.error("Upload error:", error);
     } finally {
@@ -90,6 +86,7 @@ const Recurso = () => {
           <Button
             className="mr-4"
             size="medium"
+            variant="inverted"
             label={"Enviar Recurso"}
             onClick={() => handleUpload()}
             disabled={Object.keys(selectedFiles).length === 0}

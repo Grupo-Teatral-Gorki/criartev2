@@ -25,8 +25,6 @@ const EvaluationTable: React.FC<EvaluationTableProps> = ({
       description: row[1] as string,
       score: typeof row[2] === "number" ? row[2] : 0,
     }));
-
-    console.log("Structured scores:", criteriaArray);
     onScoresUpdate(criteriaArray);
   };
 

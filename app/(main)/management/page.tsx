@@ -8,69 +8,58 @@ import { useCity } from "@/app/context/CityConfigContext";
 import { Newspaper } from "lucide-react";
 import Button from "@/app/components/Button";
 import { SelectInput } from "@/app/components/SelectInput";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+
+type Project = {
+  projectId: string;
+  projectTitle: string;
+  registrationNumber: string;
+  proponentId: string;
+  proponentName?: string;
+  projectStatus?: string;
+  projectType?: string;
+};
 
 const Management = () => {
   const { user } = useAuth();
   const { city: userCity } = useCity();
 
-  type Project = {
-    projectId: string;
-    projectTitle: string;
-    registrationNumber: string;
-    proponentId: string;
-    proponentName?: string;
-    projectStatus?: string;
-    projectType?: string;
-  };
-
   const [projects, setProjects] = useState<Project[]>([]);
-  const [citiesToSelect, setCitiesToSelect] = useState<
-    { label: string; value: string }[]
-  >([]);
+  const [cities, setCities] = useState<{ label: string; value: string }[]>([]);
   const [selectedCityId, setSelectedCityId] = useState<string | null>(null);
-  const [projectStatusCounts, setProjectStatusCounts] = useState({
+  const [statusCounts, setStatusCounts] = useState({
     rascunho: 0,
     enviado: 0,
     recurso: 0,
     habilitacao: 0,
   });
 
-  const getProponentById = async (
-    proponentId: string
-  ): Promise<string | null> => {
+  const getProponentName = async (id: string): Promise<string | null> => {
     const q = query(
       collection(db, "proponents"),
-      where("proponentId", "==", proponentId)
+      where("proponentId", "==", id)
     );
-    const querySnapshot = await getDocs(q);
-
-    if (!querySnapshot.empty) {
-      const doc = querySnapshot.docs[0];
-      const data = doc.data();
-      return data.fullName || data.corporateName || null;
-    }
-
-    return null;
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return null;
+    const data = snapshot.docs[0].data();
+    return data.fullName || data.corporateName || null;
   };
 
-  const fetchCityProjects = async (cityId: string) => {
-    const formattedCityId = cityId.padStart(4, "0");
-    console.log("Fetching projects for cityId:", formattedCityId);
+  const loadProjects = async (cityId: string) => {
+    const formattedId = cityId.padStart(4, "0");
 
     try {
       const q = query(
         collection(db, "projects"),
-        where("cityId", "==", formattedCityId)
+        where("cityId", "==", formattedId)
       );
-
       const snapshot = await getDocs(q);
 
-      console.log("Number of projects fetched:", snapshot.size);
-
-      const projectsData = await Promise.all(
+      const fetchedProjects = await Promise.all(
         snapshot.docs.map(async (doc) => {
           const data = doc.data();
-          const proponentName = await getProponentById(data.proponentId);
+          const proponentName = await getProponentName(data.proponentId);
 
           return {
             projectId: doc.id,
@@ -84,145 +73,175 @@ const Management = () => {
         })
       );
 
-      const statusCounts = {
-        rascunho: 0,
-        enviado: 0,
-        recurso: 0,
-        habilitacao: 0,
-      };
-
-      projectsData.forEach((project) => {
+      const counts = { rascunho: 0, enviado: 0, recurso: 0, habilitacao: 0 };
+      fetchedProjects.forEach((project) => {
         const status = project.projectStatus?.toLowerCase();
-        if (status && statusCounts.hasOwnProperty(status)) {
-          statusCounts[status as keyof typeof statusCounts]++;
+        if (status && counts.hasOwnProperty(status)) {
+          counts[status as keyof typeof counts]++;
         }
       });
 
-      setProjects(projectsData);
-      setProjectStatusCounts(statusCounts);
+      setProjects(fetchedProjects);
+      setStatusCounts(counts);
     } catch (error) {
-      console.error("Error fetching city projects:", error);
+      console.error("Erro ao buscar projetos:", error);
     }
   };
 
-  const fetchCities = async () => {
+  const loadCities = async () => {
     try {
       const snapshot = await getDocs(collection(db, "cities"));
-
-      const cities = snapshot.docs.map((doc) => ({
+      const citiesList = snapshot.docs.map((doc) => ({
         label: `${doc.data().name} - ${doc.data().uf}`,
         value: doc.data().cityId,
       }));
-      setCitiesToSelect(cities);
+      setCities(citiesList);
     } catch (error) {
-      console.error("Error fetching cities:", error);
+      console.error("Erro ao buscar cidades:", error);
     }
   };
 
-  // Load cities and set initial selected city from context
-  useEffect(() => {
-    if (!user || !userCity) return;
+  // Utility to extract extension from URL or fallback to content-type
+  function getExtensionFromUrlOrContentType(
+    url: string,
+    contentType: string
+  ): string {
+    const urlParts = url.split("/");
+    const lastSegment = urlParts[urlParts.length - 1].split("?")[0];
+    const extMatch = lastSegment.match(/\.(\w+)$/);
+    if (extMatch) return extMatch[1];
 
-    fetchCities();
-    setSelectedCityId(userCity.idCidade);
-  }, [user, userCity]);
+    // fallback based on contentType
+    if (contentType.includes("pdf")) return "pdf";
+    if (contentType.includes("jpeg") || contentType.includes("jpg"))
+      return "jpg";
+    if (contentType.includes("png")) return "png";
+    if (contentType.includes("zip")) return "zip";
 
-  // Fetch projects when selected city changes
-  useEffect(() => {
-    if (selectedCityId) {
-      fetchCityProjects(selectedCityId);
-    }
-  }, [selectedCityId]);
+    return "bin"; // generic binary extension fallback
+  }
 
-  const downloadFileFromUrl = async (url: string, filename: string) => {
-    console.log("Downloading file from URL:", url);
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error(`Failed to download file: ${url}`);
-      return;
-    }
-    const blob = await response.blob();
-
-    const a = document.createElement("a");
-    const urlBlob = URL.createObjectURL(blob);
-    a.href = urlBlob;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(urlBlob);
-  };
-
-  const triggerDownload = async (cityId: string) => {
-    const formattedCityId = cityId.padStart(4, "0");
+  const handleDownload = async (cityId: string) => {
+    const formattedId = cityId.padStart(4, "0");
+    const zip = new JSZip();
 
     try {
       const q = query(
         collection(db, "projects"),
-        where("cityId", "==", formattedCityId)
+        where("cityId", "==", formattedId)
       );
       const snapshot = await getDocs(q);
 
       for (const doc of snapshot.docs) {
         const data = doc.data();
-        const safeProjectTitle = (data.projectTitle || doc.id).replace(
-          /[^\w\s-]/gi,
-          ""
-        );
-        await downloadFileFromUrl(
-          data.planilhaOrcamentaria,
-          `${safeProjectTitle}.pdf`
-        );
 
-        if (Array.isArray(data.projectDocs)) {
-          for (const fileUrl of data.projectDocs) {
-            // Extract filename from URL or fallback
-            const parts = fileUrl.split("/");
-            const fileNameFromUrl = parts[parts.length - 1].split("?")[0];
-            const fileName = `${safeProjectTitle}_${fileNameFromUrl}`;
+        // Clean project title for folder name, fallback to doc.id
+        const folderName = (data.projectTitle || doc.id)
+          .replace(/[^\w\s-]/gi, "")
+          .replace(/\s+/g, "_");
 
-            await downloadFileFromUrl(fileUrl, fileName);
+        const folder = zip.folder(folderName);
+
+        // Download planilhaOrcamentaria (spreadsheet)
+        if (typeof data.planilhaOrcamentaria === "string") {
+          const url = data.planilhaOrcamentaria;
+          const response = await fetch(url);
+          const blob = await response.blob();
+          const ext = getExtensionFromUrlOrContentType(
+            url,
+            response.headers.get("content-type") || ""
+          );
+          folder?.file(`Planilha_Orcamentaria.${ext}`, blob);
+        }
+
+        // Download projectDocs (array or single)
+        const docs = Array.isArray(data.projectDocs)
+          ? data.projectDocs
+          : data.projectDocs
+          ? [data.projectDocs]
+          : [];
+
+        for (const file of docs) {
+          if (file?.url) {
+            const url = file.url;
+            const response = await fetch(url);
+            const blob = await response.blob();
+
+            // Determine filename with extension
+            const urlParts = url.split("/");
+            const filenameFromUrl = urlParts[urlParts.length - 1].split("?")[0];
+            const ext = getExtensionFromUrlOrContentType(
+              url,
+              response.headers.get("content-type") || ""
+            );
+            const baseName = file.name
+              ? file.name.replace(/[^\w\s-]/gi, "").replace(/\s+/g, "_")
+              : filenameFromUrl.split(".")[0];
+
+            const filename = baseName.includes(".")
+              ? baseName
+              : `${baseName}.${ext}`;
+
+            folder?.file(filename, blob);
           }
-        } else {
-          console.log(`No files array found in project ${doc.id}`);
         }
       }
+
+      // Generate the zip file and trigger download
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, `projetos_${formattedId}.zip`);
     } catch (error) {
-      console.error("Error downloading project files:", error);
+      console.error("Erro no download dos arquivos:", error);
     }
   };
 
+  useEffect(() => {
+    if (user && userCity) {
+      loadCities();
+      setSelectedCityId(userCity.idCidade);
+    }
+  }, [user, userCity]);
+
+  useEffect(() => {
+    if (selectedCityId) {
+      loadProjects(selectedCityId);
+    }
+  }, [selectedCityId]);
+
   return (
-    <div className="flex flex-col gap-4 px-32">
-      <div className="p-4 flex gap-4 w-full items-center justify-evenly">
-        <div className="flex gap-4 w-full items-center justify-evenly">
-          <Button label={"Voltar"} size="medium" variant="inverted" />
+    <div className="flex flex-col gap-6 px-32 w-full">
+      <div className="flex gap-4 p-4 w-full items-center justify-between">
+        <div className="flex gap-4 justify-evenly items-center">
+          <Button label="Voltar" size="medium" variant="inverted" />
           <SelectInput
+            className="w-full"
             label="Selecione uma cidade"
-            options={citiesToSelect}
+            options={cities}
             value={selectedCityId ?? ""}
             onChange={(e: any) => setSelectedCityId(e.target.value)}
           />
         </div>
 
-        <div className="flex gap-4 w-full items-center justify-evenly">
+        <div className="flex gap-8 justify-evenly items-center">
           {[
             {
               label: "Rascunhos",
-              value: projectStatusCounts.rascunho,
+              value: statusCounts.rascunho,
               color: "text-yellow-400",
             },
             {
               label: "Enviados",
-              value: projectStatusCounts.enviado,
+              value: statusCounts.enviado,
               color: "text-green-500",
             },
             {
               label: "Habilitação",
-              value: projectStatusCounts.habilitacao,
+              value: statusCounts.habilitacao,
               color: "text-blue-500",
             },
             {
               label: "Recurso",
-              value: projectStatusCounts.recurso,
+              value: statusCounts.recurso,
               color: "text-red-400",
             },
           ].map((item) => (
@@ -231,24 +250,24 @@ const Management = () => {
                 <Newspaper className={`h-4 w-4 ${item.color}`} />
                 <p className="text-sm font-bold">{item.label}</p>
               </div>
-              <p className="text-sm font-extrabold">{item.value}</p>
+              <p className="text-base font-extrabold">{item.value}</p>
             </div>
           ))}
         </div>
 
-        <div className="flex gap-4 w-full items-center justify-evenly">
+        <div className="flex gap-4 justify-evenly items-center">
           <Button
-            label={"Baixar Dados"}
+            label="Baixar Dados"
             size="medium"
             variant="inverted"
-            onClick={() => triggerDownload(selectedCityId || userCity.idCidade)}
+            onClick={() => handleDownload(selectedCityId || userCity.idCidade)}
           />
-          <Button label={"Gerar Lista"} size="medium" variant="inverted" />
-          <Button label={"Reportar Problema"} size="medium" variant="red" />
+          <Button label="Gerar Lista" size="medium" variant="inverted" />
+          <Button label="Reportar Problema" size="medium" variant="red" />
         </div>
       </div>
 
-      <div className="overflow-x-auto p-10 bg-navy rounded-lg shadow-lg">
+      <div className="overflow-x-auto p-6 bg-navy rounded-lg shadow-lg">
         <table className="min-w-full border border-gray-300">
           <thead className="bg-primary text-white">
             <tr>
@@ -274,9 +293,7 @@ const Management = () => {
                 <td className="px-4 py-2 border-b">
                   {project.registrationNumber}
                 </td>
-                <td className="px-4 py-2 border-b">
-                  {project.proponentName || "Carregando..."}
-                </td>
+                <td className="px-4 py-2 border-b">{project.proponentName}</td>
                 <td className="px-4 py-2 border-b">{project.projectType}</td>
               </tr>
             ))}

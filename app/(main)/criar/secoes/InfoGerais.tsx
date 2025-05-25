@@ -130,10 +130,6 @@ const InfoGerais = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("Form Values:", formValues);
-  }, [formValues]);
-
   const camposSelect = [
     { key: "modalidade", label: "Modalidade do Projeto", options: modalidade },
     {

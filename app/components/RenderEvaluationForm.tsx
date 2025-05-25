@@ -54,7 +54,6 @@ const RenderEvaluationForm: React.FC<RenderEvaluationFormProps> = ({
 
   const handleScoresUpdate = (updatedScores: Criteria[]) => {
     const avg = calculateAverage(updatedScores);
-    console.log("Updated average:", avg);
     setScores(updatedScores);
     setAverage(avg);
 

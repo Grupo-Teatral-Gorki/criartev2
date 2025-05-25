@@ -8,7 +8,6 @@ import { db } from "@/app/config/firebaseconfig";
 import Toast from "@/app/components/Toast";
 import ConfigProcess from "./ConfigProcess";
 import { TextInput } from "@/app/components/TextInput";
-import Button from "@/app/components/Button";
 
 interface FieldItem {
   name: string;
@@ -36,7 +35,7 @@ interface FormState {
   processStage: string;
 }
 
-const DynamicProjectForm = () => {
+const ConfigNewCity = () => {
   const [selectedUF, setSelectedUF] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [cityLogoUrl, setCityLogoUrl] = useState("");
@@ -142,11 +141,11 @@ const DynamicProjectForm = () => {
   };
 
   return (
-    <div className="flex items-center flex-col lg:flex-row justify-center gap-10 px-4">
-      <div className="p-6 max-w-4xl min-w-full lg:min-w-[510px] bg-white shadow-lg rounded-lg mt-8 lg:min-h-[700px]">
+    <div className="flex items-center flex-col md:flex-row justify-center gap-10">
+      <div className="p-6 max-w-4xl bg-white shadow-lg rounded-lg mt-8 min-w-[250px]">
         <ConfigProcess />
       </div>
-      <div className="p-6 max-w-4xl min-w-full lg:min-w-[510px] bg-white shadow-lg rounded-lg mt-8 overflow-y-auto min-h-[700px] ">
+      <div className="p-6 max-w-4xl bg-white shadow-lg rounded-lg mt-8 max-h-[694px] overflow-y-auto min-w-[250px]">
         <h2 className="text-2xl font-bold mb-4 text-navy">Novo Município</h2>
 
         {/* UF e Cidade */}
@@ -252,11 +251,12 @@ const DynamicProjectForm = () => {
                   <option value="generalInfo">Informações Gerais</option>
                   <option value="projectDocs">Documentos do Projeto</option>
                 </select>
-                <Button
-                  label={"Adicionar Chave"}
+                <button
                   onClick={handleAddFieldKey}
-                  size="small"
-                />
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                >
+                  Adicionar Chave
+                </button>
               </div>
 
               {Object.keys(newProject.fields).length > 0 && (
@@ -388,4 +388,4 @@ const DynamicProjectForm = () => {
   );
 };
 
-export default DynamicProjectForm;
+export default ConfigNewCity;

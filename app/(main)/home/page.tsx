@@ -11,9 +11,17 @@ const Home = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-350px)]">
-      <div className="flex justify-around items-center w-3/4 gap-5">
+      <div className="flex flex-col md:flex-row justify-around items-center md:w-3/4 gap-5">
         {/* Left Section */}
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col gap-4">
+          <a
+            href="https://www.example.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block md:hidden border-t-4 border-orange rounded-xl py-4"
+          >
+            <Button label="Ver Editais" size="full" variant="inverted" />
+          </a>
           <HomeCard
             title={"Meus Projetos"}
             description={"Lista de projetos inscritos"}
@@ -22,24 +30,32 @@ const Home = () => {
           <HomeCard
             title={"Ajuda"}
             description={"Veja como usar a plataforma e tire suas dúvidas"}
-            href={"/ajuda"}
+            href={"/help"}
           />
         </div>
 
         {/* Right Section */}
-        <div className="flex flex-col w-[30rem] gap-6 p-9 border-t-4 border-orange rounded-xl items-center justify-center">
+        <div className="flex-col w-[30rem] bg-navy/30 gap-6 p-9 rounded-xl items-center justify-center hidden md:flex">
           <Image
             alt="Logo Cidade"
-            src="https://guariba.sp.gov.br/pat/Arquitetura/Imagens/logo.png"
+            src={city?.cityLogoUrl || "https://picsum.photos/200"}
             width={200}
             height={0}
+            className="hidden md:block"
           />
           {city && (
-            <h2 className="text-2xl font-bold text-center">
+            <h2 className="text-2xl font-bold text-center hidden md:block">
               Editais de {city.name}
             </h2>
           )}
-          <Button label="Ver Editais" variant="inverted" />
+          <a
+            href="https://www.example.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:block"
+          >
+            <Button label="Ver Editais" size="full" />
+          </a>
         </div>
       </div>
     </div>

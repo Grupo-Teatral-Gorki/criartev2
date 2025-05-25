@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import Button from "@/app/components/Button";
 import Toast from "@/app/components/Toast";
@@ -73,11 +74,6 @@ const Habilitacao = () => {
       setShowToast(true);
 
       const updatedDoc = await getDoc(userDocRef);
-      if (updatedDoc.exists()) {
-        console.log("Updated document data:", updatedDoc.data());
-      } else {
-        console.log("No such document!");
-      }
     } catch (error) {
       console.error("Upload error:", error);
     } finally {
@@ -107,6 +103,7 @@ const Habilitacao = () => {
             size="medium"
             label={"Enviar Documentos Habilitação"}
             onClick={handleUpload}
+            variant="inverted"
             disabled={Object.keys(selectedFiles).length === 0}
           />
         </div>

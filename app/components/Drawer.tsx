@@ -72,7 +72,7 @@ export default function Drawer({ isOpen, onClose }: DrawerProps) {
       rolesAllowed: ["reviewer", "admin"],
     },
     {
-      href: "/ajuda",
+      href: "/help",
       label: "Ajuda",
       icon: <BadgeHelp className="w-5 h-5" />,
       rolesAllowed: ["user", "secretary", "reviewer", "staff", "admin"],

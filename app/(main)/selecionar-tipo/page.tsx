@@ -24,10 +24,6 @@ const SelecionarTipoProjeto = () => {
   const cityId = dbUser?.cityId;
 
   useEffect(() => {
-    console.log("City:", cityId);
-  }, [dbUser]);
-
-  useEffect(() => {
     const fetchCity = async () => {
       if (!cityId) return;
 
@@ -89,14 +85,6 @@ const SelecionarTipoProjeto = () => {
         cityId: formattedCityId,
         updatedAt: new Date(),
         updatedBy: dbUser?.id,
-      });
-
-      console.log("Project created:", {
-        projectId: newDocRef.id,
-        userId: dbUser!.id,
-        projectStatus: "rascunho",
-        registrationNumber: formattedProjectId,
-        projectType: type,
       });
 
       // Redirect to the project creation page with the type and projectId

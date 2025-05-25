@@ -227,6 +227,16 @@ const PessoaFisica = ({ onClose }: { onClose: () => void }) => {
   };
 
   const handleSubmit = () => {
+    const fieldLabels: Record<string, string> = {
+      fullName: "Nome completo",
+      CPF: "CPF",
+      dob: "Data de nascimento",
+      email: "E-mail",
+      cel: "Telefone",
+      city: "Cidade",
+      uf: "Estado (UF)",
+    };
+
     const requiredFields = [
       "fullName",
       "CPF",
@@ -238,9 +248,10 @@ const PessoaFisica = ({ onClose }: { onClose: () => void }) => {
     ];
 
     const missingFields = requiredFields.filter((field) => !pfData[field]);
+    const errorMessages = missingFields.map((field) => fieldLabels[field]);
     if (missingFields.length > 0) {
       alert(
-        `Os seguintes campos são obrigatórios: ${missingFields.join(", ")}`
+        `Os seguintes campos são obrigatórios: ${errorMessages.join(", ")}`
       );
       return; // Não envia se algum campo estiver vazio
     }
@@ -343,6 +354,15 @@ const PessoaJuridica = ({ onClose }: { onClose: () => void }) => {
   };
 
   const handleSubmit = () => {
+    const fieldLabels: Record<string, string> = {
+      corporateName: "Razão social",
+      taxId: "CNPJ",
+      tradeName: "Nome fantasia",
+      email: "E-mail",
+      mobile: "Telefone",
+      city: "Cidade",
+      state: "Estado (UF)",
+    };
     const requiredFields = [
       "corporateName",
       "taxId",
@@ -353,9 +373,10 @@ const PessoaJuridica = ({ onClose }: { onClose: () => void }) => {
       "state",
     ];
     const missingFields = requiredFields.filter((field) => !pjData[field]);
+    const errorMessages = missingFields.map((field) => fieldLabels[field]);
     if (missingFields.length > 0) {
       alert(
-        `Os seguintes campos são obrigatórios: ${missingFields.join(", ")}`
+        `Os seguintes campos são obrigatórios: ${errorMessages.join(", ")}`
       );
       return; // Não envia se algum campo estiver vazio
     }

@@ -44,7 +44,6 @@ const EvaluateProjectClient = () => {
 
   const handleSendEvaluation = async () => {
     if (!evaluationToSend) return;
-    console.log("evaluationToSend", evaluationToSend);
 
     try {
       const projectRef = doc(db, "projects", projectId);
