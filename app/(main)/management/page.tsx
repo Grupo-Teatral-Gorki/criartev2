@@ -101,7 +101,6 @@ const Management = () => {
     }
   };
 
-  // Utility to extract extension from URL or fallback to content-type
   function getExtensionFromUrlOrContentType(
     url: string,
     contentType: string
@@ -111,14 +110,13 @@ const Management = () => {
     const extMatch = lastSegment.match(/\.(\w+)$/);
     if (extMatch) return extMatch[1];
 
-    // fallback based on contentType
     if (contentType.includes("pdf")) return "pdf";
     if (contentType.includes("jpeg") || contentType.includes("jpg"))
       return "jpg";
     if (contentType.includes("png")) return "png";
     if (contentType.includes("zip")) return "zip";
 
-    return "bin"; // generic binary extension fallback
+    return "bin";
   }
 
   const handleDownload = async (cityId: string) => {
@@ -135,14 +133,12 @@ const Management = () => {
       for (const doc of snapshot.docs) {
         const data = doc.data();
 
-        // Clean project title for folder name, fallback to doc.id
         const folderName = (data.projectTitle || doc.id)
           .replace(/[^\w\s-]/gi, "")
           .replace(/\s+/g, "_");
 
         const folder = zip.folder(folderName);
 
-        // Download planilhaOrcamentaria (spreadsheet)
         if (typeof data.planilhaOrcamentaria === "string") {
           const url = data.planilhaOrcamentaria;
           const response = await fetch(url);
@@ -154,7 +150,6 @@ const Management = () => {
           folder?.file(`Planilha_Orcamentaria.${ext}`, blob);
         }
 
-        // Download projectDocs (array or single)
         const docs = Array.isArray(data.projectDocs)
           ? data.projectDocs
           : data.projectDocs
@@ -167,7 +162,6 @@ const Management = () => {
             const response = await fetch(url);
             const blob = await response.blob();
 
-            // Determine filename with extension
             const urlParts = url.split("/");
             const filenameFromUrl = urlParts[urlParts.length - 1].split("?")[0];
             const ext = getExtensionFromUrlOrContentType(
@@ -186,8 +180,6 @@ const Management = () => {
           }
         }
       }
-
-      // Generate the zip file and trigger download
       const zipBlob = await zip.generateAsync({ type: "blob" });
       saveAs(zipBlob, `projetos_${formattedId}.zip`);
     } catch (error) {
@@ -207,6 +199,22 @@ const Management = () => {
       loadProjects(selectedCityId);
     }
   }, [selectedCityId]);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const generatePDF = async () => {
+    const res = await fetch("/api/generate-pdf");
+    if (!res.ok) {
+      alert("Failed to generate PDF");
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "report.pdf";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="flex flex-col gap-6 px-32 w-full">
