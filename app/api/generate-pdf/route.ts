@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+/* import { NextResponse } from "next/server";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import admin from "firebase-admin";
 
@@ -75,3 +75,4 @@ export async function GET() {
     );
   }
 }
+ */
