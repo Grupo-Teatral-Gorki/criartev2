@@ -12,6 +12,7 @@ import { db } from "@/app/config/firebaseconfig";
 import { SelectInput } from "@/app/components/SelectInput";
 import Toast from "@/app/components/Toast";
 import { useAuth } from "@/app/context/AuthContext";
+import { FolderOpen } from "lucide-react";
 
 interface Project {
   projectId: string;
@@ -69,6 +70,7 @@ const ProjectList: React.FC = () => {
         }));
 
         setProjects(projectData);
+        console.log("Projects fetched:", projectData);
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
@@ -104,35 +106,47 @@ const ProjectList: React.FC = () => {
   return (
     <div className="w-full p-4">
       <h2 className="text-2xl font-semibold mb-6">Projetos</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  gap-4 w-full">
-        {projects.map((project) => (
-          <div
-            key={project.projectId}
-            className="bg-white shadow-sm border border-gray-200 rounded-2xl p-6 space-y-3 transition hover:shadow-md max-h-[200px]"
-          >
-            <p className="text-sm text-gray-600">
-              <span className="font-medium text-gray-800">ID:</span>{" "}
-              {project.registrationNumber}
-            </p>
-            <p className="text-base font-semibold text-gray-900">
-              {project.projectTitle}
-            </p>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Definir Parecerista
-              </label>
-              <SelectInput
-                value={selectedReviewers[project.projectId] || ""}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  handleReviewerChange(project.projectId, e.target.value)
-                }
-                options={users}
-                label="Selecione um parecerista"
-              />
+      {projects.length === 0 ? (
+        <div className="flex flex-col items-center justify-center mt-20 text-gray-500 space-y-4">
+          <FolderOpen className="w-16 h-16" />
+          <p className="text-lg font-semibold">
+            Nenhum projeto disponível para atribuição.
+          </p>
+          <p className="text-sm text-gray-400">
+            Todos os projetos foram avaliados ou ainda não há projetos enviados.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+          {projects.map((project) => (
+            <div
+              key={project.projectId}
+              className="bg-white shadow-sm border border-gray-200 rounded-2xl p-6 space-y-3 transition hover:shadow-md max-h-[200px]"
+            >
+              <p className="text-sm text-gray-600">
+                <span className="font-medium text-gray-800">ID:</span>{" "}
+                {project.registrationNumber}
+              </p>
+              <p className="text-base font-semibold text-gray-900">
+                {project.projectTitle}
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Definir Parecerista
+                </label>
+                <SelectInput
+                  value={selectedReviewers[project.projectId] || ""}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    handleReviewerChange(project.projectId, e.target.value)
+                  }
+                  options={users}
+                  label="Selecione um parecerista"
+                />
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
       <Toast
         message={toastMessage}
         show={showToast}

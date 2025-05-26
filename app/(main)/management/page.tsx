@@ -10,6 +10,7 @@ import Button from "@/app/components/Button";
 import { SelectInput } from "@/app/components/SelectInput";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { useRouter } from "next/navigation";
 
 type Project = {
   projectId: string;
@@ -22,8 +23,9 @@ type Project = {
 };
 
 const Management = () => {
-  const { user } = useAuth();
+  const { dbUser } = useAuth();
   const { city: userCity } = useCity();
+  const router = useRouter();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [cities, setCities] = useState<{ label: string; value: string }[]>([]);
@@ -47,12 +49,12 @@ const Management = () => {
   };
 
   const loadProjects = async (cityId: string) => {
-    const formattedId = cityId.padStart(4, "0");
+    console.log("Carregando projetos para a cidade:", cityId);
 
     try {
       const q = query(
         collection(db, "projects"),
-        where("cityId", "==", formattedId)
+        where("cityId", "==", cityId)
       );
       const snapshot = await getDocs(q);
 
@@ -133,7 +135,7 @@ const Management = () => {
       for (const doc of snapshot.docs) {
         const data = doc.data();
 
-        const folderName = (data.projectTitle || doc.id)
+        const folderName = (data.registrationNumber || doc.id)
           .replace(/[^\w\s-]/gi, "")
           .replace(/\s+/g, "_");
 
@@ -188,17 +190,22 @@ const Management = () => {
   };
 
   useEffect(() => {
-    if (user && userCity) {
-      loadCities();
-      setSelectedCityId(userCity.idCidade);
-    }
-  }, [user, userCity]);
+    loadCities();
+  }, []);
 
   useEffect(() => {
-    if (selectedCityId) {
-      loadProjects(selectedCityId);
+    if (cities.length > 0) {
+      const city = userCity || cities[0];
+      setSelectedCityId(city.idCidade);
     }
-  }, [selectedCityId]);
+  }, [cities, userCity]);
+
+  useEffect(() => {
+    if (userCity && userCity.cityId) {
+      loadProjects(userCity.cityId);
+      setSelectedCityId(userCity.cityId);
+    }
+  }, [selectedCityId, userCity]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const generatePDF = async () => {
@@ -220,16 +227,22 @@ const Management = () => {
     <div className="flex flex-col gap-6 px-32 w-full">
       <div className="flex gap-4 p-4 w-full items-center justify-between">
         <div className="flex gap-4 justify-evenly items-center">
-          <Button label="Voltar" size="medium" variant="inverted" />
-          <SelectInput
-            className="w-full"
-            label="Selecione uma cidade"
-            options={cities}
-            value={selectedCityId ?? ""}
-            onChange={(e: any) => setSelectedCityId(e.target.value)}
+          <Button
+            label="Voltar"
+            size="medium"
+            variant="inverted"
+            onClick={() => router.back()}
           />
+          {dbUser?.userRole.includes("admin") && (
+            <SelectInput
+              className="w-full"
+              label="Selecione uma cidade"
+              options={cities}
+              value={selectedCityId ?? ""}
+              onChange={(e: any) => setSelectedCityId(e.target.value)}
+            />
+          )}
         </div>
-
         <div className="flex gap-8 justify-evenly items-center">
           {[
             {
@@ -263,21 +276,24 @@ const Management = () => {
           ))}
         </div>
 
-        <div className="flex gap-4 justify-evenly items-center">
-          <Button
-            label="Baixar Dados"
-            size="medium"
-            variant="inverted"
-            onClick={() => handleDownload(selectedCityId || userCity.idCidade)}
-          />
-          <Button label="Gerar Lista" size="medium" variant="inverted" />
-          <Button label="Reportar Problema" size="medium" variant="red" />
-        </div>
+        {dbUser?.userRole.includes("admin") && (
+          <div className="flex gap-4 justify-evenly items-center">
+            <Button
+              label="Baixar Dados"
+              size="medium"
+              variant="inverted"
+              onClick={() =>
+                handleDownload(selectedCityId || userCity.idCidade)
+              }
+            />
+            <Button label="Gerar Lista" size="medium" variant="inverted" />
+            <Button label="Reportar Problema" size="medium" variant="red" />
+          </div>
+        )}
       </div>
-
-      <div className="overflow-x-auto p-6 bg-navy rounded-lg shadow-lg">
+      <div className="overflow-x-auto p-6 bg-primary dark:bg-navy rounded-lg shadow-lg">
         <table className="min-w-full border border-gray-300">
-          <thead className="bg-primary text-white">
+          <thead className="bg-navy text-white">
             <tr>
               <th className="px-4 py-2 text-left border-b">
                 Título do Projeto
@@ -295,6 +311,9 @@ const Management = () => {
               <tr
                 key={project.projectId}
                 className="hover:bg-primary hover:text-white cursor-pointer even:bg-gray-100 odd:bg-white text-navy"
+                onClick={() =>
+                  router.push(`/admin/review/${project.projectId}`)
+                }
               >
                 <td className="px-4 py-2 border-b">{project.projectTitle}</td>
                 <td className="px-4 py-2 border-b">{project.projectStatus}</td>
