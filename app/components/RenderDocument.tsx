@@ -33,7 +33,9 @@ const RenderDocuments: React.FC<ProjectProps> = ({ project }) => {
           ))}
         </div>
       ) : (
-        <p className="mt-5 text-white text-center">No documents available.</p>
+        <p className="mt-5 text-white text-center">
+          Nenhum documento disponível.
+        </p>
       )}
     </>
   );
