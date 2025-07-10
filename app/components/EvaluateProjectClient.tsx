@@ -109,7 +109,7 @@ const EvaluateProjectClient = () => {
       <div className="w-full flex justify-between rounded-lg dark:bg-navy bg-primary p-4 mt-4">
         <Button
           label="VOLTAR"
-          onClick={() => router.push("/admin/review")}
+          onClick={() => router.push("/home")}
           size="small"
           disabled={sending}
         />
@@ -133,10 +133,17 @@ const EvaluateProjectClient = () => {
       </div>
 
       <div className="w-full flex flex-col items-center justify-center md:px-8 bg-primary dark:bg-navy rounded-lg">
-        <p className="text-2xl p-4 mt-6 text-white">
-          Você está avaliando o projeto com ID: {project.registrationNumber} e
-          título: {project.projectTitle}
-        </p>
+        {dbUser?.userRole.includes("secretary") ? (
+          <p className="text-2xl p-4 mt-6 text-white">
+            Você está visualizando o projeto com ID:{" "}
+            {project.registrationNumber} e título: {project.projectTitle}
+          </p>
+        ) : (
+          <p className="text-2xl p-4 mt-6 text-white">
+            Você está avaliando o projeto com ID: {project.registrationNumber} e
+            título: {project.projectTitle}
+          </p>
+        )}
 
         <Tabs
           tabs={[
