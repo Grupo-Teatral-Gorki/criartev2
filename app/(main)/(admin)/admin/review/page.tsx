@@ -67,55 +67,86 @@ const Avaliar = () => {
   }, [user]);
 
   return (
-    <div className="px-32 py-8">
-      <h2 className="text-2xl font-semibold mb-6">Projetos a Avaliar</h2>
-      {projects.length === 0 ? (
-        <p>Nenhum projeto atribuído.</p>
-      ) : (
-        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project) => (
-            <li
-              key={project.projectId}
-              onClick={() => router.push(`/admin/review/${project.projectId}`)}
-              className="group flex items-center justify-between gap-4 border-2 rounded-lg p-5 cursor-pointer hover:bg-navy hover:text-white transition-colors shadow-md"
-            >
-              <div className="flex items-center gap-4">
-                <FolderOpen className="text-navy group-hover:text-white w-8 h-8 flex-shrink-0 transition-colors" />
-                <div>
-                  <p className="font-semibold text-xl mb-1">
-                    {project.projectTitle}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    <span className="font-medium text-gray-300">
-                      Proponente:
-                    </span>{" "}
-                    {project.proponent}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    <span className="font-medium text-gray-300">
-                      Número de Inscrição:
-                    </span>{" "}
-                    {project.registrationNumber}
-                  </p>
+    <div className="min-h-screen bg-gray-50 px-4 sm:px-8 lg:px-32 py-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Projetos a Avaliar</h1>
+          <p className="text-gray-600">Gerencie e avalie os projetos atribuídos a você</p>
+        </div>
+        
+        {projects.length === 0 ? (
+          <div className="text-center py-12">
+            <FolderOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum projeto atribuído</h3>
+            <p className="text-gray-500">Você não possui projetos para avaliar no momento.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {projects.map((project) => (
+              <div
+                key={project.projectId}
+                onClick={() => router.push(`/admin/review/${project.projectId}`)}
+                className="group bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-primary/20 transition-all duration-200 cursor-pointer overflow-hidden"
+              >
+                {/* Status Badge */}
+                <div className="px-6 pt-6 pb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <FolderOpen className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 text-lg leading-tight group-hover:text-primary transition-colors">
+                          {project.projectTitle}
+                        </h3>
+                      </div>
+                    </div>
+                    
+                    {project.evaluated ? (
+                      <div className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+                        <CheckCircle className="w-3 h-3" />
+                        Avaliado
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 bg-orange-50 text-orange-700 px-2 py-1 rounded-full text-xs font-medium">
+                        <XCircle className="w-3 h-3" />
+                        Pendente
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Project Details */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Proponente:</span>
+                      <span className="text-sm text-gray-900 font-medium">{project.proponent || "Não informado"}</span>
+                    </div>
+                    
+                    {project.registrationNumber && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Nº Inscrição:</span>
+                        <span className="text-sm text-gray-700 font-mono">{project.registrationNumber}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Action Area */}
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 group-hover:bg-primary/5 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 group-hover:text-primary transition-colors">
+                      {project.evaluated ? "Ver avaliação" : "Avaliar projeto"}
+                    </span>
+                    <div className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors">
+                      →
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              {/* Evaluation status icon */}
-              {project.evaluated ? (
-                <div className="flex flex-col items-center gap-2">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
-                  <p className="text-center text-sm">Projeto Avaliado</p>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <XCircle className="w-6 h-6 text-red-500" />
-                  <p className="text-center text-sm">Projeto Não Avaliado</p>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

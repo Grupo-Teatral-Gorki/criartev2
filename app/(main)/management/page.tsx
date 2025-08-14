@@ -30,6 +30,7 @@ const Management = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [cities, setCities] = useState<{ label: string; value: string }[]>([]);
   const [selectedCityId, setSelectedCityId] = useState<string | null>(null);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [statusCounts, setStatusCounts] = useState({
     rascunho: 0,
     enviado: 0,
@@ -38,18 +39,42 @@ const Management = () => {
   });
 
   const getProponentName = async (id: string): Promise<string | null> => {
-    const q = query(
-      collection(db, "proponents"),
-      where("proponentId", "==", id)
-    );
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return null;
-    const data = snapshot.docs[0].data();
-    return data.fullName || data.corporateName || null;
+    if (!id || id === 'undefined' || id === undefined || id === null) {
+      console.warn("Management: Invalid proponentId provided to getProponentName:", id);
+      return "ID não encontrado";
+    }
+    
+    try {
+      const q = query(
+        collection(db, "proponents"),
+        where("proponentId", "==", id)
+      );
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return null;
+      const data = snapshot.docs[0].data();
+      return data.fullName || data.corporateName || null;
+    } catch (error) {
+      console.error("Error fetching proponent name for ID:", id, error);
+      return "Erro ao buscar nome";
+    }
   };
 
   const loadProjects = async (cityId: string) => {
+    if (isLoadingProjects) {
+      console.log("Management: Already loading projects, skipping...");
+      return;
+    }
+    
+    console.log("Management: loadProjects called with cityId:", cityId, "type:", typeof cityId);
+    
+    if (!cityId || cityId === 'undefined' || cityId === undefined || cityId === null) {
+      console.error("Management: Invalid cityId provided:", cityId);
+      return;
+    }
+    
     try {
+      setIsLoadingProjects(true);
+      
       const q = query(
         collection(db, "projects"),
         where("cityId", "==", cityId)
@@ -83,8 +108,11 @@ const Management = () => {
 
       setProjects(fetchedProjects);
       setStatusCounts(counts);
+      
     } catch (error) {
       console.error("Erro ao buscar projetos:", error);
+    } finally {
+      setIsLoadingProjects(false);
     }
   };
 
@@ -192,18 +220,26 @@ const Management = () => {
   }, []);
 
   useEffect(() => {
-    if (cities.length > 0) {
-      const city = userCity || cities[0];
-      setSelectedCityId(city.idCidade);
+    console.log("Management: useEffect - userCity:", userCity, "dbUser cityId:", dbUser?.cityId);
+    
+    if (userCity && userCity.cityId) {
+      console.log("Management: Setting selectedCityId from userCity:", userCity.cityId);
+      setSelectedCityId(userCity.cityId);
+    } else if (dbUser?.cityId) {
+      console.log("Management: Setting selectedCityId from dbUser:", dbUser.cityId);
+      setSelectedCityId(dbUser.cityId);
+    } else {
+      console.log("Management: No valid cityId found, userCity:", userCity, "dbUser:", dbUser);
     }
-  }, [cities, userCity]);
+  }, [userCity, dbUser]);
 
   useEffect(() => {
-    if (userCity && userCity.cityId) {
-      loadProjects(userCity.cityId);
-      setSelectedCityId(userCity.cityId);
+    console.log("Management: selectedCityId useEffect - selectedCityId:", selectedCityId, "type:", typeof selectedCityId, "isLoadingProjects:", isLoadingProjects);
+    
+    if (selectedCityId && !isLoadingProjects) {
+      loadProjects(selectedCityId);
     }
-  }, [selectedCityId, userCity]);
+  }, [selectedCityId]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const generatePDF = async () => {
@@ -305,23 +341,31 @@ const Management = () => {
             </tr>
           </thead>
           <tbody>
-            {projects.map((project) => (
-              <tr
-                key={project.projectId}
-                className="hover:bg-primary hover:text-white cursor-pointer even:bg-gray-100 odd:bg-white text-navy"
-                onClick={() =>
-                  router.push(`/admin/review/${project.projectId}`)
-                }
-              >
-                <td className="px-4 py-2 border-b">{project.projectTitle}</td>
-                <td className="px-4 py-2 border-b">{project.projectStatus}</td>
-                <td className="px-4 py-2 border-b">
-                  {project.registrationNumber}
+            {projects.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                  {selectedCityId ? `Nenhum projeto encontrado para a cidade (ID: ${selectedCityId})` : 'Carregando projetos...'}
                 </td>
-                <td className="px-4 py-2 border-b">{project.proponentName}</td>
-                <td className="px-4 py-2 border-b">{project.projectType}</td>
               </tr>
-            ))}
+            ) : (
+              projects.map((project) => (
+                <tr
+                  key={project.projectId}
+                  className="hover:bg-primary hover:text-white cursor-pointer even:bg-gray-100 odd:bg-white text-navy"
+                  onClick={() =>
+                    router.push(`/admin/review/${project.projectId}`)
+                  }
+                >
+                  <td className="px-4 py-2 border-b">{project.projectTitle}</td>
+                  <td className="px-4 py-2 border-b">{project.projectStatus}</td>
+                  <td className="px-4 py-2 border-b">
+                    {project.registrationNumber}
+                  </td>
+                  <td className="px-4 py-2 border-b">{project.proponentName}</td>
+                  <td className="px-4 py-2 border-b">{project.projectType}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

@@ -35,6 +35,31 @@ const CriarContent = () => {
       return;
     }
 
+    // Check if trying to send project without proponent
+    if (updateStatus === "enviado") {
+      try {
+        const projectRef = doc(db, "projects", projectId);
+        const projectSnap = await getDoc(projectRef);
+        
+        if (projectSnap.exists()) {
+          const projectData = projectSnap.data();
+          
+          if (!projectData.proponentId) {
+            setToastMessage("Não é possível enviar o projeto sem um proponente. Por favor, adicione um proponente primeiro.");
+            setToastType("error");
+            setShowToast(true);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao verificar proponente:", error);
+        setToastMessage("Erro ao verificar dados do projeto.");
+        setToastType("error");
+        setShowToast(true);
+        return;
+      }
+    }
+
     try {
       const projectRef = doc(db, "projects", projectId);
       const updateData: Record<string, any> = {};

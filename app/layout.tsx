@@ -5,6 +5,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { FileProvider } from "./context/FileContext";
 import { CityProvider } from "./context/CityConfigContext";
+import ProfileGuard from "./components/ProfileGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,7 +35,11 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <CityProvider>
-              <FileProvider>{children}</FileProvider>
+              <FileProvider>
+                <ProfileGuard>
+                  {children}
+                </ProfileGuard>
+              </FileProvider>
             </CityProvider>
           </AuthProvider>
         </ThemeProvider>

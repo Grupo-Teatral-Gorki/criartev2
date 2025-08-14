@@ -41,12 +41,12 @@ const Home = () => {
             title={"Mapeamento"}
             description={"Mapeamento da cidade e seus agentes"}
             href={"/map"}
-          /> */}
+          /> 
           <HomeCard
             title={"Ajuda"}
             description={"Veja como usar a plataforma e tire suas dúvidas"}
             href={"/help"}
-          />
+          />*/}
         </div>
 
         {/* Right Section */}

@@ -19,6 +19,7 @@ interface AuthContextType {
   loading: boolean;
   logout: () => Promise<void>;
   updateCityId: (newCityId: string) => Promise<void>;
+  refreshUserData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -76,9 +77,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const refreshUserData = async () => {
+    if (!user) return;
+
+    const userDocRef = doc(db, "users", user.uid);
+    try {
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as UserProfile;
+        const fullUserData = { ...userData, id: user.uid };
+        setDbUser(fullUserData);
+      }
+    } catch (error) {
+      console.error("Failed to refresh user data", error);
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, dbUser, loading, logout, updateCityId }}
+      value={{ user, dbUser, loading, logout, updateCityId, refreshUserData }}
     >
       {children}
     </AuthContext.Provider>
