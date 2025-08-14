@@ -1,18 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TextInput } from "./TextInput";
 import { SelectInput } from "./SelectInput";
 import InputError from "./InputError";
-import { citiesConstant } from "../utils/constants";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { auth } from "../config/firebaseconfig";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../config/firebaseconfig";
 import { useRouter } from "next/navigation";
+
+type CityOption = {
+  value: string;
+  label: string;
+};
+
+type CityDoc = {
+  cityId: string;
+  name: string;
+};
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -26,7 +35,41 @@ export default function RegisterForm() {
     register: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [citiesOptions, setCitiesOptions] = useState<CityOption[]>([]);
+  const [loadingCities, setLoadingCities] = useState(true);
   const router = useRouter();
+
+  const fetchAllCities = async () => {
+    try {
+      setLoadingCities(true);
+      const querySnapshot = await getDocs(collection(db, "cities"));
+
+      const docs = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as CityDoc),
+      }));
+
+      const options = docs.map((item) => ({
+        value: item.cityId,
+        label: item.name,
+      }));
+      setCitiesOptions(options);
+      return docs;
+    } catch (error) {
+      console.error("Error fetching cities: ", error);
+      setErrors((prev) => ({
+        ...prev,
+        register: "Erro ao carregar cidades. Tente novamente.",
+      }));
+      return [];
+    } finally {
+      setLoadingCities(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllCities();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -132,9 +175,11 @@ export default function RegisterForm() {
         />
         <SelectInput
           name="selectedCityCode"
-          options={citiesConstant}
+          options={citiesOptions}
           value={formData.selectedCityCode}
           onChange={handleChange}
+          placeholder={loadingCities ? "Carregando cidades..." : "Selecione sua cidade"}
+          disabled={loadingCities}
         />
 
         {errors.password && <InputError message={errors.password} />}
