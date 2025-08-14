@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Button from "@/app/components/Button";
 import { SelectInput } from "@/app/components/SelectInput";
 import { TextAreaInput } from "@/app/components/TextAreaInput";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { isProfileComplete } from '../utils/profileUtils';
 
@@ -13,7 +13,6 @@ const ProfileGuard: React.FC<ProfileGuardProps> = ({ children }) => {
   const { dbUser, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isChecking, setIsChecking] = useState(true);
   const [hasRedirected, setHasRedirected] = useState(false);
 

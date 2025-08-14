@@ -14,7 +14,7 @@ import Spinner from "@/app/components/Spinner";
 import Toast from "@/app/components/Toast";
 import { useAuth } from "@/app/context/AuthContext";
 import { findCityLabel } from "@/app/utils/validators";
-import { isProfileComplete, getMissingProfileFields } from "@/app/utils/profileUtils";
+import { isProfileComplete } from "@/app/utils/profileUtils";
 
 // Firebase imports
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -157,14 +157,14 @@ const Profile: React.FC = () => {
     }
   };
 
-  const onSubmit = async (data: ProfileFormData) => {
+  const onSubmit = async (formData: ProfileFormData) => {
     if (!dbUser?.id) return;
     
     setIsSubmitting(true);
     try {
       const userDocRef = doc(db, "users", dbUser.id);
       const updateData = {
-        ...data,
+        ...formData,
         cityId: selectedCity,
         updatedAt: new Date(),
         updatedBy: dbUser.id,

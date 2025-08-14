@@ -22,7 +22,6 @@ import {
 } from "firebase/firestore";
 import Toast from "@/app/components/Toast";
 import { useAuth } from "@/app/context/AuthContext";
-import { Download } from "lucide-react";
 
 interface ProjectDoc {
   name: string;
@@ -49,7 +48,6 @@ const Documentos = () => {
   const [projectDocs, setProjectDocs] = useState<ProjectDoc[]>([]);
   const [uploading, setUploading] = useState(false);
   const [projectDocsMessage, setProjectDocsMessage] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [uploadedDocs, setUploadedDocs] = useState<UploadedDocWithPath[]>([]);
 
   const { dbUser } = useAuth();
@@ -216,12 +214,6 @@ const Documentos = () => {
     return URL.createObjectURL(file);
   };
 
-  const downloadFile = (url: string, filename: string) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-  };
 
   const renderDocumentCard = (doc: ProjectDoc) => {
     const selectedFile = selectedFiles[doc.name]?.[0];

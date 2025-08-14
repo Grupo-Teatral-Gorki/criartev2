@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Button from "@/app/components/Button";
 import Modal from "@/app/components/Modal";
 import { SelectInput } from "@/app/components/SelectInput";
 import Tabs from "@/app/components/Tabs";
-import { TextInput } from "@/app/components/TextInput";
 import { db } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext";
 import {
