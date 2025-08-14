@@ -22,6 +22,7 @@ import {
 } from "firebase/firestore";
 import Toast from "@/app/components/Toast";
 import { useAuth } from "@/app/context/AuthContext";
+import { Download } from "lucide-react";
 
 interface ProjectDoc {
   name: string;
@@ -50,6 +51,7 @@ const Documentos = () => {
   const [projectDocsMessage, setProjectDocsMessage] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [uploadedDocs, setUploadedDocs] = useState<UploadedDocWithPath[]>([]);
+
   const { dbUser } = useAuth();
 
   useEffect(() => {
@@ -210,6 +212,87 @@ const Documentos = () => {
     }
   }, [projectId, projectDocs]);
 
+  const getFilePreviewUrl = (file: File): string => {
+    return URL.createObjectURL(file);
+  };
+
+  const downloadFile = (url: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+  };
+
+  const renderDocumentCard = (doc: ProjectDoc) => {
+    const selectedFile = selectedFiles[doc.name]?.[0];
+    const uploadedDoc = uploadedDocs.find(uploaded => uploaded.name === doc.name);
+    const hasFile = selectedFile || uploadedDoc;
+    
+    // Get preview URL
+    let previewUrl = '';
+    let fileName = '';
+    if (selectedFile) {
+      previewUrl = getFilePreviewUrl(selectedFile);
+      fileName = selectedFile.name;
+    } else if (uploadedDoc) {
+      previewUrl = uploadedDoc.url;
+      fileName = uploadedDoc.name;
+    }
+
+    return (
+      <div key={doc.name} className="border rounded-lg p-4 mb-4">
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex-1">
+            <h4 className="font-medium text-gray-800">{doc.label}</h4>
+            
+            {/* Icon-sized iframe preview above the text */}
+            {hasFile && previewUrl && (
+              <div className="flex items-center gap-2 mt-1">
+                <div className="w-36 h-36 border rounded overflow-hidden flex-shrink-0 relative">
+                  <iframe
+                    src={previewUrl}
+                    className="absolute border-0"
+                    title={`Preview of ${fileName}`}
+                    style={{ 
+                      pointerEvents: 'none',
+                      width: '900px',
+                      height: '900px',
+                      transform: 'scale(0.2)',
+                      transformOrigin: 'top left',
+                      left: '0',
+                      top: '0'
+                    }}
+                  />
+                </div>
+                <div className="flex-1">
+                  {selectedFile && (
+                    <p className="text-sm text-green-600">
+                      Arquivo selecionado: {selectedFile.name}
+                    </p>
+                  )}
+                  {uploadedDoc && !selectedFile && (
+                    <p className="text-sm text-blue-600">
+                      Arquivo enviado
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+            
+
+          </div>
+
+        </div>
+        
+        <UploadFiles
+          name={doc.name}
+          label={doc.label}
+          onFilesChange={(files) => handleFileChange(doc.name, files)}
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col mt-4">
       {projectDocsMessage && (
@@ -228,16 +311,8 @@ const Documentos = () => {
           disabled={Object.keys(selectedFiles).length === 0 || uploading}
         />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2">
-        {!uploading &&
-          projectDocs.map((file) => (
-            <UploadFiles
-              key={file.name}
-              name={file.name}
-              label={file.label}
-              onFilesChange={(files) => handleFileChange(file.name, files)}
-            />
-          ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {!uploading && projectDocs.map(renderDocumentCard)}
       </div>
       <Toast
         message={toastMessage}
