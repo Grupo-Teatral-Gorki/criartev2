@@ -30,8 +30,8 @@ export function SelectInput({
       <option value="" disabled hidden>
         {label}
       </option>
-      {options.map((option: any) => (
-        <option key={option.value} value={option.value}>
+      {options.map((option: any, index: number) => (
+        <option key={index} value={option.value}>
           {option.label}
         </option>
       ))}

@@ -83,7 +83,7 @@ const RenderEvaluationForm: React.FC<RenderEvaluationFormProps> = ({
   return (
     <div>
       <div className="w-full flex items-center justify-end p-4">
-        <h2 className="text-2xl mr-4">
+        <h2 className="text-2xl mr-4 text-white">
           Avaliação Final: {average ? average.toFixed(2) : ""}
         </h2>
       </div>
@@ -95,7 +95,7 @@ const RenderEvaluationForm: React.FC<RenderEvaluationFormProps> = ({
       />
 
       <div className="p-4">
-        <h2 className="text-xl mb-4">Parecer Técnico</h2>
+        <h2 className="text-xl mb-4 text-white">Parecer Técnico</h2>
         <TextAreaInput
           value={techText}
           onChange={(e) => setTechText(e.target.value)}

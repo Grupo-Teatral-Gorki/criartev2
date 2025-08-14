@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Home,
   LayoutDashboard,
+  Newspaper,
   X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -51,6 +52,12 @@ export default function Drawer({ isOpen, onClose }: DrawerProps) {
       href: "/home",
       label: "Home",
       icon: <Home className="w-5 h-5" />,
+      rolesAllowed: ["user", "secretary", "reviewer", "staff", "admin"],
+    },
+    {
+      href: "/meusprojetos",
+      label: "Meus Projetos",
+      icon: <Newspaper className="w-5 h-5" />,
       rolesAllowed: ["user", "secretary", "reviewer", "staff", "admin"],
     },
     {

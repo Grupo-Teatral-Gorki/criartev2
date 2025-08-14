@@ -2,12 +2,14 @@
 
 import Button from "@/app/components/Button";
 import HomeCard from "@/app/components/HomeCard";
+import { useAuth } from "@/app/context/AuthContext";
 import { useCity } from "@/app/context/CityConfigContext";
 import Image from "next/image";
 import React from "react";
 
 const Home = () => {
   const { city } = useCity();
+  const { dbUser } = useAuth();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-350px)]">
@@ -22,11 +24,24 @@ const Home = () => {
           >
             <Button label="Ver Editais" size="full" variant="inverted" />
           </a>
-          <HomeCard
-            title={"Meus Projetos"}
-            description={"Lista de projetos inscritos"}
-            href={"/meusprojetos"}
-          />
+          {dbUser?.userRole.includes("secretary") ? (
+            <HomeCard
+              title={"Visualizar Projetos"}
+              description={"Lista de projetos para visualização"}
+              href={"/management"}
+            />
+          ) : (
+            <HomeCard
+              title={"Meus Projetos"}
+              description={"Lista de projetos inscritos"}
+              href={"/meusprojetos"}
+            />
+          )}
+          {/* <HomeCard
+            title={"Mapeamento"}
+            description={"Mapeamento da cidade e seus agentes"}
+            href={"/map"}
+          /> */}
           <HomeCard
             title={"Ajuda"}
             description={"Veja como usar a plataforma e tire suas dúvidas"}

@@ -155,7 +155,7 @@ const Documentos = () => {
 
       if (allRequiredUploaded) {
         setProjectDocsMessage(
-          "Todos os documentos obrigatórios já foram enviados"
+          "Você já enviou todos os documentos obrigatórios, não é necessário enviar novamente. Caso precise substituir algum documento, basta fazer o upload novamente."
         );
       }
 
@@ -195,7 +195,7 @@ const Documentos = () => {
 
         if (allDocsHaveFiles) {
           setProjectDocsMessage(
-            "Todos os documentos obrigatórios já foram enviados"
+            "Você já enviou todos os documentos obrigatórios, não é necessário enviar novamente. Caso precise substituir algum documento, basta fazer o upload novamente."
           );
         }
       }
@@ -213,7 +213,7 @@ const Documentos = () => {
   return (
     <div className="flex flex-col mt-4">
       {projectDocsMessage && (
-        <p className="col-span-full text-white-600 mt-4 text-2xl">
+        <p className="col-span-full text-white-600 mt-4 text-xl text-center">
           {projectDocsMessage}
         </p>
       )}

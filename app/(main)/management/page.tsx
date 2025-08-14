@@ -49,8 +49,6 @@ const Management = () => {
   };
 
   const loadProjects = async (cityId: string) => {
-    console.log("Carregando projetos para a cidade:", cityId);
-
     try {
       const q = query(
         collection(db, "projects"),

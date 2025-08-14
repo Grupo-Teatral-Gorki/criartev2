@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import Fomento from "./tipos/fomento";
@@ -10,7 +10,7 @@ import CulturaViva from "./tipos/culturaviva";
 import AreasPerifericas from "./tipos/areasperifericas";
 import Subsidio from "./tipos/subsidio";
 import { TextInput } from "@/app/components/TextInput";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import Toast from "@/app/components/Toast";
 
@@ -24,6 +24,7 @@ const CriarContent = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [projectData, setProjectData] = useState<any>(null);
 
   const handleSendProject = async (
     updateTitle?: string,
@@ -75,6 +76,27 @@ const CriarContent = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchProject = async () => {
+      if (!projectId) return;
+
+      try {
+        const docRef = doc(db, "projects", projectId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setProjectData(docSnap.data());
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error getting document:", error);
+      }
+    };
+
+    fetchProject();
+  }, [projectId]);
+
   return (
     <div className="w-full overflow-y-auto flex flex-col items-center justify-center p-1 sm:px-36">
       <div className="w-full flex items-center justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
@@ -105,7 +127,9 @@ const CriarContent = () => {
           <TextInput
             placeholder="Nome do Projeto"
             className="flex-1 min-h-[50px] max-h-[50px]"
-            value={projectTitle}
+            value={
+              projectTitle ? projectTitle : projectData?.projectTitle || ""
+            }
             onChange={(e) => setProjectTitle(e.target.value)}
           />
           <div className="min-w-[180px]">
