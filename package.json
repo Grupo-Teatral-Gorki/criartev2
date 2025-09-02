@@ -23,6 +23,7 @@
     "pdf-lib": "^1.17.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-firebase-hooks": "^5.1.1",
     "react-hook-form": "^7.62.0",
     "react-spinners": "^0.16.1",
     "yup": "^1.6.1",

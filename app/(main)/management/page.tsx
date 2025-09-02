@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext";
@@ -11,6 +11,7 @@ import { SelectInput } from "@/app/components/SelectInput";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { useRouter } from "next/navigation";
+import ProjectsTab from "./components/ProjectsTab";
 
 type Project = {
   projectId: string;
@@ -38,12 +39,21 @@ const Management = () => {
     habilitacao: 0,
   });
 
+  // Single search state
+  const [searchTerm, setSearchTerm] = useState("");
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   const getProponentName = async (id: string): Promise<string | null> => {
-    if (!id || id === 'undefined' || id === undefined || id === null) {
-      console.warn("Management: Invalid proponentId provided to getProponentName:", id);
+    if (!id || id === "undefined" || id === undefined || id === null) {
+      console.warn(
+        "Management: Invalid proponentId provided to getProponentName:",
+        id
+      );
       return "ID não encontrado";
     }
-    
+
     try {
       const q = query(
         collection(db, "proponents"),
@@ -64,17 +74,27 @@ const Management = () => {
       console.log("Management: Already loading projects, skipping...");
       return;
     }
-    
-    console.log("Management: loadProjects called with cityId:", cityId, "type:", typeof cityId);
-    
-    if (!cityId || cityId === 'undefined' || cityId === undefined || cityId === null) {
+
+    console.log(
+      "Management: loadProjects called with cityId:",
+      cityId,
+      "type:",
+      typeof cityId
+    );
+
+    if (
+      !cityId ||
+      cityId === "undefined" ||
+      cityId === undefined ||
+      cityId === null
+    ) {
       console.error("Management: Invalid cityId provided:", cityId);
       return;
     }
-    
+
     try {
       setIsLoadingProjects(true);
-      
+
       const q = query(
         collection(db, "projects"),
         where("cityId", "==", cityId)
@@ -108,7 +128,6 @@ const Management = () => {
 
       setProjects(fetchedProjects);
       setStatusCounts(counts);
-      
     } catch (error) {
       console.error("Erro ao buscar projetos:", error);
     } finally {
@@ -220,22 +239,45 @@ const Management = () => {
   }, []);
 
   useEffect(() => {
-    console.log("Management: useEffect - userCity:", userCity, "dbUser cityId:", dbUser?.cityId);
-    
+    console.log(
+      "Management: useEffect - userCity:",
+      userCity,
+      "dbUser cityId:",
+      dbUser?.cityId
+    );
+
     if (userCity && userCity.cityId) {
-      console.log("Management: Setting selectedCityId from userCity:", userCity.cityId);
+      console.log(
+        "Management: Setting selectedCityId from userCity:",
+        userCity.cityId
+      );
       setSelectedCityId(userCity.cityId);
     } else if (dbUser?.cityId) {
-      console.log("Management: Setting selectedCityId from dbUser:", dbUser.cityId);
+      console.log(
+        "Management: Setting selectedCityId from dbUser:",
+        dbUser.cityId
+      );
       setSelectedCityId(dbUser.cityId);
     } else {
-      console.log("Management: No valid cityId found, userCity:", userCity, "dbUser:", dbUser);
+      console.log(
+        "Management: No valid cityId found, userCity:",
+        userCity,
+        "dbUser:",
+        dbUser
+      );
     }
   }, [userCity, dbUser]);
 
   useEffect(() => {
-    console.log("Management: selectedCityId useEffect - selectedCityId:", selectedCityId, "type:", typeof selectedCityId, "isLoadingProjects:", isLoadingProjects);
-    
+    console.log(
+      "Management: selectedCityId useEffect - selectedCityId:",
+      selectedCityId,
+      "type:",
+      typeof selectedCityId,
+      "isLoadingProjects:",
+      isLoadingProjects
+    );
+
     if (selectedCityId && !isLoadingProjects) {
       loadProjects(selectedCityId);
     }
@@ -257,6 +299,30 @@ const Management = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  // Filtered projects (single search bar)
+  const filteredProjects = projects.filter((project) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      (project.proponentName || "").toLowerCase().includes(term) ||
+      (project.projectTitle || "").toLowerCase().includes(term) ||
+      (project.registrationNumber || "").toLowerCase().includes(term)
+    );
+  });
+
+  // Reset to first page when search or city changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCityId]);
+
+  // Pagination calculations
+  const totalItems = filteredProjects.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / rowsPerPage));
+  const paginatedProjects = useMemo(() => {
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    return filteredProjects.slice(startIndex, startIndex + rowsPerPage);
+  }, [filteredProjects, currentPage, rowsPerPage]);
+
   return (
     <div className="flex flex-col gap-6 px-32 w-full">
       <div className="flex gap-4 p-4 w-full items-center justify-between">
@@ -270,7 +336,6 @@ const Management = () => {
           {dbUser?.userRole.includes("admin") && (
             <SelectInput
               className="w-full"
-              label="Selecione uma cidade"
               options={cities}
               value={selectedCityId ?? ""}
               onChange={(e: any) => setSelectedCityId(e.target.value)}
@@ -325,50 +390,19 @@ const Management = () => {
           </div>
         )}
       </div>
-      <div className="overflow-x-auto p-6 bg-primary dark:bg-navy rounded-lg shadow-lg">
-        <table className="min-w-full border border-gray-300">
-          <thead className="bg-navy text-white">
-            <tr>
-              <th className="px-4 py-2 text-left border-b">
-                Título do Projeto
-              </th>
-              <th className="px-4 py-2 text-left border-b">Status</th>
-              <th className="px-4 py-2 text-left border-b">
-                Número de Registro
-              </th>
-              <th className="px-4 py-2 text-left border-b">Proponente</th>
-              <th className="px-4 py-2 text-left border-b">Tipo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {projects.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                  {selectedCityId ? `Nenhum projeto encontrado para a cidade (ID: ${selectedCityId})` : 'Carregando projetos...'}
-                </td>
-              </tr>
-            ) : (
-              projects.map((project) => (
-                <tr
-                  key={project.projectId}
-                  className="hover:bg-primary hover:text-white cursor-pointer even:bg-gray-100 odd:bg-white text-navy"
-                  onClick={() =>
-                    router.push(`/admin/review/${project.projectId}`)
-                  }
-                >
-                  <td className="px-4 py-2 border-b">{project.projectTitle}</td>
-                  <td className="px-4 py-2 border-b">{project.projectStatus}</td>
-                  <td className="px-4 py-2 border-b">
-                    {project.registrationNumber}
-                  </td>
-                  <td className="px-4 py-2 border-b">{project.proponentName}</td>
-                  <td className="px-4 py-2 border-b">{project.projectType}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+
+      <ProjectsTab
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filteredProjects={filteredProjects}
+        paginatedProjects={paginatedProjects}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        setCurrentPage={setCurrentPage}
+        setRowsPerPage={setRowsPerPage}
+        selectedCityId={selectedCityId}
+      />
     </div>
   );
 };

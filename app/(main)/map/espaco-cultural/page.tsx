@@ -2177,7 +2177,7 @@ const RegisterProject = () => {
         </div>
 
         <button
-          className="w-full p-2 bg-buttonBg text-white rounded hover:bg-buttonHover"
+          className="w-full p-2 rounded bg-primary-600 hover:bg-primary-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2"
           type="submit"
         >
           Enviar

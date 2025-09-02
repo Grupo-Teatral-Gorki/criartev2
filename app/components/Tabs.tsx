@@ -25,7 +25,7 @@ export default function Tabs({ tabs }: TabsProps) {
             ${
               activeTab === tab.label
                 ? "bg-orange dark:orange text-white"
-                : "bg-navy dark:bg-primary text-gray-100  hover:bg-gray-300 dark:hover:bg-gray-600"
+                : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600"
             }`}
           >
             {tab.label}

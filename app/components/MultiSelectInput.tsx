@@ -36,10 +36,10 @@ export function MultiSelectInput({
 
   return (
     <div className="relative">
-      <label className="block mb-1 text-primary dark:text-light">{label}</label>
+      <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>
       <div
         {...props}
-        className={`w-full p-2 mb-2 border rounded text-primary dark:text-light bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${className}`}
+        className={`w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 focus:outline-none focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-900/20 cursor-pointer transition-all duration-200 shadow-soft hover:border-slate-300 dark:hover:border-slate-500 ${className}`}
         onClick={toggleDropdown}
         aria-label={label}
       >

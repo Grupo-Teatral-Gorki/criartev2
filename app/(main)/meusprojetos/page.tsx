@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import { getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import { useCity } from "@/app/context/CityConfigContext";
+import { useLogging } from "@/app/hooks/useLogging";
 
 const MeusProjetos = () => {
   const [projectsFromApi, setProjectsFromApi] = useState<any[]>([]);
@@ -15,6 +16,7 @@ const MeusProjetos = () => {
   const router = useRouter();
   const { dbUser } = useAuth();
   const city = useCity().city;
+  const loggingService = useLogging();
 
   const getUserProjects = async (userId: string) => {
     const q = query(collection(db, "projects"), where("userId", "==", userId));
@@ -46,15 +48,26 @@ const MeusProjetos = () => {
       <div className="w-full flex justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}
-          onClick={() => router.push("/home")}
+          onClick={async () => {
+            await loggingService.logNavigation("/meusprojetos", "/home", {
+              buttonType: "voltar",
+              currentProjectsCount: projectsFromApi.length
+            });
+            router.push("/home");
+          }}
           size="medium"
         />
         <h2 className="text-2xl font-bold">Meus Projetos</h2>
         <Button
-          label={"CRIAR PROJETO"}
-          onClick={() => router.push("/selecionar-tipo")}
+          label="CRIAR NOVO PROJETO"
+          onClick={async () => {
+            await loggingService.logNavigation("/meusprojetos", "/selecionar-tipo", {
+              buttonType: "criar_novo_projeto",
+              currentProjectsCount: projectsFromApi.length
+            });
+            router.push("/selecionar-tipo");
+          }}
           size="medium"
-          disabled={city?.processStage !== "open"}
         />
       </div>
 

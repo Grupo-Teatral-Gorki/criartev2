@@ -106,7 +106,7 @@ const EvaluateProjectClient = () => {
 
   return (
     <div className="w-full overflow-y-auto flex flex-col items-center justify-center px-4 md:px-36 gap-8">
-      <div className="w-full flex justify-between rounded-lg dark:bg-navy bg-primary p-4 mt-4">
+      <div className="w-full flex justify-between rounded-xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 p-4 mt-4 shadow-soft">
         <Button
           label="VOLTAR"
           onClick={() => router.push("/home")}
@@ -114,12 +114,12 @@ const EvaluateProjectClient = () => {
           disabled={sending}
         />
         {dbUser?.userRole.includes("secretary") ? (
-          <h2 className="text-xl font-semibold sm:text-2xl sm:font-bold text-center text-white">
+          <h2 className="text-xl font-semibold sm:text-2xl sm:font-bold text-center text-slate-900 dark:text-slate-100">
             Visualizar Projeto
           </h2>
         ) : (
           <>
-            <h2 className="text-xl font-semibold sm:text-2xl sm:font-bold text-center">
+            <h2 className="text-xl font-semibold sm:text-2xl sm:font-bold text-center text-slate-900 dark:text-slate-100">
               Avaliar Projeto
             </h2>
             <Button
@@ -132,14 +132,14 @@ const EvaluateProjectClient = () => {
         )}
       </div>
 
-      <div className="w-full flex flex-col items-center justify-center md:px-8 bg-primary dark:bg-navy rounded-lg">
+      <div className="w-full flex flex-col items-center justify-center md:px-8 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-xl shadow-soft">
         {dbUser?.userRole.includes("secretary") ? (
-          <p className="text-2xl p-4 mt-6 text-white">
+          <p className="text-2xl p-4 mt-6 text-slate-900 dark:text-slate-100">
             Você está visualizando o projeto com ID:{" "}
             {project.registrationNumber} e título: {project.projectTitle}
           </p>
         ) : (
-          <p className="text-2xl p-4 mt-6 text-white">
+          <p className="text-2xl p-4 mt-6 text-slate-900 dark:text-slate-100">
             Você está avaliando o projeto com ID: {project.registrationNumber} e
             título: {project.projectTitle}
           </p>
@@ -164,6 +164,7 @@ const EvaluateProjectClient = () => {
                     content: (
                       <RenderEvaluationForm
                         setEvaluationToSend={setEvaluationToSend}
+                        evaluationFromDb={project.evaluation || null}
                       />
                     ),
                   },

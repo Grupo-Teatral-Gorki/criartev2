@@ -2,7 +2,7 @@
 import React from "react";
 import { useLogging } from "../hooks/useLogging";
 
-interface ButtonProps {
+interface LoggedButtonProps {
   label: string;
   onClick?: () => void;
   variant?: "default" | "red" | "outlined" | "danger" | "inverted" | "save";
@@ -13,7 +13,7 @@ interface ButtonProps {
   logMetadata?: Record<string, any>;
 }
 
-const Button: React.FC<ButtonProps> = ({
+const LoggedButton: React.FC<LoggedButtonProps> = ({
   label,
   onClick,
   variant = "default",
@@ -40,6 +40,7 @@ const Button: React.FC<ButtonProps> = ({
       onClick();
     }
   };
+
   const baseStyles =
     "inline-block rounded-xl shadow-soft transition-all duration-200 hover:shadow-soft-lg hover:scale-[1.02] focus:ring-2 focus:ring-offset-2 outline-none text-center font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 backdrop-blur-sm";
 
@@ -73,4 +74,4 @@ const Button: React.FC<ButtonProps> = ({
   );
 };
 
-export default Button;
+export default LoggedButton;

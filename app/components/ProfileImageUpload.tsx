@@ -1,4 +1,6 @@
+"use client";
 import React, { ChangeEvent } from "react";
+import { useLogging } from "../hooks/useLogging";
 
 interface ProfileImageModalProps {
   isOpen: boolean;
@@ -11,13 +13,37 @@ const ProfileImageUpload: React.FC<ProfileImageModalProps> = ({
   onClose,
   onImageUpload,
 }) => {
+  const loggingService = useLogging();
+
   if (!isOpen) return null;
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      onImageUpload(file);
-      onClose();
+      // Log profile image upload attempt
+      await loggingService.logFileUploadAttempt(file.name, {
+        fileSize: file.size,
+        fileType: file.type,
+        component: "ProfileImageUpload"
+      });
+
+      try {
+        onImageUpload(file);
+        // Log successful profile image upload
+        await loggingService.logFileUploadSuccess(file.name, {
+          fileSize: file.size,
+          fileType: file.type,
+          uploadType: "profile_image"
+        });
+        onClose();
+      } catch (error) {
+        // Log profile image upload failure
+        await loggingService.logFileUploadFailure(
+          file.name, 
+          "Profile image upload failed", 
+          { error: error instanceof Error ? error.message : "Unknown error" }
+        );
+      }
     }
   };
 

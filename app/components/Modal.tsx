@@ -31,19 +31,19 @@ export default function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 px-4 py-6">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 px-4 py-6 animate-fade-in-up">
       <div
-        className={`bg-white dark:bg-navy rounded-lg shadow-lg px-6 relative w-full ${
-          terms ? "max-w-[30%]" : "max-w-[75%]"
-        }  max-h-[90vh] overflow-y-auto`}
+        className={`bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl shadow-soft-lg border border-white/20 dark:border-slate-700/50 px-8 py-6 relative w-full ${
+          terms ? "max-w-md" : "max-w-2xl"
+        } max-h-[90vh] overflow-hidden animate-bounce-in`}
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-primary dark:text-white dark:hover:text-red-500 hover:text-red-500"
+          className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-error-500 dark:hover:text-error-400 transition-all duration-200 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 hover:scale-110"
         >
-          <X size={24} />
+          <X size={20} />
         </button>
-        <div className="overflow-y-auto">{children}</div>
+        <div className="overflow-y-auto max-h-[calc(90vh-3rem)] pr-2 custom-scrollbar">{children}</div>
       </div>
     </div>
   );

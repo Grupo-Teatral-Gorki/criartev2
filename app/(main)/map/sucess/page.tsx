@@ -8,7 +8,7 @@ const Success = () => {
       <h2 className="text-3xl mt-24">Cadastro realizado com sucesso!</h2>
       <Link
         href="/"
-        className="w-[5rem] flex items-center justify-center p-2 bg-buttonBg text-white rounded hover:bg-buttonHover"
+        className="w-[5rem] flex items-center justify-center p-2 rounded bg-primary-600 hover:bg-primary-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2"
       >
         Voltar
       </Link>

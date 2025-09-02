@@ -12,6 +12,7 @@ import { auth } from "../config/firebaseconfig";
 import { doc, setDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../config/firebaseconfig";
 import { useRouter } from "next/navigation";
+import LoggingService from "../services/loggingService";
 
 type CityOption = {
   value: string;
@@ -108,7 +109,17 @@ export default function RegisterForm() {
     }
 
     setIsSubmitting(true);
+    const loggingService = LoggingService.getInstance();
+    
     try {
+      // Log registration attempt
+      loggingService.setCurrentUser(formData.email);
+      await loggingService.logAction('registro_usuario', {
+        email: formData.email,
+        cityId: formData.selectedCityCode,
+        timestamp: new Date().toISOString()
+      });
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
@@ -126,8 +137,16 @@ export default function RegisterForm() {
 
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
 
+      // Successful login will be logged by AuthContext
       router.push("/home");
     } catch (err: any) {
+      // Log failed registration
+      await loggingService.logAction('registro_falha', {
+        email: formData.email,
+        error: err.message || 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+      
       setErrors((prev) => ({
         ...prev,
         register: err.message || "Erro ao tentar registrar.",
@@ -188,7 +207,7 @@ export default function RegisterForm() {
 
       <button
         type="submit"
-        className="w-full p-2 bg-primary text-light rounded"
+        className="w-full px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-medium rounded-xl shadow-soft transition-all duration-200 hover:shadow-soft-lg hover:scale-[1.02] focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         disabled={isSubmitting}
       >
         {isSubmitting ? "Cadastrando..." : "Cadastrar"}

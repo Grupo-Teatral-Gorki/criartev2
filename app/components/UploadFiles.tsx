@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { PDFDocument } from "pdf-lib"; // Import for PDF compression
+import { useLogging } from "../hooks/useLogging";
 
 interface FileUploaderProps {
   onFilesChange: (files: File[]) => void;
@@ -14,6 +15,7 @@ export default function FileUploader({
   name,
 }: FileUploaderProps) {
   const [files, setFiles] = useState<File[]>([]);
+  const loggingService = useLogging();
   const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
   const ALLOWED_TYPES = [
     "image/png",
@@ -28,7 +30,20 @@ export default function FileUploader({
 
     const processedFiles = await Promise.all(
       Array.from(newFiles).map(async (file) => {
+        // Log upload attempt for each file
+        await loggingService.logFileUploadAttempt(file.name, {
+          fileSize: file.size,
+          fileType: file.type,
+          component: name
+        });
+
         if (!ALLOWED_TYPES.includes(file.type)) {
+          // Log failure due to unsupported file type
+          await loggingService.logFileUploadFailure(
+            file.name, 
+            "Unsupported file type", 
+            { fileType: file.type, allowedTypes: ALLOWED_TYPES }
+          );
           alert(
             `"${file.name}" is not a supported file type. Only images and PDFs are allowed.`
           );
@@ -36,16 +51,57 @@ export default function FileUploader({
         }
         if (file.size > MAX_FILE_SIZE) {
           if (file.type.startsWith("image/")) {
-            return await compressImage(file);
+            try {
+              const compressedFile = await compressImage(file);
+              await loggingService.logFileUploadSuccess(file.name, {
+                originalSize: file.size,
+                compressedSize: compressedFile.size,
+                compressionType: "image"
+              });
+              return compressedFile;
+            } catch (error) {
+              await loggingService.logFileUploadFailure(
+                file.name, 
+                "Image compression failed", 
+                { error: error instanceof Error ? error.message : "Unknown error" }
+              );
+              return null;
+            }
           } else if (file.type === "application/pdf") {
-            return await compressPDF(file);
+            try {
+              const compressedFile = await compressPDF(file);
+              await loggingService.logFileUploadSuccess(file.name, {
+                originalSize: file.size,
+                compressedSize: compressedFile.size,
+                compressionType: "pdf"
+              });
+              return compressedFile;
+            } catch (error) {
+              await loggingService.logFileUploadFailure(
+                file.name, 
+                "PDF compression failed", 
+                { error: error instanceof Error ? error.message : "Unknown error" }
+              );
+              return null;
+            }
           } else {
+            await loggingService.logFileUploadFailure(
+              file.name, 
+              "File too large and cannot be compressed", 
+              { fileSize: file.size, maxSize: MAX_FILE_SIZE }
+            );
             alert(
               `"${file.name}" is too large (max 2MB) and cannot be uploaded.`
             );
             return null;
           }
         }
+        
+        // Log successful upload for files that don't need compression
+        await loggingService.logFileUploadSuccess(file.name, {
+          fileSize: file.size,
+          fileType: file.type
+        });
         return file;
       })
     );

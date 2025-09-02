@@ -307,13 +307,12 @@ const ColetivoSemCNPJ = () => {
 
     const isFileUploaded = await handleUpload();
 
-    if (1 + 1 === 2) {
+    if (isFileUploaded) {
       try {
         const docRef = await addDoc(
           collection(db, "coletivoSemCNPJ"),
           requestBody
         );
-        alert(`Coletivo Cadastrado com ID:  ${docRef.id}`);
         console.log("cadastro", requestBody);
         router.push("/register-project/sucess");
       } catch (error) {
@@ -354,7 +353,6 @@ const ColetivoSemCNPJ = () => {
   return (
     <div className="max-w-[60rem] mx-auto mt-4 p-6 border border-gray-300 rounded-lg shadow-md bg-white">
       <h1 className="text-2xl font-bold mb-4 text-center">Cadastro</h1>
-      <h2>Espaço/Prêmio Cultura Viva</h2>
       <form onSubmit={handleSubmit}>
         {collectiveContactForm.map((input, index) => {
           return (
@@ -819,7 +817,7 @@ const ColetivoSemCNPJ = () => {
           />
         </div>
         <button
-          className="w-full p-2 bg-buttonBg text-white rounded hover:bg-buttonHover"
+          className="w-full p-2 rounded bg-primary-600 hover:bg-primary-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2"
           type="submit"
         >
           Enviar

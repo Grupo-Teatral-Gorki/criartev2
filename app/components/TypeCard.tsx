@@ -14,7 +14,7 @@ const TypeCard = ({ title, link, description, linkString }: TypeCardProps) => {
       {description && <p className="text-sm text-justify">{description}</p>}
       <Link
         href={link}
-        className="px-6 py-3 bg-primary text-slate-100 font-semibold rounded-lg shadow-md hover:bg-buttonHover focus:outline-none focus:ring-2 focus:ring-buttonHover focus:ring-opacity-75 transition duration-150 ease-in-out"
+        className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold rounded-xl shadow-soft hover:shadow-soft-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 hover:scale-[1.02]"
       >
         {linkString}
       </Link>

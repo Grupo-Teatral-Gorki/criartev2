@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import { useLogging } from "@/app/hooks/useLogging";
 import Fomento from "./tipos/fomento";
 import Button from "@/app/components/Button";
 import Premiacao from "./tipos/premiacao";
@@ -25,6 +26,7 @@ const CriarContent = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const [projectData, setProjectData] = useState<any>(null);
+  const loggingService = useLogging();
 
   const handleSendProject = async (
     updateTitle?: string,
@@ -83,10 +85,30 @@ const CriarContent = () => {
 
         if (updateTitle) {
           messages.push("Nome do projeto atualizado com sucesso!");
+          // Log project title update
+          await loggingService.logProjectUpdate(projectId, "titulo", {
+            newTitle: updateTitle,
+            projectType: type
+          });
         }
 
         if (updateStatus) {
           messages.push(`Status do projeto atualizado para '${updateStatus}'!`);
+          
+          if (updateStatus === "enviado") {
+            // Log project submission
+            await loggingService.logProjectSubmission(projectId, updateTitle || projectData?.projectTitle, {
+              projectType: type,
+              sentDate: new Date().toISOString(),
+              hasProponent: !!projectData?.proponentId
+            });
+          } else {
+            // Log general status update
+            await loggingService.logProjectUpdate(projectId, "status", {
+              newStatus: updateStatus,
+              projectType: type
+            });
+          }
         }
 
         setToastMessage(messages.join(" "));
@@ -95,6 +117,25 @@ const CriarContent = () => {
       }
     } catch (error) {
       console.error("Erro ao atualizar projeto:", error);
+      
+      // Log project update/submission failure
+      if (updateStatus === "enviado") {
+        await loggingService.logAction('enviar_projeto', {
+          projectId,
+          projectType: type,
+          error: error instanceof Error ? error.message : "Unknown error",
+          success: false
+        });
+      } else if (updateTitle || updateStatus) {
+        await loggingService.logAction('atualizar_projeto', {
+          projectId,
+          projectType: type,
+          updateType: updateTitle ? "titulo" : "status",
+          error: error instanceof Error ? error.message : "Unknown error",
+          success: false
+        });
+      }
+
       setToastMessage("Erro ao atualizar o projeto.");
       setToastType("error");
       setShowToast(true);
@@ -127,7 +168,14 @@ const CriarContent = () => {
       <div className="w-full flex items-center justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}
-          onClick={() => router.push("/meusprojetos")}
+          onClick={async () => {
+            await loggingService.logNavigation("/criar", "/meusprojetos", {
+              buttonType: "voltar",
+              projectId: projectId,
+              projectType: type
+            });
+            router.push("/meusprojetos");
+          }}
           size="medium"
         />
         {isEdit ? (
@@ -168,7 +216,7 @@ const CriarContent = () => {
         </div>
         <div className="w-full flex justify-center items-center cursor-pointer ">
           <p
-            className="bg-primary cursor-pointer p-4 rounded-lg text-white"
+            className="bg-primary-600 cursor-pointer p-4 rounded-lg text-white"
             onClick={() =>
               window.open(
                 "https://criarte.s3.us-east-2.amazonaws.com/public/Edital%2Bde%2BFomento-%2BSanta%2BRita-6-37.pdf",

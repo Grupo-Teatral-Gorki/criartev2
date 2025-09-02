@@ -7,7 +7,7 @@ const CustomLoader = () => {
         className="flex items-center justify-center w-16 h-16 rounded-full border-4 border-t-transparent animate-spin 
           border-primary dark:border-white"
       >
-        <Loader className="w-8 h-8 animate-pulse text-primary dark:text-white" />
+        <Loader className="w-8 h-8 animate-pulse text-primary-600 dark:text-primary-400" />
       </div>
     </div>
   );

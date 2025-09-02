@@ -10,7 +10,7 @@ type SelectProps = any & {
 
 export function SelectInput({
   options,
-  label = "Selecione uma opção",
+  label,
   className = "",
   value,
   onChange,
@@ -21,20 +21,27 @@ export function SelectInput({
   };
 
   return (
-    <select
-      {...props}
-      className={`w-full p-2 mb-2 border rounded text-primary dark:text-light bg-white dark:bg-gray-800 ${className}`}
-      value={value}
-      onChange={handleChange} // Use the modified handleChange function
-    >
-      <option value="" disabled hidden>
-        {label}
-      </option>
-      {options.map((option: any, index: number) => (
-        <option key={index} value={option.value}>
-          {option.label}
+    <div className="w-full">
+      {label && (
+        <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+          {label}
+        </label>
+      )}
+      <select
+        {...props}
+        className={`w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-900/20 transition-all duration-200 outline-none shadow-soft hover:border-slate-300 dark:hover:border-slate-500 cursor-pointer ${className}`}
+        value={value}
+        onChange={handleChange}
+      >
+        <option value="" disabled hidden>
+          Selecione uma opção
         </option>
-      ))}
-    </select>
+        {options.map((option: any, index: number) => (
+          <option key={index} value={option.value} className="py-2">
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

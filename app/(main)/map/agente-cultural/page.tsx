@@ -51,6 +51,7 @@ const RegisterProject = () => {
   const [history, setHistory] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>();
   const [urls, setUrls] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const router = useRouter();
   const city = useCity();
@@ -66,6 +67,8 @@ const RegisterProject = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const requestBody = {
       ...culturalAgentFormData,
       hasDRT,
@@ -103,7 +106,11 @@ const RegisterProject = () => {
         router.push("/register-project/sucess");
       } catch (error) {
         console.error(error);
+      } finally {
+        setIsSubmitting(false);
       }
+    } else {
+      setIsSubmitting(false);
     }
   };
 
@@ -148,7 +155,7 @@ const RegisterProject = () => {
             <div className="mb-4" key={index}>
               <label className="block mb-1 font-semibold">{input.label}</label>
               <input
-                className="w-full p-2 border border-gray-300 rounded"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-300"
                 type={input.type}
                 placeholder={input.placeholder}
                 name={input.name}
@@ -191,7 +198,7 @@ const RegisterProject = () => {
                 Qual o número do seu DRT:
               </label>
               <input
-                className="w-full p-2 border border-gray-300 rounded"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-300"
                 type="text"
                 value={drtNumber}
                 onChange={(e) => setDrtNumber(e.target.value)}
@@ -354,243 +361,241 @@ const RegisterProject = () => {
               ))}
             </div>
           </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold">
-              Qual o seu grau de escolaridade?
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {educationLevelOptions.map((option) => (
-                <label
-                  className="flex items-center p-8 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
-                  key={option.id}
-                >
-                  <input
-                    type="radio"
-                    name="educationLevel"
-                    value={option.value}
-                    onChange={() => setEducationLevel(option.value)}
-                    checked={educationLevel === option.value}
-                    className="w-5 h-5 text-blue-600 border-gray-300 "
-                  />
-                  <span className="text-gray-700 font-medium">
-                    {option.display}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold">
-              Qual a sua renda mensal fixa individual (média mensal bruta
-              aproximada) nos últimos 3 meses?
-              <p className="text-sm text-gray-500">
-                (Calcule fazendo uma média das suas remunerações nos últimos 3
-                meses. Em 2023, o salário mínimo foi fixado em R$ 1.320,00.)
-              </p>
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {incomeOptions.map((option) => (
-                <label
-                  className="flex items-center p-8 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
-                  key={option.id}
-                >
-                  <input
-                    type="radio"
-                    name="income"
-                    value={option.value}
-                    onChange={() => setIncome(option.value)}
-                    checked={income === option.value}
-                    className="w-5 h-5 text-blue-600 border-gray-300 "
-                  />
-                  <span className="text-gray-700 font-medium">
-                    {option.display}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold">
-              Você é beneficiário de algum programa social?
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {socialProgramOptions.map((option) => (
-                <label
-                  className="flex items-center p-8 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
-                  key={option.id}
-                >
-                  <input
-                    type="radio"
-                    name="socialProgram"
-                    value={option.value}
-                    onChange={() => setSocialProgram(option.value)}
-                    checked={socialProgram === option.value}
-                    className="w-5 h-5 text-blue-600 border-gray-300 "
-                  />
-                  <span className="text-gray-700 font-medium">
-                    {option.display}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold">
-              Dependência Financeira da Atividade Cultural ?
-            </label>
-            <div className="flex gap-4 mb-4">
-              <label className="flex items-center gap-4">
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">
+            Qual o seu grau de escolaridade?
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {educationLevelOptions.map((option) => (
+              <label
+                className="flex items-center p-8 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
+                key={option.id}
+              >
                 <input
                   type="radio"
-                  name="isDependent"
-                  value="yes"
-                  onChange={() => setDependency(true)}
-                  checked={dependency === true}
-                  className="w-full p-2 border border-gray-300 rounded"
+                  name="educationLevel"
+                  value={option.value}
+                  onChange={() => setEducationLevel(option.value)}
+                  checked={educationLevel === option.value}
+                  className="w-5 h-5 text-blue-600 border-gray-300 "
                 />
-                Sim
+                <span className="text-gray-700 font-medium">
+                  {option.display}
+                </span>
               </label>
-              <label className="flex items-center gap-4">
+            ))}
+          </div>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">
+            Qual a sua renda mensal fixa individual (média mensal bruta
+            aproximada) nos últimos 3 meses?
+            <p className="text-sm text-gray-500">
+              (Calcule fazendo uma média das suas remunerações nos últimos 3
+              meses. Em 2023, o salário mínimo foi fixado em R$ 1.320,00.)
+            </p>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {incomeOptions.map((option) => (
+              <label
+                className="flex items-center p-8 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
+                key={option.id}
+              >
                 <input
                   type="radio"
-                  name="isDependent"
-                  value="no"
-                  onChange={() => setDependency(false)}
-                  checked={dependency === false}
-                  className="w-full p-2 border border-gray-300 rounded"
+                  name="income"
+                  value={option.value}
+                  onChange={() => setIncome(option.value)}
+                  checked={income === option.value}
+                  className="w-5 h-5 text-blue-600 border-gray-300 "
                 />
-                Não
+                <span className="text-gray-700 font-medium">
+                  {option.display}
+                </span>
               </label>
-            </div>
+            ))}
           </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold">
-              Anos de Experiência na Área Cultural:
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {experienceOptions.map((option) => (
-                <label
-                  className="flex items-center p-8 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
-                  key={option.id}
-                >
-                  <input
-                    type="radio"
-                    name="experience"
-                    value={option.value}
-                    onChange={() => setExperience(option.value)}
-                    checked={experience === option.value}
-                    className="w-5 h-5 text-blue-600 border-gray-300 "
-                  />
-                  <span className="text-gray-700 font-medium">
-                    {option.display}
-                  </span>
-                </label>
-              ))}
-            </div>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">
+            Você é beneficiário de algum programa social?
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {socialProgramOptions.map((option) => (
+              <label
+                className="flex items-center p-8 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
+                key={option.id}
+              >
+                <input
+                  type="radio"
+                  name="socialProgram"
+                  value={option.value}
+                  onChange={() => setSocialProgram(option.value)}
+                  checked={socialProgram === option.value}
+                  className="w-5 h-5 text-blue-600 border-gray-300 "
+                />
+                <span className="text-gray-700 font-medium">
+                  {option.display}
+                </span>
+              </label>
+            ))}
           </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold">
-              Qual seu segmento artístico:
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
-              {artisticSegmentOptions.map((option) => (
-                <label
-                  className="flex items-center p-4 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
-                  key={option.id}
-                >
-                  <input
-                    type="radio"
-                    name="artisticSegment"
-                    value={option.value}
-                    onChange={() => setArtisticSegment(option.value)}
-                    checked={artisticSegment === option.value}
-                    className="w-5 h-5 text-blue-600 border-gray-300 "
-                  />
-                  <span className="text-gray-700 font-medium">
-                    {option.display}
-                  </span>
-                </label>
-              ))}
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1 font-semibold"> Outro</label>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">
+            Dependência Financeira da Atividade Cultural ?
+          </label>
+          <div className="flex gap-4 mb-4">
+            <label className="flex items-center gap-4">
               <input
+                type="radio"
+                name="isDependent"
+                value="yes"
+                onChange={() => setDependency(true)}
+                checked={dependency === true}
                 className="w-full p-2 border border-gray-300 rounded"
+              />
+              Sim
+            </label>
+            <label className="flex items-center gap-4">
+              <input
+                type="radio"
+                name="isDependent"
+                value="no"
+                onChange={() => setDependency(false)}
+                checked={dependency === false}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              Não
+            </label>
+          </div>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">
+            Anos de Experiência na Área Cultural:
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {experienceOptions.map((option) => (
+              <label
+                className="flex items-center p-8 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
+                key={option.id}
+              >
+                <input
+                  type="radio"
+                  name="experience"
+                  value={option.value}
+                  onChange={() => setExperience(option.value)}
+                  checked={experience === option.value}
+                  className="w-5 h-5 text-blue-600 border-gray-300 "
+                />
+                <span className="text-gray-700 font-medium">
+                  {option.display}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">
+            Qual seu segmento artístico:
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
+            {artisticSegmentOptions.map((option) => (
+              <label
+                className="flex items-center p-4 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
+                key={option.id}
+              >
+                <input
+                  type="radio"
+                  name="artisticSegment"
+                  value={option.value}
+                  onChange={() => setArtisticSegment(option.value)}
+                  checked={artisticSegment === option.value}
+                  className="w-5 h-5 text-blue-600 border-gray-300 "
+                />
+                <span className="text-gray-700 font-medium">
+                  {option.display}
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="mb-4">
+            <label className="block mb-1 font-semibold"> Outro</label>
+            <input
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-300"
+              type="text"
+              name="artisticSegment"
+              value={otherArtisticSegment}
+              onChange={(e) => setOtherArtisticSegment(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">
+            Qual grupo etnico você pertence?
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {ethnicityOptions.map((option) => (
+              <label
+                className="flex items-center p-8 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
+                key={option.id}
+              >
+                <input
+                  type="radio"
+                  name="ethnicity"
+                  value={option.value}
+                  onChange={() => setEthnicity(option.value)}
+                  checked={ethnicity === option.value}
+                  className="w-5 h-5 text-blue-600 border-gray-300 "
+                />
+                <span className="text-gray-700 font-medium">
+                  {option.display}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">
+            Já Recebeu Outros Incentivos Culturais ou Bolsas?
+          </label>
+          <div className="flex gap-4 mb-4">
+            <label className="flex items-center gap-4">
+              <input
+                type="radio"
+                name="otherIncentives"
+                value="yes"
+                onChange={() => setOtherIncentives(true)}
+                checked={otherIncentives === true}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              Sim
+            </label>
+            <label className="flex items-center gap-4">
+              <input
+                type="radio"
+                name="otherIncentives"
+                value="no"
+                onChange={() => setOtherIncentives(false)}
+                checked={otherIncentives === false}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              Não
+            </label>
+          </div>
+
+          {otherIncentives && (
+            <div>
+              <label className="block mb-1 font-semibold">Se sim, qual:</label>
+              <input
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-300"
                 type="text"
-                name="artisticSegment"
-                value={otherArtisticSegment}
-                onChange={(e) => setOtherArtisticSegment(e.target.value)}
+                value={otherIncentiveName}
+                onChange={(e) => setOtherIncentiveName(e.target.value)}
               />
             </div>
-          </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold">
-              Qual grupo etnico você pertence?
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {ethnicityOptions.map((option) => (
-                <label
-                  className="flex items-center p-8 gap-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition"
-                  key={option.id}
-                >
-                  <input
-                    type="radio"
-                    name="ethnicity"
-                    value={option.value}
-                    onChange={() => setEthnicity(option.value)}
-                    checked={ethnicity === option.value}
-                    className="w-5 h-5 text-blue-600 border-gray-300 "
-                  />
-                  <span className="text-gray-700 font-medium">
-                    {option.display}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold">
-              Já Recebeu Outros Incentivos Culturais ou Bolsas?
-            </label>
-            <div className="flex gap-4 mb-4">
-              <label className="flex items-center gap-4">
-                <input
-                  type="radio"
-                  name="otherIncentives"
-                  value="yes"
-                  onChange={() => setOtherIncentives(true)}
-                  checked={otherIncentives === true}
-                  className="w-full p-2 border border-gray-300 rounded"
-                />
-                Sim
-              </label>
-              <label className="flex items-center gap-4">
-                <input
-                  type="radio"
-                  name="otherIncentives"
-                  value="no"
-                  onChange={() => setOtherIncentives(false)}
-                  checked={otherIncentives === false}
-                  className="w-full p-2 border border-gray-300 rounded"
-                />
-                Não
-              </label>
-            </div>
-
-            {otherIncentives && (
-              <div>
-                <label className="block mb-1 font-semibold">
-                  Se sim, qual:
-                </label>
-                <input
-                  className="w-full p-2 border border-gray-300 rounded"
-                  type="text"
-                  value={otherIncentiveName}
-                  onChange={(e) => setOtherIncentiveName(e.target.value)}
-                />
-              </div>
-            )}
-          </div>
+          )}
         </div>
         <div className="mb-4">
           <label className="block mb-1 font-semibold">
@@ -626,7 +631,7 @@ const RegisterProject = () => {
             cultura?
           </label>
           <input
-            className="w-full p-2 border border-gray-300 rounded"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-300"
             type="text"
             name="objective"
             onChange={(e) => setObjective(e.target.value)}
@@ -666,7 +671,7 @@ const RegisterProject = () => {
             <div>
               <label className="block mb-1 font-semibold">Se sim, qual?</label>
               <input
-                className="w-full p-2 border border-gray-300 rounded"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-300"
                 type="text"
                 value={whichGroup}
                 onChange={(e) => setWhichGroup(e.target.value)}
@@ -701,11 +706,11 @@ const RegisterProject = () => {
         </div>
 
         <button
-          className="w-full p-2 bg-buttonBg text-white rounded hover:bg-buttonHover"
+          className="w-full p-2 rounded bg-primary-600 hover:bg-primary-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           type="submit"
-          onClick={handleUpload}
+          disabled={isSubmitting}
         >
-          Enviar
+          {isSubmitting ? "Enviando..." : "Enviar"}
         </button>
       </form>
     </div>

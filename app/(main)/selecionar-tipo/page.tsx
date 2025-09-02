@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import Button from "@/app/components/Button";
 import TypeProjectCard from "@/app/components/TypeProjectCard";
+import { useLogging } from "@/app/hooks/useLogging";
 import {
   collection,
   doc,
@@ -22,6 +23,7 @@ const SelecionarTipoProjeto = () => {
   const router = useRouter();
   const { dbUser } = useAuth();
   const cityId = dbUser?.cityId;
+  const loggingService = useLogging();
 
   useEffect(() => {
     const fetchCity = async () => {
@@ -57,6 +59,12 @@ const SelecionarTipoProjeto = () => {
       return { success: false, error: "User not authenticated" };
     }
 
+    // Log project type selection
+    await loggingService.logProjectTypeSelection(type, {
+      cityId: dbUser.cityId,
+      userId: dbUser.id
+    });
+
     try {
       // Reference to the collection where we store the last project ID
       const lastIdRef = doc(db, "system", "lastProjectId");
@@ -87,12 +95,29 @@ const SelecionarTipoProjeto = () => {
         updatedBy: dbUser?.id,
       });
 
+      // Log successful project creation
+      await loggingService.logProjectCreation(newDocRef.id, type, {
+        registrationNumber: formattedProjectId,
+        cityId: formattedCityId,
+        userId: dbUser.id
+      });
+
       // Redirect to the project creation page with the type and projectId
       router.push(`/criar?state=${type}&projectId=${newDocRef.id}`);
 
       return { success: true, projectId: formattedProjectId };
     } catch (error) {
       console.error("Error creating project:", error);
+      
+      // Log project creation failure
+      await loggingService.logAction('criar_projeto', {
+        projectType: type,
+        error: error instanceof Error ? error.message : "Unknown error",
+        success: false,
+        cityId: dbUser.cityId,
+        userId: dbUser.id
+      });
+
       return { success: false, error };
     }
   };

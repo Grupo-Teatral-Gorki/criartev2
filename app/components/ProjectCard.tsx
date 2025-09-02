@@ -5,6 +5,7 @@ import { db } from "../config/firebaseconfig";
 import Modal from "./Modal";
 import { useRouter } from "next/navigation";
 import { useCity } from "../context/CityConfigContext";
+import { useLogging } from "../hooks/useLogging";
 
 export interface Project {
   projectId: string;
@@ -56,6 +57,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const router = useRouter();
   const city = useCity().city;
+  const loggingService = useLogging();
 
   const formatType = (type: string) => {
     switch (type) {
@@ -70,6 +72,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
 
   const handleDelete = async (id: string) => {
     try {
+      await loggingService.logDelete("project", id, {
+        projectType: project.projectType,
+        projectStatus: project.projectStatus
+      });
       const projectRef = doc(db, "projects", id);
       await deleteDoc(projectRef);
       setConfirmDelete(false);
@@ -80,7 +86,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   };
   return (
     <div
-      className="bg-white dark:bg-primary p-6 rounded-lg shadow-md dark:shadow-lg"
+      className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-soft dark:shadow-soft-lg border border-slate-200/50 dark:border-slate-700/50"
       key={project.projectId}
     >
       <div className="flex justify-between gap-1 items-center">
@@ -112,14 +118,30 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           variant="outlined"
           size="small"
           disabled={city.processStage !== "habilitacao"}
-          onClick={() => router.push(`/habilitacao?id=${project.projectId}`)}
+          onClick={async () => {
+            await loggingService.logNavigation("/meusprojetos", `/habilitacao?id=${project.projectId}`, {
+              buttonType: "habilitacao",
+              projectId: project.projectId,
+              projectType: project.projectType,
+              projectStatus: project.projectStatus
+            });
+            router.push(`/habilitacao?id=${project.projectId}`);
+          }}
         />
         <Button
           label="Recurso"
           variant="outlined"
           size="small"
           disabled={city.processStage !== "recurso"}
-          onClick={() => router.push(`/recurso?id=${project.projectId}`)}
+          onClick={async () => {
+            await loggingService.logNavigation("/meusprojetos", `/recurso?id=${project.projectId}`, {
+              buttonType: "recurso",
+              projectId: project.projectId,
+              projectType: project.projectType,
+              projectStatus: project.projectStatus
+            });
+            router.push(`/recurso?id=${project.projectId}`);
+          }}
         />
         <Button
           label="Excluir"
@@ -132,11 +154,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           variant="outlined"
           size="small"
           disabled={project.projectStatus == "enviado"}
-          onClick={() =>
+          onClick={async () => {
+            await loggingService.logNavigation("/meusprojetos", `/criar?edit=true&projectId=${project.projectId}&state=${project.projectType}`, {
+              buttonType: "editar_projeto",
+              projectId: project.projectId,
+              projectType: project.projectType,
+              projectStatus: project.projectStatus
+            });
             router.push(
               `criar?edit=true&projectId=${project.projectId}&state=${project.projectType}`
-            )
-          }
+            );
+          }}
         />
       </div>
       {confirmDelete && (

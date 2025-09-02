@@ -32,7 +32,7 @@ const EvaluationTable: React.FC<EvaluationTableProps> = ({
     <div className="overflow-x-auto p-4">
       <table className="w-full border-collapse rounded-lg shadow-lg">
         <thead>
-          <tr className="bg-primary text-white">
+          <tr className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
             {headers.map((header, index) => (
               <th key={index} className="p-3 text-left">
                 {header}

@@ -14,16 +14,12 @@ export function TextAreaInput({
   return (
     <div className="relative w-full">
       {label && (
-        <label
-          className={`absolute left-3 text-gray-500 dark:text-gray-400 transition-all ${
-            value ? "top-1 text-xs" : "top-3 text-sm"
-          }`}
-        >
+        <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           {label}
         </label>
       )}
       <textarea
-        className={`w-full p-3 pt-6 mb-2 border rounded text-primary dark:text-light bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none ${className}`}
+        className={`w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-900/20 transition-all duration-200 outline-none shadow-soft hover:border-slate-300 dark:hover:border-slate-500 resize-y min-h-[120px] ${className}`}
         value={value}
         onChange={onChange}
         {...props}

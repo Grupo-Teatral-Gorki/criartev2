@@ -19,14 +19,20 @@ export interface Evaluation {
 
 interface RenderEvaluationFormProps {
   setEvaluationToSend: (evaluation: Evaluation) => void;
+  evaluationFromDb?: Evaluation | null;
 }
 
 const RenderEvaluationForm: React.FC<RenderEvaluationFormProps> = ({
   setEvaluationToSend,
+  evaluationFromDb,
 }) => {
-  const [scores, setScores] = useState<Criteria[]>([]);
-  const [average, setAverage] = useState<number>(0);
-  const [techText, setTechText] = useState("");
+  const [scores, setScores] = useState<Criteria[]>(
+    evaluationFromDb?.scores || []
+  );
+  const [average, setAverage] = useState<number>(
+    evaluationFromDb?.average || 0
+  );
+  const [techText, setTechText] = useState(evaluationFromDb?.techText || "");
 
   // Table headers and rows
   const HEADERS = ["Critério", "Descrição do Critério", "Pontuação"];
@@ -67,18 +73,25 @@ const RenderEvaluationForm: React.FC<RenderEvaluationFormProps> = ({
     setEvaluationToSend(evaluation);
   };
 
+  // If evaluationFromDb changes (e.g. after fetch), update state
+  useEffect(() => {
+    if (evaluationFromDb) {
+      setScores(evaluationFromDb.scores || []);
+      setAverage(evaluationFromDb.average || 0);
+      setTechText(evaluationFromDb.techText || "");
+    }
+  }, [evaluationFromDb]);
+
   useEffect(() => {
     if (!scores.length) return;
-
     const evaluation: Evaluation = {
       evaluated: true,
       scores,
       average,
       techText,
     };
-
     setEvaluationToSend(evaluation);
-  }, [techText]);
+  }, [techText, scores, average, setEvaluationToSend]);
 
   return (
     <div>
