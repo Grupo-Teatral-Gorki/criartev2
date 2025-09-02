@@ -14,12 +14,16 @@ import {
   where 
 } from 'firebase/firestore';
 import { LogEntry, UserLog, UserLogWithId, ActionType } from '../types/logging';
+import EmailService from './emailService';
 
 class LoggingService {
   private static instance: LoggingService;
   private currentUser: string | null = null;
+  private emailService: EmailService;
 
-  private constructor() {}
+  private constructor() {
+    this.emailService = EmailService.getInstance();
+  }
 
   public static getInstance(): LoggingService {
     if (!LoggingService.instance) {
@@ -51,9 +55,9 @@ class LoggingService {
 
     try {
       // ✅ Use Date instead of serverTimestamp inside arrayUnion
-      const logEntry = {
+      const logEntry: LogEntry = {
         action,
-        createdAt: new Date(),
+        timestamp: new Date(),
         ...(filename && { filename }),
         ...(metadata && { metadata })
       };
@@ -62,20 +66,21 @@ class LoggingService {
       const userLogDoc = await getDoc(userLogRef);
 
       if (userLogDoc.exists()) {
-        // Update existing document
+        const existingData = userLogDoc.data() as UserLog;
+        // Ensure logs array exists, initialize if undefined
+        const currentLogs = existingData.logs || [];
         await updateDoc(userLogRef, {
-          logs: arrayUnion(logEntry),
+          logs: [...currentLogs, logEntry],
           updatedAt: serverTimestamp()
         });
       } else {
-        // Create new document
-        const newUserLog = {
+        // Create new document with first log entry
+        const newUserLog: UserLog = {
           user: this.currentUser,
           logs: [logEntry],
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          createdAt: new Date(),
+          updatedAt: new Date()
         };
-
         await setDoc(userLogRef, newUserLog);
       }
 
@@ -152,18 +157,7 @@ class LoggingService {
     await this.logAction('visualizar', { itemType, itemId, ...metadata });
   }
 
-  // Project-specific logging methods
-  public async logProjectCreation(projectId: string, projectType: string, metadata?: Record<string, any>): Promise<void> {
-    await this.logAction('criar_projeto', { projectId, projectType, ...metadata });
-  }
-
-  public async logProjectSubmission(projectId: string, projectTitle?: string, metadata?: Record<string, any>): Promise<void> {
-    await this.logAction('enviar_projeto', { projectId, projectTitle, ...metadata });
-  }
-
-  public async logProjectUpdate(projectId: string, updateType: string, metadata?: Record<string, any>): Promise<void> {
-    await this.logAction('atualizar_projeto', { projectId, updateType, ...metadata });
-  }
+  // Project-specific logging methods (basic versions without email)
 
   public async logProjectTypeSelection(projectType: string, metadata?: Record<string, any>): Promise<void> {
     await this.logAction('selecionar_tipo_projeto', { projectType, ...metadata });
@@ -233,6 +227,128 @@ class LoggingService {
     } catch (error) {
       console.error(`Error checking admin status for user ${userEmail}:`, error);
       return false;
+    }
+  }
+
+  // Enhanced project creation logging with email notification
+  public async logProjectCreation(
+    projectId: string,
+    projectTitle: string,
+    projectType: string,
+    userEmail?: string,
+    userName?: string
+  ): Promise<void> {
+    try {
+      // Log the project creation
+      await this.logAction('criar_projeto', {
+        projectId,
+        projectTitle,
+        projectType,
+        success: true
+      });
+
+      // Send email notification if user details are provided
+      if (userEmail && userName) {
+        const emailSent = await this.emailService.sendProjectCreatedEmail(
+          userEmail,
+          userName,
+          projectTitle,
+          projectType
+        );
+
+        // Log email attempt
+        await this.logAction('envio_email', {
+          emailType: 'project_created',
+          projectId,
+          projectTitle,
+          recipient: userEmail,
+          success: emailSent
+        });
+      }
+    } catch (error) {
+      console.error('Error in logProjectCreation:', error);
+      // Log the failure
+      await this.logAction('criar_projeto', {
+        projectId,
+        projectTitle,
+        projectType,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        success: false
+      });
+    }
+  }
+
+  // Enhanced project submission logging with email notification
+  public async logProjectSubmission(
+    projectId: string,
+    projectTitle: string,
+    metadata?: Record<string, any>,
+    userEmail?: string,
+    userName?: string
+  ): Promise<void> {
+    try {
+      // Log the project submission
+      await this.logAction('enviar_projeto', {
+        projectId,
+        projectTitle,
+        ...metadata,
+        success: true
+      });
+
+      // Send email notification if user details are provided
+      if (userEmail && userName) {
+        const emailSent = await this.emailService.sendProjectSubmittedEmail(
+          userEmail,
+          userName,
+          projectTitle,
+          metadata?.projectType || 'unknown',
+          new Date()
+        );
+
+        // Log email attempt
+        await this.logAction('envio_email', {
+          emailType: 'project_submitted',
+          projectId,
+          projectTitle,
+          recipient: userEmail,
+          success: emailSent
+        });
+      }
+    } catch (error) {
+      console.error('Error in logProjectSubmission:', error);
+      // Log the failure
+      await this.logAction('enviar_projeto', {
+        projectId,
+        projectTitle,
+        ...metadata,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        success: false
+      });
+    }
+  }
+
+  // Enhanced project update logging
+  public async logProjectUpdate(
+    projectId: string,
+    updateType: string,
+    metadata?: Record<string, any>
+  ): Promise<void> {
+    try {
+      await this.logAction('atualizar_projeto', {
+        projectId,
+        updateType,
+        ...metadata,
+        success: true
+      });
+    } catch (error) {
+      console.error('Error in logProjectUpdate:', error);
+      await this.logAction('atualizar_projeto', {
+        projectId,
+        updateType,
+        ...metadata,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        success: false
+      });
     }
   }
 }

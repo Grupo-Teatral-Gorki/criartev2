@@ -42,4 +42,5 @@ export type ActionType =
   | 'criar_projeto'
   | 'enviar_projeto'
   | 'atualizar_projeto'
-  | 'selecionar_tipo_projeto';
+  | 'selecionar_tipo_projeto'
+  | 'envio_email';

@@ -96,12 +96,18 @@ const CriarContent = () => {
           messages.push(`Status do projeto atualizado para '${updateStatus}'!`);
           
           if (updateStatus === "enviado") {
-            // Log project submission
-            await loggingService.logProjectSubmission(projectId, updateTitle || projectData?.projectTitle, {
-              projectType: type,
-              sentDate: new Date().toISOString(),
-              hasProponent: !!projectData?.proponentId
-            });
+            // Log project submission with email notification
+            await loggingService.logProjectSubmission(
+              projectId, 
+              updateTitle || projectData?.projectTitle, 
+              {
+                projectType: type,
+                sentDate: new Date().toISOString(),
+                hasProponent: !!projectData?.proponentId
+              },
+              loggingService.getCurrentUser() || undefined, // userEmail
+              projectData?.userName || "Usuário" // userName - you may need to get this from user context
+            );
           } else {
             // Log general status update
             await loggingService.logProjectUpdate(projectId, "status", {

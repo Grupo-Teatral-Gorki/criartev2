@@ -22,7 +22,8 @@ export const actionTranslations: Record<string, string> = {
   'criar_projeto': 'Criar Projeto',
   'enviar_projeto': 'Enviar Projeto',
   'atualizar_projeto': 'Atualizar Projeto',
-  'selecionar_tipo_projeto': 'Selecionar Tipo de Projeto'
+  'selecionar_tipo_projeto': 'Seleção de Tipo de Projeto',
+  'envio_email': 'Envio de Email'
 };
 
 export const getActionDisplayName = (action: string): string => {
