@@ -96,11 +96,13 @@ const SelecionarTipoProjeto = () => {
       });
 
       // Log successful project creation
-      await loggingService.logProjectCreation(newDocRef.id, type, {
-        registrationNumber: formattedProjectId,
-        cityId: formattedCityId,
-        userId: dbUser.id
-      });
+      await loggingService.logProjectCreation(
+        newDocRef.id, 
+        formattedProjectId, 
+        type,
+        dbUser.email,
+        `${dbUser.firstName} ${dbUser.lastName}`
+      );
 
       // Redirect to the project creation page with the type and projectId
       router.push(`/criar?state=${type}&projectId=${newDocRef.id}`);
