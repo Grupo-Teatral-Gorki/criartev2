@@ -1,47 +1,115 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is admin by querying their document
+    // Helper functions for security
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
     function isAdmin() {
-      return request.auth != null && 
+      return isAuthenticated() && 
              exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole.hasAny(['admin', 'administrador']);
     }
     
-    // Helper function to check if user is admin by email (for logs collection)
-    function isAdminByEmail(email) {
-      return request.auth != null && request.auth.token.email == email &&
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole.hasAny(['admin', 'administrador']);
+    function isValidEmail(email) {
+      return email.matches('[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}');
     }
     
-    // Logs collection rules
+    function isValidData(data) {
+      return data.keys().hasAll(['email', 'firstName', 'lastName']) &&
+             data.email is string && data.firstName is string && data.lastName is string &&
+             isValidEmail(data.email) &&
+             data.firstName.size() > 0 && data.firstName.size() <= 50 &&
+             data.lastName.size() > 0 && data.lastName.size() <= 50;
+    }
+    
+    // Rate limiting helper (basic implementation)
+    function withinRateLimit() {
+      return request.time > resource.data.lastUpdate + duration.value(1, 's');
+    }
+    
+    // Security logs collection
+    match /security_logs/{logId} {
+      allow write: if isAdmin();
+      allow read: if isAdmin();
+    }
+    
+    // User logs collection
     match /logs/{userEmail} {
-      // Allow users to write their own logs
-      allow write: if request.auth != null && request.auth.token.email == userEmail;
-      // Allow users to read their own logs, or admins to read any logs
-      allow read: if request.auth != null && 
+      allow write: if isAuthenticated() && 
+                      request.auth.token.email == userEmail &&
+                      isValidEmail(userEmail);
+      allow read: if isAuthenticated() && 
                      (request.auth.token.email == userEmail || isAdmin());
     }
     
-    // Allow admin users to read all logs (wildcard rule)
-    match /logs/{document=**} {
-      allow read: if request.auth != null && isAdmin();
-    }
-    
-    // Users collection rules
+    // Users collection with enhanced security
     match /users/{userId} {
-      // Users can read/write their own document
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      // Admins can read any user document
-      allow read: if request.auth != null && isAdmin();
-      // Allow querying users collection for admin checks
-      allow read: if request.auth != null;
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && 
+                      isValidData(request.resource.data) &&
+                      (!('userRole' in request.resource.data) || isAdmin());
+      allow create: if isOwner(userId) && isValidData(request.resource.data);
+      allow update: if isOwner(userId) && 
+                       isValidData(request.resource.data) &&
+                       (!('userRole' in request.resource.data) || isAdmin());
     }
     
-    // Default rules for other collections
+    // Projects collection with strict access control
+    match /projects/{projectId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.createdBy == request.auth.uid || 
+                      resource.data.assignedTo.hasAny([request.auth.uid]) ||
+                      isAdmin());
+      allow create: if isAuthenticated() && 
+                       request.resource.data.createdBy == request.auth.uid &&
+                       request.resource.data.keys().hasAll(['projectType', 'cityId', 'registrationNumber']);
+      allow update: if isAuthenticated() && 
+                       (resource.data.createdBy == request.auth.uid || isAdmin()) &&
+                       withinRateLimit();
+      allow delete: if isAdmin();
+    }
+    
+    // Project files with size and type restrictions
+    match /project_files/{fileId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.uploadedBy == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && 
+                       request.resource.data.uploadedBy == request.auth.uid &&
+                       request.resource.data.size < 10485760 && // 10MB limit
+                       request.resource.data.contentType.matches('(image|application)/(jpeg|png|pdf|msword|vnd\\.openxmlformats-officedocument\\.(wordprocessingml\\.document|spreadsheetml\\.sheet))');
+      allow update: if isAuthenticated() && 
+                       resource.data.uploadedBy == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       (resource.data.uploadedBy == request.auth.uid || isAdmin());
+    }
+    
+    // City configurations (admin only)
+    match /city_configs/{cityId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // System configurations (admin only)
+    match /system_configs/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Audit trail (admin only)
+    match /audit_trail/{auditId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Block all other access
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }
