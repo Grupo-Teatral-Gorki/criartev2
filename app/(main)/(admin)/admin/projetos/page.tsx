@@ -38,7 +38,7 @@ const ProjetosGestao = () => {
   const [municipios, setMunicipios] = useState<{ id: number; nome: string }[]>(
     []
   );
-  const [estadoSelecionado, setEstadoSelecionado] = useState<string>();
+  const [estadoSelecionado, setEstadoSelecionado] = useState<string>("");
   const [municipioSelecionado, setMunicipioSelecionado] = useState<string>("");
   const [tiposEditais, setTiposEditais] = useState<string[]>([]);
   const [configMunicipio, setConfigMunicipio] = useState<CityConfig[]>([]);
