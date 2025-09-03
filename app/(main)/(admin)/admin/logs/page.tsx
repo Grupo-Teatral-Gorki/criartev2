@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { collection, getDocs, query, orderBy, limit, where } from "firebase/firestore";
 import { db } from "../../../../config/firebaseconfig";
 import { UserLog, UserLogWithId, LogEntry } from "../../../../types/logging";
@@ -61,7 +61,7 @@ const LogsPage: React.FC = () => {
     "selecionar_tipo_projeto"
   ];
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
@@ -105,9 +105,9 @@ const LogsPage: React.FC = () => {
         loading: false 
       }));
     }
-  };
+  }, [user?.email]);
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...state.logs];
 
     // Filter by email
@@ -136,7 +136,7 @@ const LogsPage: React.FC = () => {
     }
 
     setState(prev => ({ ...prev, filteredLogs: filtered, currentPage: 1 }));
-  };
+  }, [state.logs, state.searchEmail, state.selectedAction, state.dateFilter]);
 
   const clearFilters = () => {
     setState(prev => ({
@@ -203,11 +203,11 @@ const LogsPage: React.FC = () => {
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [fetchLogs]);
 
   useEffect(() => {
     applyFilters();
-  }, [state.searchEmail, state.selectedAction, state.dateFilter, state.logs]);
+  }, [applyFilters]);
 
   if (state.loading) {
     return (
