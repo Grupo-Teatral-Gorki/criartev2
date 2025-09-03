@@ -41,8 +41,8 @@ const RenderBudget: React.FC<ProjectProps> = ({ project }) => {
             height="100%"
             className="border-none rounded secure-iframe"
             title="Planilha Orçamentária"
-            onLoad={() => console.log('Budget loaded')}
-            onError={() => console.error('Budget failed to load')}
+            onLoad={() => {}}
+            onError={() => {}}
             onContextMenu={(e) => e.preventDefault()}
           />
           {/* Transparent overlay to block interactions */}

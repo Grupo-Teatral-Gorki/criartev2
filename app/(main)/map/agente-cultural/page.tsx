@@ -14,13 +14,14 @@ import {
   educationLevelOptions,
   incomeOptions,
   socialProgramOptions,
-  artisticSegmentOptions,
   experienceOptions,
+  artisticSegmentOptions,
 } from "./agenteConsts";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getDownloadURL, uploadBytes, ref } from "firebase/storage";
 import { useRouter } from "next/navigation";
 import { db, storage } from "@/app/config/firebaseconfig";
-import { useCity } from "@/app/context/CityConfigContext";
+import { useAuth } from "@/app/context/AuthContext";
+import Toast from "@/app/components/Toast";
 
 const RegisterProject = () => {
   const [culturalAgentFormData, setCulturalAgentFormData] = useState<{
@@ -49,13 +50,15 @@ const RegisterProject = () => {
   const [partOfAGroup, setPartOfAGroup] = useState(false);
   const [whichGroup, setWhichGroup] = useState("");
   const [history, setHistory] = useState("");
-  const [selectedFiles, setSelectedFiles] = useState<File[]>();
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [urls, setUrls] = useState<string[]>([]);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [cityId, setCityId] = useState("");
   const router = useRouter();
-  const city = useCity();
-  const cityId = city.city.cityId;
+  const { dbUser } = useAuth();
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -102,10 +105,17 @@ const RegisterProject = () => {
     if (uploaded) {
       try {
         const docRef = await addDoc(collection(db, "agentes"), requestBody);
-        alert(`Agente Cultural Cadastrado com ID:  ${docRef.id}`);
-        router.push("/register-project/sucess");
+        setToastMessage(`Agente Cultural cadastrado com sucesso! ID: ${docRef.id}`);
+        setToastType("success");
+        setShowToast(true);
+        setTimeout(() => {
+          router.push("/register-project/sucess");
+        }, 2000);
       } catch (error) {
         console.error(error);
+        setToastMessage("Erro ao cadastrar agente cultural. Tente novamente.");
+        setToastType("error");
+        setShowToast(true);
       } finally {
         setIsSubmitting(false);
       }
@@ -129,7 +139,6 @@ const RegisterProject = () => {
   };
 
   const handleUpload = async () => {
-    console.log("uploading...");
     const uploadedUrls: string[] = [];
     try {
       for (const file of selectedFiles!) {
@@ -141,7 +150,6 @@ const RegisterProject = () => {
       setUrls(uploadedUrls);
       return true;
     } catch (error) {
-      console.log("Error uploading, try again");
       return false;
     }
   };
@@ -713,6 +721,12 @@ const RegisterProject = () => {
           {isSubmitting ? "Enviando..." : "Enviar"}
         </button>
       </form>
+      <Toast
+        message={toastMessage}
+        show={showToast}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

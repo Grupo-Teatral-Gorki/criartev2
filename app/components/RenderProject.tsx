@@ -15,7 +15,7 @@ const RenderProject: React.FC<ProjectProps> = ({ project }) => (
           Object.entries(project.generalInfo).map(([key, value]) => (
             <div
               key={key}
-              className="flex flex-col bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200/50 dark:border-slate-700/50"
+              className="flex flex-col theme-card p-4"
             >
               <p className="font-bold">{key}</p>
               <p>{String(value)}</p>

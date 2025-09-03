@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TextInput } from "./TextInput";
 import InputError from "./InputError";
+import Toast from "./Toast";
 import { auth } from "../config/firebaseconfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -13,6 +14,9 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,8 +37,15 @@ export default function LoginForm() {
 
       await signInWithEmailAndPassword(auth, email, password);
       
-      // Successful login will be logged by AuthContext
-      router.push("/home");
+      // Show success toast
+      setToastMessage("Login realizado com sucesso! Redirecionando...");
+      setToastType("success");
+      setShowToast(true);
+      
+      // Delay redirect to show toast
+      setTimeout(() => {
+        router.push("/home");
+      }, 1500);
     } catch (error: any) {
       // Log failed login attempt
       await loggingService.logAction('login_falha', {
@@ -44,7 +55,13 @@ export default function LoginForm() {
         timestamp: new Date().toISOString()
       });
       
-      setError("Falha ao entrar. Verifique suas credenciais.");
+      const errorMessage = "Falha ao entrar. Verifique suas credenciais.";
+      setError(errorMessage);
+      
+      // Show error toast
+      setToastMessage(errorMessage);
+      setToastType("error");
+      setShowToast(true);
     } finally {
       setIsLoading(false);
     }
@@ -77,6 +94,13 @@ export default function LoginForm() {
       >
         {isLoading ? "Entrando..." : "Entrar"}
       </button>
+      
+      <Toast
+        message={toastMessage}
+        show={showToast}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </form>
   );
 }

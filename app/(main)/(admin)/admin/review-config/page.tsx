@@ -70,7 +70,6 @@ const ProjectList: React.FC = () => {
         }));
 
         setProjects(projectData);
-        console.log("Projects fetched:", projectData);
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
@@ -140,7 +139,7 @@ const ProjectList: React.FC = () => {
                     handleReviewerChange(project.projectId, e.target.value)
                   }
                   options={users}
-                  label="Selecione um parecerista"
+                  placeholder="Selecione um parecerista"
                 />
               </div>
             </div>

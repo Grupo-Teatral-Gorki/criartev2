@@ -6,6 +6,7 @@ import { collection, addDoc } from "firebase/firestore";
 import { getDownloadURL, uploadBytes, ref } from "firebase/storage";
 import { useRouter } from "next/navigation";
 import { db, storage } from "@/app/config/firebaseconfig";
+import Toast from "@/app/components/Toast";
 import { useCity } from "@/app/context/CityConfigContext";
 
 const inputFields = [
@@ -1265,9 +1266,13 @@ const RegisterProject = () => {
   const [peopleCount, setPeopleCount] = useState("");
   const [hasBenefit, setHasBenefit] = useState(false);
   const [benefit, setBenefit] = useState("");
-  const [mainGoal, setMainGoal] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [urls, setUrls] = useState<string[]>([]);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
   const [history, setHistory] = useState("");
-
+  const [mainGoal, setMainGoal] = useState("");
   const router = useRouter();
   const city = useCity();
   const cityId = city.city.cityId;
@@ -1316,7 +1321,6 @@ const RegisterProject = () => {
           setCertificationURL(uploadedUrls[0]);
           return true;
         } catch (error) {
-          console.log("Error uploading, try again");
           return false;
         }
       }
@@ -1343,7 +1347,6 @@ const RegisterProject = () => {
           setPortfolioURL(uploadedUrls);
           return true;
         } catch (error) {
-          console.log("Error uploading, try again");
           return false;
         }
       }
@@ -1387,23 +1390,27 @@ const RegisterProject = () => {
         peopleCount,
         hasBenefit,
         benefit,
-        mainGoal,
-        history,
       },
       cityId,
     };
 
-    /* const uploadedCertification = await handleCertificationUpload();
-    const uploadedPortfolio = await handlePortfolioUpload(); */
     try {
       const docRef = await addDoc(
         collection(db, "espacoCultural"),
         requestBody
       );
-      alert(`Entidade Cadastrada com ID:  ${docRef.id}`);
-      router.push("/register-project/sucess");
+
+      setToastMessage(`Espaço Cultural cadastrado com sucesso! ID: ${docRef.id}`);
+      setToastType("success");
+      setShowToast(true);
+
+      setTimeout(() => {
+        router.push("/register-project/sucess");
+      }, 2000);
     } catch (error) {
-      console.error(error);
+      setToastMessage("Erro ao cadastrar espaço cultural. Tente novamente.");
+      setToastType("error");
+      setShowToast(true);
     }
   };
 
@@ -2183,6 +2190,13 @@ const RegisterProject = () => {
           Enviar
         </button>
       </form>
+
+      <Toast
+        message={toastMessage}
+        show={showToast}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

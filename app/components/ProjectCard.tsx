@@ -31,11 +31,11 @@ const getStatusStyles = (status?: string) => {
 
   const rawStatusClasses = {
     Enviado:
-      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+      "bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300",
     Habilitação:
-      "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-    Recurso: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-    Rascunho: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+      "bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300",
+    Recurso: "bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-300",
+    Rascunho: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300",
   };
 
   const statusClasses: Record<string, string> = {};
@@ -49,7 +49,7 @@ const getStatusStyles = (status?: string) => {
 
   return (
     statusClasses[normalizedStatus] ||
-    "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+    "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
   );
 };
 
@@ -86,11 +86,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   };
   return (
     <div
-      className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-soft dark:shadow-soft-lg border border-slate-200/50 dark:border-slate-700/50"
+      className="theme-card p-6"
       key={project.projectId}
     >
       <div className="flex justify-between gap-1 items-center">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-xl font-semibold theme-text-primary">
           {project.projectTitle}
         </h2>
         <span
@@ -104,7 +104,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             : ""}
         </span>
       </div>
-      <div className="mt-4 space-y-2 text-gray-700 dark:text-gray-300">
+      <div className="mt-4 space-y-2 theme-text-secondary">
         <p>
           <strong>Nº de inscrição:</strong> {project.registrationNumber}
         </p>

@@ -1,98 +1,20 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { collection, doc, getDocs, query, where } from "firebase/firestore";
-import { db } from "@/app/config/firebaseconfig";
+import React, { useState, useMemo } from "react";
 import { useCity } from "@/app/context/CityConfigContext";
-import AgentesTab from "./AgentesTab";
-import ColetivosTab from "./ColetivosTab";
-import EspacosTab from "./EspacosTab";
-
-type GenericDoc = { id: string; [key: string]: any };
-
-type FetchState = {
-  loading: boolean;
-  error: string | null;
-};
+import { GenericDataTab } from "./GenericDataTab";
+import { useMappingData } from "../hooks/useMappingData";
+import { TabType, TabConfig } from "../types/mapping.types";
+import { 
+  agenteFieldExtractor, 
+  coletivoFieldExtractor, 
+  espacoFieldExtractor 
+} from "../services/fieldExtractor.service";
 
 export default function MappingTab() {
   const { city } = useCity();
-  const cityId = city?.cityId;
-
-  const [agentes, setAgentes] = useState<GenericDoc[]>([]);
-  const [coletivos, setColetivos] = useState<GenericDoc[]>([]);
-  const [espacos, setEspacos] = useState<GenericDoc[]>([]);
-  const [activeTab, setActiveTab] = useState<'agentes' | 'coletivos' | 'espacos'>('agentes');
-
-  const [state, setState] = useState<FetchState>({
-    loading: false,
-    error: null,
-  });
-
-  useEffect(() => {
-    const loadAll = async () => {
-      if (!cityId) return;
-      setState({ loading: true, error: null });
-      try {
-        const agentesQ = query(
-          collection(db, "agentes"),
-          where("cityId", "==", cityId)
-        );
-        const coletivosQ = query(
-          collection(db, "coletivoSemCNPJ"),
-          where("cityId", "==", cityId)
-        );
-        const espacosQ = query(
-          collection(db, "espacoCultural"),
-          where("cityId", "==", cityId)
-        );
-
-        const [agentesSnap, coletivosSnap, espacosSnap] = await Promise.all([
-          getDocs(agentesQ),
-          getDocs(coletivosQ),
-          getDocs(espacosQ),
-        ]);
-
-        setAgentes(
-          agentesSnap.docs.map((d) => ({
-            id: d.id,
-            ...(d.data() as Record<string, unknown>),
-          }))
-        );
-        setColetivos(
-          coletivosSnap.docs.map((d) => ({
-            id: d.id,
-            ...(d.data() as Record<string, unknown>),
-          }))
-        );
-        setEspacos(
-          espacosSnap.docs.map((d) => ({
-            id: d.id,
-            ...(d.data() as Record<string, unknown>),
-          }))
-        );
-        setState({ loading: false, error: null });
-      } catch (err) {
-        setState({
-          loading: false,
-          error: "Erro ao carregar dados de mapeamento.",
-        });
-        // eslint-disable-next-line no-console
-        console.error(err);
-      }
-    };
-
-    loadAll();
-  }, [cityId]);
-
-  const counts = useMemo(
-    () => ({
-      agentes: agentes.length,
-      coletivos: coletivos.length,
-      espacos: espacos.length,
-    }),
-    [agentes.length, coletivos.length, espacos.length]
-  );
+  const { data, loading, error, counts } = useMappingData(city?.cityId);
+  const [activeTab, setActiveTab] = useState<TabType>('agentes');
 
   const tabs = [
     { id: 'agentes' as const, label: 'Agentes', count: counts.agentes },
@@ -130,13 +52,34 @@ export default function MappingTab() {
 
       {/* Tab Content */}
       {activeTab === 'agentes' && (
-        <AgentesTab agentes={agentes} loading={state.loading} error={state.error} />
+        <GenericDataTab
+          title="Agentes"
+          data={data.agentes}
+          loading={loading}
+          error={error}
+          fieldExtractor={agenteFieldExtractor}
+          loadingMessage="Carregando agentes..."
+        />
       )}
       {activeTab === 'coletivos' && (
-        <ColetivosTab coletivos={coletivos} loading={state.loading} error={state.error} />
+        <GenericDataTab
+          title="Coletivos sem CNPJ"
+          data={data.coletivos}
+          loading={loading}
+          error={error}
+          fieldExtractor={coletivoFieldExtractor}
+          loadingMessage="Carregando coletivos..."
+        />
       )}
       {activeTab === 'espacos' && (
-        <EspacosTab espacos={espacos} loading={state.loading} error={state.error} />
+        <GenericDataTab
+          title="Espaços Culturais"
+          data={data.espacos}
+          loading={loading}
+          error={error}
+          fieldExtractor={espacoFieldExtractor}
+          loadingMessage="Carregando espaços culturais..."
+        />
       )}
     </div>
   );

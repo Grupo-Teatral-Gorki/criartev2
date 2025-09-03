@@ -24,8 +24,8 @@ export default function Tabs({ tabs }: TabsProps) {
             className={`w-full sm:w-auto px-4 py-3 text-sm sm:text-base font-medium rounded-t-md transition-colors duration-200 
             ${
               activeTab === tab.label
-                ? "bg-orange dark:orange text-white"
-                : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600"
+                ? "bg-accent-400 text-white"
+                : "theme-surface-secondary theme-text-secondary theme-hover"
             }`}
           >
             {tab.label}
@@ -34,7 +34,7 @@ export default function Tabs({ tabs }: TabsProps) {
       </div>
 
       {/* Tabs Content */}
-      <div className="dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-b-md">
+      <div className="theme-surface-primary theme-text-primary rounded-b-md">
         {tabs.find((tab) => tab.label === activeTab)?.content}
       </div>
     </div>

@@ -74,7 +74,7 @@ const ConfigNewCity = () => {
   function getCitiesByUF(uf: string) {
     return cities
       .filter((item) => item.uf === uf)
-      .map(({ id, nome }) => ({ value: id, label: nome }));
+      .map(({ id, nome }) => ({ value: id.toString(), label: nome }));
   }
 
   function getCityNameById(id: string) {
@@ -87,12 +87,11 @@ const ConfigNewCity = () => {
       const docRef = await addDoc(collection(db, "cities"), form);
       setShowToast(true);
       setToastType("success");
-      setToastMessage(`Documento salvo com ID: ${docRef.id}`);
+      setToastMessage(`Nova cidade configurada com sucesso! ID: ${docRef.id}`);
     } catch (error) {
-      console.error("Erro ao adicionar documento:", error);
       setShowToast(true);
       setToastType("error");
-      setToastMessage("Erro ao salvar.");
+      setToastMessage("Erro ao configurar nova cidade. Tente novamente.");
     }
   };
 

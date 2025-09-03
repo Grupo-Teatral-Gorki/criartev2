@@ -10,7 +10,6 @@ const LoggingExample: React.FC = () => {
 
   const handleSearch = async () => {
     await loggingService.logSearch(searchQuery, 10, { component: "LoggingExample" });
-    console.log(`Searching for: ${searchQuery}`);
   };
 
   const handleDownload = async () => {
@@ -18,14 +17,12 @@ const LoggingExample: React.FC = () => {
       component: "LoggingExample",
       downloadType: "manual" 
     });
-    console.log("Download initiated");
   };
 
   const handleModalOpen = async () => {
     await loggingService.logModalOpen("ExampleModal", { 
       component: "LoggingExample" 
     });
-    console.log("Modal opened");
   };
 
   const handleEdit = async () => {
@@ -33,7 +30,6 @@ const LoggingExample: React.FC = () => {
       component: "LoggingExample",
       editType: "content" 
     });
-    console.log("Edit action logged");
   };
 
   return (

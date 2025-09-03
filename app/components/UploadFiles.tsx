@@ -187,7 +187,7 @@ export default function FileUploader({
     <div className="w-full mx-auto p-4">
       {/* Drag-and-Drop Area */}
       <div
-        className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 flex flex-col items-center justify-center text-gray-600 dark:text-gray-300 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition  min-h-[200px]"
+        className="border-2 border-dashed theme-border-secondary rounded-lg p-6 flex flex-col items-center justify-center theme-text-tertiary cursor-pointer hover:theme-border-accent transition min-h-[200px]"
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
       >
@@ -215,7 +215,7 @@ export default function FileUploader({
           {files.map((file, index) => (
             <li
               key={index}
-              className="text-gray-800 dark:text-gray-200 text-sm"
+              className="theme-text-primary text-sm"
             >
               📄 {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
             </li>

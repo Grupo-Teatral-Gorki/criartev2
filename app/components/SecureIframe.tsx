@@ -38,10 +38,10 @@ const SecureIframe: React.FC<SecureIframeProps> = ({
         title={title}
         onContextMenu={(e) => e.preventDefault()}
         onLoad={(e) => {
-          console.log('Iframe loaded:', secureUrl);
+          // Iframe loaded successfully
         }}
         onError={(e) => {
-          console.error('Iframe error:', e);
+          // Handle iframe error
         }}
       />
       

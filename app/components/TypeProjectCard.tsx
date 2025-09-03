@@ -8,9 +8,9 @@ interface Props extends ProjectTypesType {
 
 const TypeProjectCard = ({ available, description, label, onClick }: Props) => {
   return (
-    <div className="bg-slate-200 rounded-lg flex flex-col gap-3 w-full p-4 justify-between">
+    <div className="theme-card flex flex-col gap-3 w-full p-4 justify-between">
       <div className="flex items-center justify-between">
-        <h3 className="text-slate-900 dark:text-slate-100 font-semibold text-3xl">{label}</h3>
+        <h3 className="theme-text-primary font-semibold text-3xl">{label}</h3>
         {available && (
           <div className="bg-green-700 text-white rounded-lg p-2">
             Disponível
@@ -22,7 +22,7 @@ const TypeProjectCard = ({ available, description, label, onClick }: Props) => {
           </div>
         )}
       </div>
-      <p className="text-slate-700 dark:text-slate-300 text-lg px-4">{description}</p>
+      <p className="theme-text-secondary text-lg px-4">{description}</p>
       <Button label={"Selecionar"} size="medium" onClick={onClick} />
     </div>
   );

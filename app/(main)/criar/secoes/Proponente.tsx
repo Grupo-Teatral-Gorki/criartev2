@@ -121,21 +121,18 @@ const Proponent = () => {
       const projectDoc = projectSnapshot.docs[0];
 
       if (!projectDoc) {
-        console.log("Project not found.");
         return null;
       }
 
       const { proponentId } = projectDoc.data();
 
       if (!proponentId) {
-        console.log("No proponentId in project document.");
         return null;
       }
 
       const proponentSnap = await getDoc(doc(db, "proponents", proponentId));
 
       if (!proponentSnap.exists()) {
-        console.log("Proponent not found.");
         return null;
       }
 

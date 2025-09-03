@@ -34,7 +34,6 @@ class LoggingService {
 
   public setCurrentUser(userEmail: string) {
     this.currentUser = userEmail;
-    console.log(`LoggingService: Current user set to: ${userEmail}`);
   }
 
   public getCurrentUser(): string | null {
@@ -50,8 +49,6 @@ class LoggingService {
       console.warn('LoggingService: No user set, cannot log action');
       return;
     }
-
-    console.log(`LoggingService: Attempting to log action "${action}" for user: ${this.currentUser}`);
 
     try {
       // ✅ Use Date instead of serverTimestamp inside arrayUnion
@@ -84,7 +81,6 @@ class LoggingService {
         await setDoc(userLogRef, newUserLog);
       }
 
-      console.log(`Successfully logged action: ${action} for user: ${this.currentUser}`);
     } catch (error: any) {
       console.error(`Error logging action "${action}" for user ${this.currentUser}:`, error);
       console.error('Error details:', {
@@ -218,11 +214,9 @@ class LoggingService {
         const userDoc = querySnapshot.docs[0];
         const userData = userDoc.data();
         const userRole = userData.userRole || [];
-        console.log(`Admin check for ${userEmail}:`, { userRole, isAdmin: userRole.includes('admin') || userRole.includes('administrador') });
         return userRole.includes('admin') || userRole.includes('administrador');
       }
       
-      console.log(`No user found with email: ${userEmail}`);
       return false;
     } catch (error) {
       console.error(`Error checking admin status for user ${userEmail}:`, error);

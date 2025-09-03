@@ -18,9 +18,9 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ data }) => {
     router.push(`/gestao/avaliar/${id}`);
   };
   return (
-    <div className="overflow-y-auto shadow-soft rounded-xl bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50 p-4 max-h-screen">
+    <div className="overflow-y-auto theme-card p-4 max-h-screen">
       <table className="min-w-full table-auto">
-        <thead className="sticky top-0 bg-gradient-to-r from-primary-600 to-primary-700 z-10 rounded-t-lg">
+        <thead className="sticky top-0 bg-primary-600 z-10 rounded-t-lg">
           <tr className="text-white">
             <th className="px-4 py-2">Número Inscrição</th>
             <th className="px-4 py-2">Nome Projeto</th>

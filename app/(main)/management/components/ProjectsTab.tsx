@@ -53,9 +53,9 @@ export default function ProjectsTab({
         />
       </div>
 
-      <div className="overflow-x-auto p-6 bg-primary dark:bg-navy rounded-lg shadow-lg">
-        <table className="min-w-full border border-gray-300">
-          <thead className="bg-navy text-white">
+      <div className="overflow-x-auto p-6 theme-card">
+        <table className="min-w-full border theme-border-primary">
+          <thead className="bg-primary-600 text-white">
             <tr>
               <th className="px-4 py-2 text-left border-b">
                 Título do Projeto

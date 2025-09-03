@@ -159,7 +159,7 @@ const ProjetosGestao = () => {
 
   return (
     <div className="w-full flex items-center justify-center">
-      <div className="flex flex-col gap-2 w-[60%] mt-12 p-8 bg-primary dark:bg-navy rounded shadow-md">
+      <div className="flex flex-col gap-2 w-[60%] mt-12 p-8 theme-card">
         <SelectInput
           label="Selecione um estado"
           value={estadoSelecionado}

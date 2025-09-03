@@ -342,6 +342,7 @@ export default function Header() {
         <div className="flex flex-col items-center justify-center p-14">
           <SelectInput
             label={"Selecione a cidade"}
+            placeholder={"Selecione a cidade"}
             options={citiesOptions}
             value={selectedCity}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>

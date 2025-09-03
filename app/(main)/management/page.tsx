@@ -71,16 +71,9 @@ const Management = () => {
 
   const loadProjects = async (cityId: string) => {
     if (isLoadingProjects) {
-      console.log("Management: Already loading projects, skipping...");
       return;
     }
 
-    console.log(
-      "Management: loadProjects called with cityId:",
-      cityId,
-      "type:",
-      typeof cityId
-    );
 
     if (
       !cityId ||
@@ -239,49 +232,20 @@ const Management = () => {
   }, []);
 
   useEffect(() => {
-    console.log(
-      "Management: useEffect - userCity:",
-      userCity,
-      "dbUser cityId:",
-      dbUser?.cityId
-    );
 
     if (userCity && userCity.cityId) {
-      console.log(
-        "Management: Setting selectedCityId from userCity:",
-        userCity.cityId
-      );
       setSelectedCityId(userCity.cityId);
     } else if (dbUser?.cityId) {
-      console.log(
-        "Management: Setting selectedCityId from dbUser:",
-        dbUser.cityId
-      );
       setSelectedCityId(dbUser.cityId);
     } else {
-      console.log(
-        "Management: No valid cityId found, userCity:",
-        userCity,
-        "dbUser:",
-        dbUser
-      );
     }
   }, [userCity, dbUser]);
 
   useEffect(() => {
-    console.log(
-      "Management: selectedCityId useEffect - selectedCityId:",
-      selectedCityId,
-      "type:",
-      typeof selectedCityId,
-      "isLoadingProjects:",
-      isLoadingProjects
-    );
-
     if (selectedCityId && !isLoadingProjects) {
       loadProjects(selectedCityId);
     }
-  }, [selectedCityId]);
+  }, [selectedCityId, isLoadingProjects]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const generatePDF = async () => {

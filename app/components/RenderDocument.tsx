@@ -48,8 +48,8 @@ const RenderDocuments: React.FC<ProjectProps> = ({ project }) => {
                   height="100%"
                   className="border-none rounded secure-iframe"
                   title={`Document: ${doc.name}`}
-                  onLoad={() => console.log('Document loaded:', doc.name)}
-                  onError={() => console.error('Document failed to load:', doc.name)}
+                  onLoad={() => {}}
+                  onError={() => {}}
                   onContextMenu={(e) => e.preventDefault()}
                 />
                 {/* Transparent overlay to block interactions */}

@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { TextInput } from "./TextInput";
 import { SelectInput } from "./SelectInput";
 import InputError from "./InputError";
+import Toast from "./Toast";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { auth } from "../config/firebaseconfig";
+import { auth, db } from "../config/firebaseconfig";
 import { doc, setDoc, collection, getDocs } from "firebase/firestore";
-import { db } from "../config/firebaseconfig";
 import { useRouter } from "next/navigation";
+import cities from "@/data/cities.json";
+import { useLogging } from "../hooks/useLogging";
 import LoggingService from "../services/loggingService";
 
 type CityOption = {
@@ -38,6 +40,9 @@ export default function RegisterForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [citiesOptions, setCitiesOptions] = useState<CityOption[]>([]);
   const [loadingCities, setLoadingCities] = useState(true);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
   const router = useRouter();
 
   const fetchAllCities = async () => {
@@ -137,8 +142,15 @@ export default function RegisterForm() {
 
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
 
-      // Successful login will be logged by AuthContext
-      router.push("/home");
+      // Show success toast
+      setToastMessage("Cadastro realizado com sucesso! Redirecionando...");
+      setToastType("success");
+      setShowToast(true);
+      
+      // Delay redirect to show toast
+      setTimeout(() => {
+        router.push("/home");
+      }, 2000);
     } catch (err: any) {
       // Log failed registration
       await loggingService.logAction('registro_falha', {
@@ -147,10 +159,16 @@ export default function RegisterForm() {
         timestamp: new Date().toISOString()
       });
       
+      const errorMessage = err.message || "Erro ao tentar registrar.";
       setErrors((prev) => ({
         ...prev,
-        register: err.message || "Erro ao tentar registrar.",
+        register: errorMessage,
       }));
+      
+      // Show error toast
+      setToastMessage(errorMessage);
+      setToastType("error");
+      setShowToast(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -212,6 +230,13 @@ export default function RegisterForm() {
       >
         {isSubmitting ? "Cadastrando..." : "Cadastrar"}
       </button>
+      
+      <Toast
+        message={toastMessage}
+        show={showToast}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </form>
   );
 }

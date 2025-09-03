@@ -51,7 +51,6 @@ class EmailService {
         throw new Error(`Email API responded with status: ${response.status}`);
       }
 
-      console.log('Project created email sent successfully');
       return true;
     } catch (error) {
       console.error('Error sending project created email:', error);
@@ -89,7 +88,6 @@ class EmailService {
         throw new Error(`Email API responded with status: ${response.status}`);
       }
 
-      console.log('Project submitted email sent successfully');
       return true;
     } catch (error) {
       console.error('Error sending project submitted email:', error);

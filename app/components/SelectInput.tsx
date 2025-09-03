@@ -1,16 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 
-type SelectProps = any & {
+interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> {
   options: { value: string; label: string }[];
   label?: string;
+  placeholder?: string;
   value: string;
-  onChange: (value: string) => void; // This will remain to get the value when the selection changes
-};
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+}
 
 export function SelectInput({
   options,
   label,
+  placeholder = "Selecione uma opção",
   className = "",
   value,
   onChange,
@@ -33,10 +34,10 @@ export function SelectInput({
         value={value}
         onChange={handleChange}
       >
-        <option value="" disabled hidden>
-          Selecione uma opção
+        <option value="" disabled>
+          {placeholder}
         </option>
-        {options.map((option: any, index: number) => (
+        {options.map((option, index) => (
           <option key={index} value={option.value} className="py-2">
             {option.label}
           </option>

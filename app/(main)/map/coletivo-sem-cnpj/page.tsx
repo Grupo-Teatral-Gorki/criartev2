@@ -5,6 +5,7 @@ import { collection, addDoc } from "firebase/firestore";
 import { getDownloadURL, uploadBytes, ref } from "firebase/storage";
 import { useRouter } from "next/navigation";
 import { db, storage } from "@/app/config/firebaseconfig";
+import Toast from "@/app/components/Toast";
 import { useCity } from "@/app/context/CityConfigContext";
 
 const collectiveContactForm = [
@@ -254,7 +255,10 @@ const ColetivoSemCNPJ = () => {
   const [history, setHistory] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [urls, setUrls] = useState<string[]>([]);
-
+  const [isFileUploaded, setIsFileUploaded] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
   const router = useRouter();
   const city = useCity();
   const cityId = city.city.cityId;
@@ -313,10 +317,16 @@ const ColetivoSemCNPJ = () => {
           collection(db, "coletivoSemCNPJ"),
           requestBody
         );
-        console.log("cadastro", requestBody);
-        router.push("/register-project/sucess");
+        setToastMessage(`Coletivo cadastrado com sucesso! ID: ${docRef.id}`);
+        setToastType("success");
+        setShowToast(true);
+        setTimeout(() => {
+          router.push("/register-project/sucess");
+        }, 2000);
       } catch (error) {
-        console.error(error);
+        setToastMessage("Erro ao cadastrar coletivo. Tente novamente.");
+        setToastType("error");
+        setShowToast(true);
       }
     }
   };
@@ -345,7 +355,6 @@ const ColetivoSemCNPJ = () => {
       setUrls(uploadedUrls);
       return true;
     } catch (error) {
-      console.log("Error uploading, try again");
       return false;
     }
   };
@@ -823,6 +832,12 @@ const ColetivoSemCNPJ = () => {
           Enviar
         </button>
       </form>
+      <Toast
+        message={toastMessage}
+        show={showToast}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

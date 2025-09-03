@@ -8,7 +8,7 @@ interface TermsAndConditionsProps {
 const TermsAndConditions = ({ onClose }: TermsAndConditionsProps) => {
   return (
     <div className="p-6">
-      <h2 className="text-left text-xl font-bold text-slate-900 dark:text-slate-100">
+      <h2 className="text-left text-xl font-bold theme-text-primary">
         Aceitação de termos
       </h2>
       <div className="bg-blue-100 p-4 rounded-lg flex flex-col items-center text-center mt-4">
