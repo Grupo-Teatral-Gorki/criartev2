@@ -17,6 +17,7 @@ const eslintConfig = [
       "@typescript-eslint/no-unused-vars": "off", // Disable TypeScript unused variable check
       "@typescript-eslint/no-explicit-any": "off", // Disable implicit 'any' check
       "react-hooks/exhaustive-deps": "warn", // Change exhaustive deps to warning instead of error
+      "@typescript-eslint/no-var-requires": "off", // Disable no require imports rule
     },
   },
 ];
