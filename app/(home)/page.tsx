@@ -26,7 +26,7 @@ export default function Home() {
           backgroundSize: '20px 20px'
         }}></div>
       </div>
-      
+
       <div className="absolute top-6 right-6 z-10">
         <ThemeToggle />
       </div>
@@ -37,8 +37,8 @@ export default function Home() {
             <Image
               src={
                 theme === "dark"
-                  ? "https://styxx-public.s3.sa-east-1.amazonaws.com/logo-criarte.png"
-                  : "https://styxx-public.s3.sa-east-1.amazonaws.com/logo_criarte_black.png"
+                  ? "https://firebasestorage.googleapis.com/v0/b/itapevi-cce4e.firebasestorage.app/o/criarte.png?alt=media&token=09310b4d-9035-406a-bc7c-4611d51190c5"
+                  : "https://firebasestorage.googleapis.com/v0/b/itapevi-cce4e.firebasestorage.app/o/criarte_black.png?alt=media&token=cc531c98-6652-4a2d-9499-19b50ea70b0f"
               }
               alt="Logo Criarte"
               width={120}
@@ -47,16 +47,15 @@ export default function Home() {
             />
           </div>
         </div>
-        
+
         <div className="flex justify-center mb-6 bg-slate-100 dark:bg-slate-700/50 rounded-2xl p-1">
           {["login", "register"].map((type) => (
             <button
               key={type}
-              className={`flex-1 px-6 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
-                tab === type
-                  ? "bg-white dark:bg-slate-600 text-primary-600 dark:text-primary-400 shadow-soft"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
-              }`}
+              className={`flex-1 px-6 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${tab === type
+                ? "bg-white dark:bg-slate-600 text-primary-600 dark:text-primary-400 shadow-soft"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                }`}
               onClick={() => setTab(type as "login" | "register")}
             >
               {type === "login" ? "Entrar" : "Cadastrar"}

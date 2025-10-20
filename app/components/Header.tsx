@@ -97,10 +97,10 @@ export default function Header() {
       });
 
       const result = await response.json();
-      
+
       if (response.ok) {
         alert(`✅ Email de teste enviado com sucesso!\nTipo: ${testType === 'project_created' ? 'Criação de Projeto' : 'Envio de Projeto'}\nPara: criarte@grupoteatralgorki.com`);
-        
+
         // Log the test email action
         await loggingService.logAction('envio_email', {
           emailType: `test_${testType}`,
@@ -114,7 +114,7 @@ export default function Header() {
     } catch (error) {
       console.error('Erro ao enviar email de teste:', error);
       alert(`❌ Erro ao enviar email de teste: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      
+
       // Log the failed test email action
       await loggingService.logAction('envio_email', {
         emailType: `test_${testType}`,
@@ -195,7 +195,7 @@ export default function Header() {
             >
               <div className="p-2 rounded-xl transition-all duration-200 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20">
                 <Image
-                  src="https://styxx-public.s3.sa-east-1.amazonaws.com/logo-criarte.png"
+                  src="https://firebasestorage.googleapis.com/v0/b/itapevi-cce4e.firebasestorage.app/o/criarte.png?alt=media&token=09310b4d-9035-406a-bc7c-4611d51190c5"
                   alt="Logo"
                   width={100}
                   height={32}
@@ -224,7 +224,7 @@ export default function Header() {
             {/* Right Side Actions */}
             <div className="flex items-center gap-3">
               <ThemeToggle />
-              <LoggedLink 
+              <LoggedLink
                 href="/profile"
                 logMetadata={{ linkType: "profile_access" }}
               >
@@ -248,9 +248,8 @@ export default function Header() {
                 className="md:hidden p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all duration-200"
               >
                 <ChevronDown
-                  className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform duration-200 ${
-                    mobileMenuOpen ? "rotate-180" : ""
-                  }`}
+                  className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform duration-200 ${mobileMenuOpen ? "rotate-180" : ""
+                    }`}
                 />
               </button>
             </div>
@@ -258,9 +257,8 @@ export default function Header() {
 
           {/* Mobile Navigation Menu */}
           <div
-            className={`md:hidden transition-all duration-300 ease-in-out ${
-              mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-            } overflow-hidden`}
+            className={`md:hidden transition-all duration-300 ease-in-out ${mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+              } overflow-hidden`}
           >
             <div className="py-4 space-y-2 border-t border-slate-200/50 dark:border-slate-700/50">
               {filteredLinks.map((link) => (
@@ -300,41 +298,41 @@ export default function Header() {
             {["admin", "staff"].some((role) =>
               dbUser?.userRole?.includes(role)
             ) && (
-              <div className="flex items-center gap-3">
-                <button
-                  className="px-3 py-1.5 text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all duration-200 border border-primary-200 dark:border-primary-800 hover:border-primary-300 dark:hover:border-primary-700"
-                  onClick={() => setModalIsOpen(true)}
-                >
-                  Trocar Cidade
-                </button>
-                {userRole.includes("admin") && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="px-2 py-1.5 text-xs font-medium text-success-600 dark:text-success-400 hover:text-success-700 dark:hover:text-success-300 hover:bg-success-50 dark:hover:bg-success-900/20 rounded-lg transition-all duration-200 border border-success-200 dark:border-success-800 hover:border-success-300 dark:hover:border-success-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                      onClick={() => sendTestEmail('project_created')}
-                      disabled={testEmailLoading}
-                      title="Enviar email de teste - Criação de Projeto"
-                    >
-                      <Mail className="w-3 h-3" />
-                      {testEmailLoading ? '...' : 'Test ✉️'}
-                    </button>
-                    <button
-                      className="px-2 py-1.5 text-xs font-medium text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 hover:bg-accent-50 dark:hover:bg-accent-900/20 rounded-lg transition-all duration-200 border border-accent-200 dark:border-accent-800 hover:border-accent-300 dark:hover:border-accent-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                      onClick={() => sendTestEmail('project_submitted')}
-                      disabled={testEmailLoading}
-                      title="Enviar email de teste - Envio de Projeto"
-                    >
-                      <Mail className="w-3 h-3" />
-                      {testEmailLoading ? '...' : 'Test 📤'}
-                    </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    className="px-3 py-1.5 text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all duration-200 border border-primary-200 dark:border-primary-800 hover:border-primary-300 dark:hover:border-primary-700"
+                    onClick={() => setModalIsOpen(true)}
+                  >
+                    Trocar Cidade
+                  </button>
+                  {userRole.includes("admin") && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="px-2 py-1.5 text-xs font-medium text-success-600 dark:text-success-400 hover:text-success-700 dark:hover:text-success-300 hover:bg-success-50 dark:hover:bg-success-900/20 rounded-lg transition-all duration-200 border border-success-200 dark:border-success-800 hover:border-success-300 dark:hover:border-success-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        onClick={() => sendTestEmail('project_created')}
+                        disabled={testEmailLoading}
+                        title="Enviar email de teste - Criação de Projeto"
+                      >
+                        <Mail className="w-3 h-3" />
+                        {testEmailLoading ? '...' : 'Test ✉️'}
+                      </button>
+                      <button
+                        className="px-2 py-1.5 text-xs font-medium text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 hover:bg-accent-50 dark:hover:bg-accent-900/20 rounded-lg transition-all duration-200 border border-accent-200 dark:border-accent-800 hover:border-accent-300 dark:hover:border-accent-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        onClick={() => sendTestEmail('project_submitted')}
+                        disabled={testEmailLoading}
+                        title="Enviar email de teste - Envio de Projeto"
+                      >
+                        <Mail className="w-3 h-3" />
+                        {testEmailLoading ? '...' : 'Test 📤'}
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1.5 bg-gradient-to-r from-error-500 to-error-600 px-2.5 py-1 rounded-lg text-white shadow-soft">
+                    <ShieldCheck className="w-3 h-3" />
+                    <span className="text-xs font-medium">Supervisor</span>
                   </div>
-                )}
-                <div className="flex items-center gap-1.5 bg-gradient-to-r from-error-500 to-error-600 px-2.5 py-1 rounded-lg text-white shadow-soft">
-                  <ShieldCheck className="w-3 h-3" />
-                  <span className="text-xs font-medium">Supervisor</span>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </div>
       </div>
