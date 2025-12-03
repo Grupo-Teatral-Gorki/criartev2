@@ -118,11 +118,10 @@ export default function PessoaFisicaPage() {
     };
 
     const handleSubmit = async () => {
-        // Validation temporarily disabled to allow empty submissions
-        // if (!validateCurrentStep()) {
-        //     alert('Por favor, preencha todos os campos obrigatórios.');
-        //     return;
-        // }
+        if (!validateCurrentStep()) {
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return;
+        }
 
         if (!user || !dbUser) {
             alert('Erro: Usuário não autenticado.');

@@ -1,4 +1,4 @@
-import { collection, addDoc, doc, getDoc, getDocs, query, where, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, getDocs, query, where, Timestamp, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseconfig';
 
 export interface ProponenteData {
@@ -122,6 +122,39 @@ class ProponenteService {
         } catch (error) {
             console.error('Error fetching proponente:', error);
             throw new Error('Falha ao buscar proponente.');
+        }
+    }
+
+    /**
+     * Update an existing proponente
+     */
+    async updateProponente(proponenteId: string, data: Partial<ProponenteData>): Promise<void> {
+        try {
+            const docRef = doc(db, this.collectionName, proponenteId);
+            const updateData = {
+                ...data,
+                updatedAt: Timestamp.now()
+            };
+
+            await updateDoc(docRef, updateData);
+            console.log('Proponente updated successfully');
+        } catch (error) {
+            console.error('Error updating proponente:', error);
+            throw new Error('Falha ao atualizar proponente.');
+        }
+    }
+
+    /**
+     * Delete a proponente
+     */
+    async deleteProponente(proponenteId: string): Promise<void> {
+        try {
+            const docRef = doc(db, this.collectionName, proponenteId);
+            await deleteDoc(docRef);
+            console.log('Proponente deleted successfully');
+        } catch (error) {
+            console.error('Error deleting proponente:', error);
+            throw new Error('Falha ao excluir proponente.');
         }
     }
 }

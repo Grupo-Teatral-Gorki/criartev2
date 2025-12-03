@@ -93,7 +93,22 @@ export default function ColetivoPage() {
         }
     };
 
+    const validateCurrentStep = () => {
+        const fields = getCurrentFields();
+        for (const field of fields) {
+            if (field.required && !formData[field.name]) {
+                return false;
+            }
+        }
+        return true;
+    };
+
     const handleSubmit = async () => {
+        if (!validateCurrentStep()) {
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return;
+        }
+
         if (!user || !dbUser) {
             alert('Erro: Usuário não autenticado.');
             return;

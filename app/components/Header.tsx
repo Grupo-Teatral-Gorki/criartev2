@@ -17,6 +17,7 @@ import {
   MapPin,
   FileText,
   Mail,
+  Users,
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "../context/AuthContext";
@@ -140,6 +141,12 @@ export default function Header() {
       href: "/meusprojetos",
       label: "Meus Projetos",
       icon: <Newspaper className="w-4 h-4" />,
+      rolesAllowed: ["user", "secretary", "reviewer", "staff", "admin"],
+    },
+    {
+      href: "/proponentes",
+      label: "Meus Proponentes",
+      icon: <Users className="w-4 h-4" />,
       rolesAllowed: ["user", "secretary", "reviewer", "staff", "admin"],
     },
     {
