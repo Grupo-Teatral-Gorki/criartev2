@@ -52,7 +52,7 @@ const Profile: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isRequired = searchParams.get('required') === 'true';
-  
+
   const [uploading, setUploading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [profileImage, setProfileImage] = useState<string>("");
@@ -106,7 +106,7 @@ const Profile: React.FC = () => {
     if (dbUser) {
       const incomplete = !isProfileComplete(dbUser);
       setProfileIncomplete(incomplete);
-      
+
       // If profile is incomplete and this is a required completion, force edit mode
       if (incomplete && isRequired) {
         setIsEditing(true);
@@ -141,7 +141,7 @@ const Profile: React.FC = () => {
       setShowToast(true);
       return;
     }
-    
+
     setIsEditing(!isEditing);
     if (isEditing) {
       // Reset form when canceling edit
@@ -159,7 +159,7 @@ const Profile: React.FC = () => {
 
   const onSubmit = async (formData: ProfileFormData) => {
     if (!dbUser?.id) return;
-    
+
     setIsSubmitting(true);
     try {
       const userDocRef = doc(db, "users", dbUser.id);
@@ -169,17 +169,17 @@ const Profile: React.FC = () => {
         updatedAt: new Date(),
         updatedBy: dbUser.id,
       };
-      
+
       await updateDoc(userDocRef, updateData);
-      
+
       // Refresh user data to show changes immediately
       await refreshUserData();
-      
+
       setToastMessage("Perfil atualizado com sucesso!");
       setToastType("success");
       setShowToast(true);
       setIsEditing(false);
-      
+
       // If this was a required profile completion, redirect to home immediately
       if (isRequired && isProfileComplete({ ...dbUser, ...updateData })) {
         // Clear the required parameter from URL first
@@ -280,9 +280,9 @@ const Profile: React.FC = () => {
                         'reviewer': 'Parecerista',
                         'admin': 'Administrador'
                       };
-                      
+
                       const roles = Array.isArray(dbUser?.userRole) ? dbUser.userRole : [dbUser?.userRole];
-                      
+
                       return roles.filter(Boolean).map((role, index) => (
                         <span key={index} className="bg-blue-500 bg-opacity-50 px-3 py-1 rounded-full text-sm">
                           {roleMapping[role as string] || role}
@@ -339,9 +339,8 @@ const Profile: React.FC = () => {
                     <input
                       {...register("firstName")}
                       type="text"
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.firstName ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.firstName ? 'border-red-500' : 'border-gray-300'
+                        }`}
                       placeholder="Seu nome"
                     />
                     {errors.firstName && (
@@ -358,9 +357,8 @@ const Profile: React.FC = () => {
                     <input
                       {...register("lastName")}
                       type="text"
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.lastName ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.lastName ? 'border-red-500' : 'border-gray-300'
+                        }`}
                       placeholder="Seu sobrenome"
                     />
                     {errors.lastName && (
@@ -377,9 +375,8 @@ const Profile: React.FC = () => {
                     <input
                       {...register("email")}
                       type="email"
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.email ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'
+                        }`}
                       placeholder="seu@email.com"
                     />
                     {errors.email && (
@@ -410,9 +407,8 @@ const Profile: React.FC = () => {
                     <select
                       value={selectedCity}
                       onChange={(e) => setSelectedCity(e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        !selectedCity && profileIncomplete ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${!selectedCity && profileIncomplete ? 'border-red-500' : 'border-gray-300'
+                        }`}
                     >
                       <option value="">Selecione uma cidade</option>
                       {citiesOptions.map((city) => (
@@ -471,7 +467,7 @@ const Profile: React.FC = () => {
                         <p className="font-medium">{dbUser?.firstName} {dbUser?.lastName}</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-3">
                       <Mail size={20} className="text-gray-400" />
                       <div>
@@ -479,7 +475,7 @@ const Profile: React.FC = () => {
                         <p className="font-medium">{dbUser?.email}</p>
                       </div>
                     </div>
-                    
+
                     {(dbUser as any)?.phone && (
                       <div className="flex items-center space-x-3">
                         <Phone size={20} className="text-gray-400" />
@@ -490,7 +486,7 @@ const Profile: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3">
                       <MapPin size={20} className="text-gray-400" />
@@ -499,7 +495,7 @@ const Profile: React.FC = () => {
                         <p className="font-medium">{findCityLabel(dbUser?.cityId ?? "")}</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-3">
                       <Calendar size={20} className="text-gray-400" />
                       <div>
@@ -511,7 +507,7 @@ const Profile: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {(dbUser as any)?.bio && (
                   <div className="border-t pt-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-3">Biografia</h3>
@@ -529,7 +525,7 @@ const Profile: React.FC = () => {
         onClose={handleCloseModal}
         onImageUpload={handleImageUpload}
       />
-      
+
       <Toast
         message={toastMessage}
         show={showToast}

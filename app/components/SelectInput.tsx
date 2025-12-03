@@ -14,20 +14,25 @@ export function SelectInput({
   className = "",
   value,
   onChange,
+  id,
   ...props
 }: SelectProps) {
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange(e);
   };
 
+  // Generate a unique ID if not provided
+  const selectId = id || `select-${label?.replace(/\s+/g, '-').toLowerCase()}-${Math.random().toString(36).substr(2, 9)}`;
+
   return (
     <div className="w-full">
       {label && (
-        <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+        <label htmlFor={selectId} className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           {label}
         </label>
       )}
       <select
+        id={selectId}
         {...props}
         className={`w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-900/20 transition-all duration-200 outline-none shadow-soft hover:border-slate-300 dark:hover:border-slate-500 cursor-pointer ${className}`}
         value={value}

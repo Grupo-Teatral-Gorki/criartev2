@@ -10,20 +10,25 @@ export function TextInput({
   type = "text",
   label,
   className = "",
+  id,
   ...props
 }: TextInputProps) {
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === "password";
 
+  // Generate a unique ID if not provided
+  const inputId = id || `input-${label?.replace(/\s+/g, '-').toLowerCase()}-${Math.random().toString(36).substr(2, 9)}`;
+
   return (
     <div className="w-full">
       {label && (
-        <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+        <label htmlFor={inputId} className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           {label}
         </label>
       )}
       <div className="relative w-full">
         <input
+          id={inputId}
           type={isPassword && showPassword ? "text" : type}
           className={`w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 placeholder-slate-400 dark:placeholder-slate-500 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-900/20 transition-all duration-200 outline-none shadow-soft hover:border-slate-300 dark:hover:border-slate-500 ${className}`}
           placeholder={label}

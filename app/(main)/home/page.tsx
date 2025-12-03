@@ -67,11 +67,11 @@ const Home = () => {
                   />
                 )}
                 <HomeCard
-                  title={"Mapeamento"}
+                  title={"Meus Proponentes"}
                   description={
-                    "Cadastrar agentes culturais, coletivos e espaços culturais"
+                    "Cadastrar proponentes"
                   }
-                  href={"/map"}
+                  href={"/proponentes"}
                 />
                 <HomeCard
                   title={"Ajuda"}
