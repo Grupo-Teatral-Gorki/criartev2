@@ -129,7 +129,7 @@ const Proponent = () => {
                             Você ainda não tem proponentes cadastrados.
                         </p>
                         <p className="text-sm text-slate-500 dark:text-slate-500">
-                            Clique em "Ir para Proponentes" para criar seu primeiro proponente.
+                            Clique em &quot;Ir para Proponentes&quot; para criar seu primeiro proponente.
                         </p>
                     </div>
                 ) : (
