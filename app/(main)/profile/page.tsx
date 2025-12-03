@@ -85,7 +85,7 @@ const Profile: React.FC = () => {
       const options = docs.map((item) => ({
         value: item.cityId,
         label: item.name,
-      }));
+      })).sort((a, b) => a.label.localeCompare(b.label));
       setCitiesOptions(options);
     } catch (error) {
       console.error("Error fetching cities: ", error);

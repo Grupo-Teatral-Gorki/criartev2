@@ -53,7 +53,7 @@ export default function RegisterForm() {
       const options = docs.map((item) => ({
         value: item.cityId,
         label: item.name,
-      }));
+      })).sort((a, b) => a.label.localeCompare(b.label));
       setCitiesOptions(options);
       return docs;
     } catch (error) {
@@ -110,7 +110,7 @@ export default function RegisterForm() {
 
     setIsSubmitting(true);
     const loggingService = LoggingService.getInstance();
-    
+
     try {
       // Log registration attempt
       loggingService.setCurrentUser(formData.email);
@@ -146,7 +146,7 @@ export default function RegisterForm() {
         error: err.message || 'Unknown error',
         timestamp: new Date().toISOString()
       });
-      
+
       setErrors((prev) => ({
         ...prev,
         register: err.message || "Erro ao tentar registrar.",

@@ -141,7 +141,7 @@ const Management = () => {
       const citiesList = snapshot.docs.map((doc) => ({
         label: `${doc.data().name} - ${doc.data().uf}`,
         value: doc.data().cityId,
-      }));
+      })).sort((a, b) => a.label.localeCompare(b.label));
       setCities(citiesList);
     } catch (error) {
       console.error("Erro ao buscar cidades:", error);
@@ -200,8 +200,8 @@ const Management = () => {
         const docs = Array.isArray(data.projectDocs)
           ? data.projectDocs
           : data.projectDocs
-          ? [data.projectDocs]
-          : [];
+            ? [data.projectDocs]
+            : [];
 
         for (const file of docs) {
           if (file?.url) {
