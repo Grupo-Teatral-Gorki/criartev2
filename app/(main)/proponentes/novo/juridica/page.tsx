@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { TextInput } from '@/app/components/TextInput';
 import { SelectInput } from '@/app/components/SelectInput';
+import { MaskedInput } from '@/app/components/MaskedInput';
 import Button from '@/app/components/Button';
 import { Check, ArrowLeft } from 'lucide-react';
 import { proponenteJuridicaForm } from '@/app/(main)/proponentes/consts/pj';
@@ -314,6 +315,75 @@ export default function PessoaJuridicaPage() {
             );
         }
 
+        // Special handling for CNPJ field
+        if (field.name === 'cnpj') {
+            return (
+                <MaskedInput
+                    key={field.name}
+                    label={field.label}
+                    maskType="cnpj"
+                    value={value}
+                    onChange={(maskedValue, rawValue) => handleInputChange(field.name, maskedValue)}
+                    required={field.required}
+                />
+            );
+        }
+
+        // Special handling for CPF field (responsável legal)
+        if (field.name === 'cpfResponsavelLegal') {
+            return (
+                <MaskedInput
+                    key={field.name}
+                    label={field.label}
+                    maskType="cpf"
+                    value={value}
+                    onChange={(maskedValue, rawValue) => handleInputChange(field.name, maskedValue)}
+                    required={field.required}
+                />
+            );
+        }
+
+        // Special handling for CEP fields
+        if (field.name === 'cep') {
+            return (
+                <MaskedInput
+                    key={field.name}
+                    label={field.label}
+                    maskType="cep"
+                    value={value}
+                    onChange={(maskedValue, rawValue) => handleInputChange(field.name, maskedValue)}
+                    required={field.required}
+                />
+            );
+        }
+
+        // Special handling for phone fields
+        if (field.name === 'celular') {
+            return (
+                <MaskedInput
+                    key={field.name}
+                    label={field.label}
+                    maskType="cellphone"
+                    value={value}
+                    onChange={(maskedValue, rawValue) => handleInputChange(field.name, maskedValue)}
+                    required={field.required}
+                />
+            );
+        }
+
+        if (field.name === 'fixo' || field.name === 'alternativo') {
+            return (
+                <MaskedInput
+                    key={field.name}
+                    label={field.label}
+                    maskType="phone"
+                    value={value}
+                    onChange={(maskedValue, rawValue) => handleInputChange(field.name, maskedValue)}
+                    required={field.required}
+                />
+            );
+        }
+
         return (
             <TextInput
                 key={field.name}
@@ -321,7 +391,6 @@ export default function PessoaJuridicaPage() {
                 label={field.label}
                 value={value}
                 onChange={(e) => handleInputChange(field.name, e.target.value)}
-                placeholder={field.placeholder || field.label}
                 required={field.required}
             />
         );

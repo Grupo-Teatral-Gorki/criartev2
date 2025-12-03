@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { TextInput } from '@/app/components/TextInput';
 import { SelectInput } from '@/app/components/SelectInput';
+import { MaskedInput } from '@/app/components/MaskedInput';
 import Button from '@/app/components/Button';
 import { Check, ArrowLeft, Loader2 } from 'lucide-react';
 import { proponenteFisicaForm } from '@/app/(main)/proponentes/consts/pf';
@@ -299,17 +300,15 @@ export default function PessoaFisicaPage() {
             return (
                 <div key={field.name}>
                     <div className="relative">
-                        <TextInput
-                            type="text"
+                        <MaskedInput
                             label={field.label}
+                            maskType="cep"
                             value={value}
-                            onChange={(e) => {
-                                handleInputChange(field.name, e.target.value);
+                            onChange={(maskedValue, rawValue) => {
+                                handleInputChange(field.name, maskedValue);
                                 clearError();
                             }}
-                            placeholder="00000-000"
                             required={field.required}
-                            maxLength={9}
                         />
                         {cepLoading && (
                             <div className="absolute right-3 top-11">
@@ -324,6 +323,47 @@ export default function PessoaFisicaPage() {
                         <p className="text-sm text-green-600 dark:text-green-400 mt-1">✓ Endereço encontrado</p>
                     )}
                 </div>
+            );
+        }
+
+        // Special handling for CPF field
+        if (field.name === 'cpf') {
+            return (
+                <MaskedInput
+                    key={field.name}
+                    label={field.label}
+                    maskType="cpf"
+                    value={value}
+                    onChange={(maskedValue, rawValue) => handleInputChange(field.name, maskedValue)}
+                    required={field.required}
+                />
+            );
+        }
+
+        // Special handling for phone fields
+        if (field.name === 'celular') {
+            return (
+                <MaskedInput
+                    key={field.name}
+                    label={field.label}
+                    maskType="cellphone"
+                    value={value}
+                    onChange={(maskedValue, rawValue) => handleInputChange(field.name, maskedValue)}
+                    required={field.required}
+                />
+            );
+        }
+
+        if (field.name === 'telefoneFixo' || field.name === 'telefoneAlternativo') {
+            return (
+                <MaskedInput
+                    key={field.name}
+                    label={field.label}
+                    maskType="phone"
+                    value={value}
+                    onChange={(maskedValue, rawValue) => handleInputChange(field.name, maskedValue)}
+                    required={field.required}
+                />
             );
         }
 

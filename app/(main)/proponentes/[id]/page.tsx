@@ -9,6 +9,7 @@ import ProponenteService, { ProponenteData } from '@/app/services/proponenteServ
 import Button from '@/app/components/Button';
 import { TextInput } from '@/app/components/TextInput';
 import { SelectInput } from '@/app/components/SelectInput';
+import { MaskedInput } from '@/app/components/MaskedInput';
 
 export default function EditProponentePage() {
     const router = useRouter();
@@ -125,10 +126,11 @@ export default function EditProponentePage() {
                             value={formData.nomeSocial || ''}
                             onChange={(e) => handleInputChange('nomeSocial', e.target.value)}
                         />
-                        <TextInput
+                        <MaskedInput
                             label="CPF"
+                            maskType="cpf"
                             value={formData.CPF || ''}
-                            onChange={(e) => handleInputChange('CPF', e.target.value)}
+                            onChange={(maskedValue, rawValue) => handleInputChange('CPF', maskedValue)}
                             required
                         />
                         <TextInput
@@ -149,24 +151,27 @@ export default function EditProponentePage() {
                             onChange={(e) => handleInputChange('email', e.target.value)}
                             required
                         />
-                        <TextInput
+                        <MaskedInput
                             label="Celular"
+                            maskType="cellphone"
                             value={formData.celular || ''}
-                            onChange={(e) => handleInputChange('celular', e.target.value)}
+                            onChange={(maskedValue, rawValue) => handleInputChange('celular', maskedValue)}
                             required
                         />
-                        <TextInput
+                        <MaskedInput
                             label="Telefone"
+                            maskType="phone"
                             value={formData.telefone || ''}
-                            onChange={(e) => handleInputChange('telefone', e.target.value)}
+                            onChange={(maskedValue, rawValue) => handleInputChange('telefone', maskedValue)}
                         />
                     </div>
                     <h3 className="text-lg font-semibold mt-6 mb-4">Endereço</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <TextInput
+                        <MaskedInput
                             label="CEP"
+                            maskType="cep"
                             value={formData.CEP || ''}
-                            onChange={(e) => handleInputChange('CEP', e.target.value)}
+                            onChange={(maskedValue, rawValue) => handleInputChange('CEP', maskedValue)}
                         />
                         <TextInput
                             label="Logradouro"
@@ -219,10 +224,11 @@ export default function EditProponentePage() {
                             value={formData.nomeFantasia || ''}
                             onChange={(e) => handleInputChange('nomeFantasia', e.target.value)}
                         />
-                        <TextInput
+                        <MaskedInput
                             label="CNPJ"
+                            maskType="cnpj"
                             value={formData.CNPJ || ''}
-                            onChange={(e) => handleInputChange('CNPJ', e.target.value)}
+                            onChange={(maskedValue, rawValue) => handleInputChange('CNPJ', maskedValue)}
                             required
                         />
                         <TextInput
@@ -232,24 +238,27 @@ export default function EditProponentePage() {
                             onChange={(e) => handleInputChange('email', e.target.value)}
                             required
                         />
-                        <TextInput
+                        <MaskedInput
                             label="Celular"
+                            maskType="cellphone"
                             value={formData.celular || ''}
-                            onChange={(e) => handleInputChange('celular', e.target.value)}
+                            onChange={(maskedValue, rawValue) => handleInputChange('celular', maskedValue)}
                             required
                         />
-                        <TextInput
+                        <MaskedInput
                             label="Telefone"
+                            maskType="phone"
                             value={formData.telefone || ''}
-                            onChange={(e) => handleInputChange('telefone', e.target.value)}
+                            onChange={(maskedValue, rawValue) => handleInputChange('telefone', maskedValue)}
                         />
                     </div>
                     <h3 className="text-lg font-semibold mt-6 mb-4">Endereço</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <TextInput
+                        <MaskedInput
                             label="CEP"
+                            maskType="cep"
                             value={formData.CEP || ''}
-                            onChange={(e) => handleInputChange('CEP', e.target.value)}
+                            onChange={(maskedValue, rawValue) => handleInputChange('CEP', maskedValue)}
                         />
                         <TextInput
                             label="Logradouro"
@@ -304,24 +313,27 @@ export default function EditProponentePage() {
                             onChange={(e) => handleInputChange('email', e.target.value)}
                             required
                         />
-                        <TextInput
+                        <MaskedInput
                             label="Celular"
+                            maskType="cellphone"
                             value={formData.celular || ''}
-                            onChange={(e) => handleInputChange('celular', e.target.value)}
+                            onChange={(maskedValue, rawValue) => handleInputChange('celular', maskedValue)}
                             required
                         />
-                        <TextInput
+                        <MaskedInput
                             label="Telefone"
+                            maskType="phone"
                             value={formData.telefone || ''}
-                            onChange={(e) => handleInputChange('telefone', e.target.value)}
+                            onChange={(maskedValue, rawValue) => handleInputChange('telefone', maskedValue)}
                         />
                     </div>
                     <h3 className="text-lg font-semibold mt-6 mb-4">Endereço</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <TextInput
+                        <MaskedInput
                             label="CEP"
+                            maskType="cep"
                             value={formData.CEP || ''}
-                            onChange={(e) => handleInputChange('CEP', e.target.value)}
+                            onChange={(maskedValue, rawValue) => handleInputChange('CEP', maskedValue)}
                         />
                         <TextInput
                             label="Logradouro"
