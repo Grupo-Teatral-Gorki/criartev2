@@ -86,14 +86,40 @@ describe('PessoaFisicaPage', () => {
 
     // Helper function to navigate to last step
     const navigateToLastStep = async () => {
-        for (let i = 0; i < 6; i++) {
-            await waitFor(() => {
-                const nextButton = screen.queryByText('Próximo');
-                expect(nextButton).toBeInTheDocument();
-            });
-            const nextButton = screen.getByText('Próximo');
-            fireEvent.click(nextButton);
-        }
+        // Step 1: Dados Pessoais - fill required fields
+        fireEvent.change(screen.getByLabelText(/Nome completo/i), { target: { value: 'Test User' } });
+        fireEvent.change(screen.getByLabelText(/CPF/i), { target: { value: '12345678901' } });
+        await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+        fireEvent.click(screen.getByText('Próximo'));
+
+        // Step 2: Contato - fill required fields
+        await waitFor(() => expect(screen.getByLabelText(/E-mail/i)).toBeInTheDocument());
+        fireEvent.change(screen.getByLabelText(/E-mail/i), { target: { value: 'test@test.com' } });
+        await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+        fireEvent.click(screen.getByText('Próximo'));
+
+        // Step 3: Endereço - fill required fields
+        await waitFor(() => expect(screen.getByLabelText(/CEP/i)).toBeInTheDocument());
+        fireEvent.change(screen.getByLabelText(/CEP/i), { target: { value: '12345678' } });
+        await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+        fireEvent.click(screen.getByText('Próximo'));
+
+        // Step 4: Informações Demográficas - fill required fields
+        await waitFor(() => expect(screen.getByLabelText(/Sexo/i)).toBeInTheDocument());
+        fireEvent.change(screen.getByLabelText(/Sexo/i), { target: { value: 'masculino' } });
+        await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+        fireEvent.click(screen.getByText('Próximo'));
+
+        // Step 5: Experiência - fill required fields
+        await waitFor(() => expect(screen.getByLabelText(/Música/i)).toBeInTheDocument());
+        fireEvent.click(screen.getByLabelText(/Música/i));
+        await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+        fireEvent.click(screen.getByText('Próximo'));
+
+        // Step 6: Aspectos Financeiros - no required fields
+        await waitFor(() => expect(screen.getByText('Próximo')).toBeInTheDocument());
+        fireEvent.click(screen.getByText('Próximo'));
+
         // Wait for final button to appear
         await waitFor(() => {
             expect(screen.getByText('Finalizar Cadastro')).toBeInTheDocument();
@@ -129,6 +155,11 @@ describe('PessoaFisicaPage', () => {
         it('should navigate to next step when clicking Próximo', async () => {
             render(<PessoaFisicaPage />);
 
+            // Fill required fields first
+            fireEvent.change(screen.getByLabelText(/Nome completo/i), { target: { value: 'Test User' } });
+            fireEvent.change(screen.getByLabelText(/CPF/i), { target: { value: '12345678901' } });
+
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
             const nextButton = screen.getByText('Próximo');
             fireEvent.click(nextButton);
 
@@ -141,7 +172,10 @@ describe('PessoaFisicaPage', () => {
         it('should navigate to previous step when clicking Anterior', async () => {
             render(<PessoaFisicaPage />);
 
-            // Go to second step
+            // Fill required fields and go to second step
+            fireEvent.change(screen.getByLabelText(/Nome completo/i), { target: { value: 'Test User' } });
+            fireEvent.change(screen.getByLabelText(/CPF/i), { target: { value: '12345678901' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
             fireEvent.click(screen.getByText('Próximo'));
 
             await waitFor(() => {
@@ -186,13 +220,23 @@ describe('PessoaFisicaPage', () => {
         it('should handle select input changes', async () => {
             render(<PessoaFisicaPage />);
 
-            // Navigate to step with select
-            for (let i = 0; i < 3; i++) {
-                await waitFor(() => {
-                    expect(screen.getByText('Próximo')).toBeInTheDocument();
-                });
-                fireEvent.click(screen.getByText('Próximo'));
-            }
+            // Step 1: Fill and navigate
+            fireEvent.change(screen.getByLabelText(/Nome completo/i), { target: { value: 'Test' } });
+            fireEvent.change(screen.getByLabelText(/CPF/i), { target: { value: '12345678901' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 2: Fill and navigate
+            await waitFor(() => expect(screen.getByLabelText(/E-mail/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/E-mail/i), { target: { value: 'test@test.com' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 3: Fill and navigate
+            await waitFor(() => expect(screen.getByLabelText(/CEP/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/CEP/i), { target: { value: '12345678' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
 
             await waitFor(() => {
                 expect(screen.getByLabelText(/Sexo/i)).toBeInTheDocument();
@@ -207,13 +251,30 @@ describe('PessoaFisicaPage', () => {
         it('should handle multiselect checkbox changes', async () => {
             render(<PessoaFisicaPage />);
 
-            // Navigate to step with multiselect
-            for (let i = 0; i < 4; i++) {
-                await waitFor(() => {
-                    expect(screen.getByText('Próximo')).toBeInTheDocument();
-                });
-                fireEvent.click(screen.getByText('Próximo'));
-            }
+            // Navigate through steps filling required fields
+            // Step 1
+            fireEvent.change(screen.getByLabelText(/Nome completo/i), { target: { value: 'Test' } });
+            fireEvent.change(screen.getByLabelText(/CPF/i), { target: { value: '12345678901' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 2
+            await waitFor(() => expect(screen.getByLabelText(/E-mail/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/E-mail/i), { target: { value: 'test@test.com' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 3
+            await waitFor(() => expect(screen.getByLabelText(/CEP/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/CEP/i), { target: { value: '12345678' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 4
+            await waitFor(() => expect(screen.getByLabelText(/Sexo/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/Sexo/i), { target: { value: 'masculino' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
 
             await waitFor(() => {
                 expect(screen.getByLabelText(/Música/i)).toBeInTheDocument();
@@ -228,13 +289,30 @@ describe('PessoaFisicaPage', () => {
         it('should handle multiple multiselect selections', async () => {
             render(<PessoaFisicaPage />);
 
-            // Navigate to step with multiselect
-            for (let i = 0; i < 4; i++) {
-                await waitFor(() => {
-                    expect(screen.getByText('Próximo')).toBeInTheDocument();
-                });
-                fireEvent.click(screen.getByText('Próximo'));
-            }
+            // Navigate through steps filling required fields
+            // Step 1
+            fireEvent.change(screen.getByLabelText(/Nome completo/i), { target: { value: 'Test' } });
+            fireEvent.change(screen.getByLabelText(/CPF/i), { target: { value: '12345678901' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 2
+            await waitFor(() => expect(screen.getByLabelText(/E-mail/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/E-mail/i), { target: { value: 'test@test.com' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 3
+            await waitFor(() => expect(screen.getByLabelText(/CEP/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/CEP/i), { target: { value: '12345678' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 4
+            await waitFor(() => expect(screen.getByLabelText(/Sexo/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/Sexo/i), { target: { value: 'masculino' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
 
             await waitFor(() => {
                 expect(screen.getByLabelText(/Música/i)).toBeInTheDocument();
@@ -253,13 +331,30 @@ describe('PessoaFisicaPage', () => {
         it('should uncheck multiselect option when clicked again', async () => {
             render(<PessoaFisicaPage />);
 
-            // Navigate to step with multiselect
-            for (let i = 0; i < 4; i++) {
-                await waitFor(() => {
-                    expect(screen.getByText('Próximo')).toBeInTheDocument();
-                });
-                fireEvent.click(screen.getByText('Próximo'));
-            }
+            // Navigate through steps filling required fields
+            // Step 1
+            fireEvent.change(screen.getByLabelText(/Nome completo/i), { target: { value: 'Test' } });
+            fireEvent.change(screen.getByLabelText(/CPF/i), { target: { value: '12345678901' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 2
+            await waitFor(() => expect(screen.getByLabelText(/E-mail/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/E-mail/i), { target: { value: 'test@test.com' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 3
+            await waitFor(() => expect(screen.getByLabelText(/CEP/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/CEP/i), { target: { value: '12345678' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 4
+            await waitFor(() => expect(screen.getByLabelText(/Sexo/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/Sexo/i), { target: { value: 'masculino' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
 
             await waitFor(() => {
                 expect(screen.getByLabelText(/Música/i)).toBeInTheDocument();
@@ -361,13 +456,30 @@ describe('PessoaFisicaPage', () => {
 
             render(<PessoaFisicaPage />);
 
-            // Navigate to multiselect step (step 5 - Experiência)
-            for (let i = 0; i < 4; i++) {
-                await waitFor(() => {
-                    expect(screen.getByText('Próximo')).toBeInTheDocument();
-                });
-                fireEvent.click(screen.getByText('Próximo'));
-            }
+            // Navigate through steps filling required fields
+            // Step 1
+            fireEvent.change(screen.getByLabelText(/Nome completo/i), { target: { value: 'Test' } });
+            fireEvent.change(screen.getByLabelText(/CPF/i), { target: { value: '12345678901' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 2
+            await waitFor(() => expect(screen.getByLabelText(/E-mail/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/E-mail/i), { target: { value: 'test@test.com' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 3
+            await waitFor(() => expect(screen.getByLabelText(/CEP/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/CEP/i), { target: { value: '12345678' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            // Step 4
+            await waitFor(() => expect(screen.getByLabelText(/Sexo/i)).toBeInTheDocument());
+            fireEvent.change(screen.getByLabelText(/Sexo/i), { target: { value: 'masculino' } });
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
 
             // Wait for multiselect options to appear
             await waitFor(() => {
@@ -379,14 +491,11 @@ describe('PessoaFisicaPage', () => {
             fireEvent.click(screen.getByLabelText(/Teatro/i));
 
             // Navigate to last step
-            for (let i = 0; i < 2; i++) {
-                await waitFor(() => {
-                    const nextButton = screen.queryByText('Próximo');
-                    expect(nextButton).toBeInTheDocument();
-                });
-                const nextButton = screen.getByText('Próximo');
-                fireEvent.click(nextButton);
-            }
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
+            fireEvent.click(screen.getByText('Próximo'));
+
+            await waitFor(() => expect(screen.getByText('Próximo')).toBeInTheDocument());
+            fireEvent.click(screen.getByText('Próximo'));
 
             await waitFor(() => {
                 expect(screen.getByText('Finalizar Cadastro')).toBeInTheDocument();
@@ -467,22 +576,27 @@ describe('PessoaFisicaPage', () => {
     });
 
     describe('Data Persistence', () => {
-        it('should maintain form data when navigating between steps', () => {
+        it('should maintain form data when navigating between steps', async () => {
             render(<PessoaFisicaPage />);
 
             // Fill data in first step
             const nameInput = screen.getByLabelText(/Nome completo/i) as HTMLInputElement;
             fireEvent.change(nameInput, { target: { value: 'João Silva' } });
+            fireEvent.change(screen.getByLabelText(/CPF/i), { target: { value: '12345678901' } });
 
             // Navigate forward
+            await waitFor(() => expect(screen.getByText('Próximo')).not.toBeDisabled());
             fireEvent.click(screen.getByText('Próximo'));
 
             // Navigate back
+            await waitFor(() => expect(screen.getByText('Anterior')).toBeInTheDocument());
             fireEvent.click(screen.getByText('Anterior'));
 
             // Data should still be there
-            const nameInputAgain = screen.getByLabelText(/Nome completo/i) as HTMLInputElement;
-            expect(nameInputAgain.value).toBe('João Silva');
+            await waitFor(() => {
+                const nameInputAgain = screen.getByLabelText(/Nome completo/i) as HTMLInputElement;
+                expect(nameInputAgain.value).toBe('João Silva');
+            });
         });
     });
 });
