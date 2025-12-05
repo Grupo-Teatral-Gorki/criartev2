@@ -30,18 +30,6 @@ export const proponenteJuridicaForm = {
             placeholder: "www.exemplo.com"
         },
         {
-            "name": "nivelEscolaridade",
-            "label": "Nível de Escolaridade",
-            "type": "select",
-            "options": [
-                {
-                    "value": "fundamental_incompleto",
-                    "label": "Ensino Fundamental Incompleto"
-                },
-            ],
-            "required": true
-        },
-        {
             name: "naturezaEmpresa", // Or 'companyNature'
             label: "Qual é a natureza da sua empresa?",
             type: "select", // Since it has a dropdown

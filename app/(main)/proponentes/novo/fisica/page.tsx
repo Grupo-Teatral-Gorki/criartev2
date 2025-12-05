@@ -55,6 +55,7 @@ export default function PessoaFisicaPage() {
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState<FormData>(initializeFormData());
     const [saving, setSaving] = useState(false);
+    const [changingStep, setChangingStep] = useState(false);
     const { loading: cepLoading, error: cepError, fetchAddress, clearError } = useCEP();
 
     const handleInputChange = (name: string, value: any) => {
@@ -106,9 +107,13 @@ export default function PessoaFisicaPage() {
         return true;
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentStep < STEPS.length - 1) {
+            setChangingStep(true);
+            // Simulate a brief delay for better UX
+            await new Promise(resolve => setTimeout(resolve, 300));
             setCurrentStep(prev => prev + 1);
+            setChangingStep(false);
         }
     };
 
@@ -267,13 +272,12 @@ export default function PessoaFisicaPage() {
 
         if (field.type === 'date') {
             return (
-                <TextInput
+                <MaskedInput
                     key={field.name}
-                    type="text"
                     label={field.label}
+                    maskType="date"
                     value={value}
-                    onChange={(e) => handleInputChange(field.name, e.target.value)}
-                    placeholder="DD/MM/AAAA"
+                    onChange={(maskedValue, rawValue) => handleInputChange(field.name, maskedValue)}
                     required={field.required}
                 />
             );
@@ -453,8 +457,9 @@ export default function PessoaFisicaPage() {
                         />
                     ) : (
                         <Button
-                            label="Próximo"
+                            label={changingStep ? "Carregando..." : "Próximo"}
                             onClick={handleNext}
+                            disabled={!validateCurrentStep() || changingStep}
                         />
                     )}
                 </div>

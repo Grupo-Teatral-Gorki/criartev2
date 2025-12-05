@@ -312,28 +312,6 @@ export default function Header() {
                   >
                     Trocar Cidade
                   </button>
-                  {userRole.includes("admin") && (
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="px-2 py-1.5 text-xs font-medium text-success-600 dark:text-success-400 hover:text-success-700 dark:hover:text-success-300 hover:bg-success-50 dark:hover:bg-success-900/20 rounded-lg transition-all duration-200 border border-success-200 dark:border-success-800 hover:border-success-300 dark:hover:border-success-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                        onClick={() => sendTestEmail('project_created')}
-                        disabled={testEmailLoading}
-                        title="Enviar email de teste - Criação de Projeto"
-                      >
-                        <Mail className="w-3 h-3" />
-                        {testEmailLoading ? '...' : 'Test ✉️'}
-                      </button>
-                      <button
-                        className="px-2 py-1.5 text-xs font-medium text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 hover:bg-accent-50 dark:hover:bg-accent-900/20 rounded-lg transition-all duration-200 border border-accent-200 dark:border-accent-800 hover:border-accent-300 dark:hover:border-accent-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                        onClick={() => sendTestEmail('project_submitted')}
-                        disabled={testEmailLoading}
-                        title="Enviar email de teste - Envio de Projeto"
-                      >
-                        <Mail className="w-3 h-3" />
-                        {testEmailLoading ? '...' : 'Test 📤'}
-                      </button>
-                    </div>
-                  )}
                   <div className="flex items-center gap-1.5 bg-gradient-to-r from-error-500 to-error-600 px-2.5 py-1 rounded-lg text-white shadow-soft">
                     <ShieldCheck className="w-3 h-3" />
                     <span className="text-xs font-medium">Supervisor</span>

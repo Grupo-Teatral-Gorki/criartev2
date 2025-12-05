@@ -3,7 +3,7 @@
  * Provides formatting and validation for CPF, CNPJ, CEP, and phone numbers
  */
 
-export type MaskType = 'cpf' | 'cnpj' | 'cep' | 'phone' | 'cellphone' | 'cpf-cnpj';
+export type MaskType = 'cpf' | 'cnpj' | 'cep' | 'phone' | 'cellphone' | 'cpf-cnpj' | 'date';
 
 /**
  * Apply CPF mask: 000.000.000-00
@@ -64,6 +64,18 @@ export const applyCellphoneMask = (value: string): string => {
     return limited
         .replace(/(\d{2})(\d)/, '($1) $2')
         .replace(/(\d{5})(\d{1,4})/, '$1-$2');
+};
+
+/**
+ * Apply date mask: DD/MM/YYYY
+ */
+export const applyDateMask = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    const limited = numbers.slice(0, 8);
+
+    return limited
+        .replace(/(\d{2})(\d)/, '$1/$2')
+        .replace(/(\d{2})(\d)/, '$1/$2');
 };
 
 /**
@@ -207,6 +219,8 @@ export const applyMask = (value: string, maskType: MaskType): string => {
             return applyCellphoneMask(value);
         case 'cpf-cnpj':
             return applyCPFOrCNPJMask(value);
+        case 'date':
+            return applyDateMask(value);
         default:
             return value;
     }
@@ -229,6 +243,8 @@ export const getMaskPlaceholder = (maskType: MaskType): string => {
             return '(00) 00000-0000';
         case 'cpf-cnpj':
             return 'CPF ou CNPJ';
+        case 'date':
+            return 'DD/MM/AAAA';
         default:
             return '';
     }
