@@ -266,10 +266,10 @@ const Profile: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-white">
-                  <h1 className="text-3xl font-bold">
+                  <h1 className="text-3xl text-gray-900 font-bold">
                     {dbUser?.firstName} {dbUser?.lastName}
                   </h1>
-                  <p className="text-blue-100 mt-1">
+                  <p className="text-blue-600 font-bold mt-1">
                     {findCityLabel(dbUser?.cityId ?? "")}
                   </p>
                   <div className="flex items-center flex-wrap gap-2 mt-2">
@@ -325,7 +325,7 @@ const Profile: React.FC = () => {
           )}
 
           {/* Profile Content */}
-          <div className="p-6">
+          <div className="p-6 text-gray-900">
             {isEditing ? (
               /* Edit Form */
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
