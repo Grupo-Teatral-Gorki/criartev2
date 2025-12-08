@@ -324,9 +324,9 @@ const Management = () => {
   }, [filteredProjects, currentPage, rowsPerPage]);
 
   return (
-    <div className="flex flex-col gap-6 px-32 w-full">
-      <div className="flex gap-4 p-4 w-full items-center justify-between">
-        <div className="flex gap-4 justify-evenly items-center">
+    <div className="flex flex-col gap-4 md:gap-6 px-4 md:px-8 lg:px-32 w-full pb-8 md:pb-12">
+      <div className="flex flex-col md:flex-row gap-4 p-4 w-full items-start md:items-center justify-between">
+        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
           <Button
             label="Voltar"
             size="medium"
@@ -335,14 +335,14 @@ const Management = () => {
           />
           {dbUser?.userRole.includes("admin") && (
             <SelectInput
-              className="w-full"
+              className="w-full md:w-64"
               options={cities}
               value={selectedCityId ?? ""}
               onChange={(e: any) => setSelectedCityId(e.target.value)}
             />
           )}
         </div>
-        <div className="flex gap-8 justify-evenly items-center">
+        <div className="grid grid-cols-2 md:flex gap-4 md:gap-8 w-full md:w-auto">
           {[
             {
               label: "Rascunhos",
@@ -365,18 +365,18 @@ const Management = () => {
               color: "text-red-400",
             },
           ].map((item) => (
-            <div key={item.label} className="flex flex-col items-center">
-              <div className="flex items-center gap-2">
-                <Newspaper className={`h-4 w-4 ${item.color}`} />
-                <p className="text-sm font-bold">{item.label}</p>
+            <div key={item.label} className="flex flex-col items-center bg-white dark:bg-slate-800 rounded-lg p-2 md:p-0 md:bg-transparent">
+              <div className="flex items-center gap-1 md:gap-2">
+                <Newspaper className={`h-3 w-3 md:h-4 md:w-4 ${item.color}`} />
+                <p className="text-xs md:text-sm font-bold">{item.label}</p>
               </div>
-              <p className="text-base font-extrabold">{item.value}</p>
+              <p className="text-sm md:text-base font-extrabold">{item.value}</p>
             </div>
           ))}
         </div>
 
         {dbUser?.userRole.includes("admin") && (
-          <div className="flex gap-4 justify-evenly items-center">
+          <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
             <Button
               label="Baixar Dados"
               size="medium"

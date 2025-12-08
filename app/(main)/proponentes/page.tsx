@@ -102,10 +102,10 @@ export default function ProponentesPage() {
     };
 
     return (
-        <div className="container mx-auto p-6 max-w-6xl">
-            <div className="flex justify-between items-center mb-8">
+        <div className="container mx-auto p-4 md:p-6 max-w-6xl">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 md:mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold mb-2">Meus Proponentes</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold mb-2">Meus Proponentes</h1>
                     <p className="text-slate-600 dark:text-slate-400">
                         Gerencie seus cadastros de proponentes culturais
                     </p>
@@ -183,9 +183,9 @@ export default function ProponentesPage() {
                                         <Icon size={28} className="text-primary-600 dark:text-primary-400" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between mb-2">
+                                        <div className="flex flex-col md:flex-row items-start justify-between mb-2 gap-2">
                                             <div>
-                                                <h3 className="text-xl font-semibold mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                                <h3 className="text-lg md:text-xl font-semibold mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors break-words">
                                                     {getProponenteName(proponente)}
                                                 </h3>
                                                 <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300">

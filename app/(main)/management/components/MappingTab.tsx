@@ -7,8 +7,9 @@ import { useCity } from "@/app/context/CityConfigContext";
 import AgentesTab from "./AgentesTab";
 import ColetivosTab from "./ColetivosTab";
 import EspacosTab from "./EspacosTab";
+import ProponentesTab from "./ProponentesTab";
 
-type GenericDoc = { id: string; [key: string]: any };
+type GenericDoc = { id: string;[key: string]: any };
 
 type FetchState = {
   loading: boolean;
@@ -22,7 +23,8 @@ export default function MappingTab() {
   const [agentes, setAgentes] = useState<GenericDoc[]>([]);
   const [coletivos, setColetivos] = useState<GenericDoc[]>([]);
   const [espacos, setEspacos] = useState<GenericDoc[]>([]);
-  const [activeTab, setActiveTab] = useState<'agentes' | 'coletivos' | 'espacos'>('agentes');
+  const [proponentes, setProponentes] = useState<GenericDoc[]>([]);
+  const [activeTab, setActiveTab] = useState<'agentes' | 'coletivos' | 'espacos' | 'proponentes'>('agentes');
 
   const [state, setState] = useState<FetchState>({
     loading: false,
@@ -46,11 +48,16 @@ export default function MappingTab() {
           collection(db, "espacoCultural"),
           where("cityId", "==", cityId)
         );
+        const proponentesQ = query(
+          collection(db, "proponentes"),
+          where("cityId", "==", cityId)
+        );
 
-        const [agentesSnap, coletivosSnap, espacosSnap] = await Promise.all([
+        const [agentesSnap, coletivosSnap, espacosSnap, proponentesSnap] = await Promise.all([
           getDocs(agentesQ),
           getDocs(coletivosQ),
           getDocs(espacosQ),
+          getDocs(proponentesQ),
         ]);
 
         setAgentes(
@@ -67,6 +74,12 @@ export default function MappingTab() {
         );
         setEspacos(
           espacosSnap.docs.map((d) => ({
+            id: d.id,
+            ...(d.data() as Record<string, unknown>),
+          }))
+        );
+        setProponentes(
+          proponentesSnap.docs.map((d) => ({
             id: d.id,
             ...(d.data() as Record<string, unknown>),
           }))
@@ -90,14 +103,16 @@ export default function MappingTab() {
       agentes: agentes.length,
       coletivos: coletivos.length,
       espacos: espacos.length,
+      proponentes: proponentes.length,
     }),
-    [agentes.length, coletivos.length, espacos.length]
+    [agentes.length, coletivos.length, espacos.length, proponentes.length]
   );
 
   const tabs = [
     { id: 'agentes' as const, label: 'Agentes', count: counts.agentes },
     { id: 'coletivos' as const, label: 'Coletivos sem CNPJ', count: counts.coletivos },
     { id: 'espacos' as const, label: 'Espaços Culturais', count: counts.espacos },
+    { id: 'proponentes' as const, label: 'Proponentes', count: counts.proponentes },
   ];
 
   return (
@@ -116,11 +131,10 @@ export default function MappingTab() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-900/50'
-              }`}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === tab.id
+                ? 'bg-primary-600 text-white'
+                : 'bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-900/50'
+                }`}
             >
               {tab.label} <span className="font-bold">({tab.count})</span>
             </button>
@@ -137,6 +151,9 @@ export default function MappingTab() {
       )}
       {activeTab === 'espacos' && (
         <EspacosTab espacos={espacos} loading={state.loading} error={state.error} />
+      )}
+      {activeTab === 'proponentes' && cityId && (
+        <ProponentesTab cityId={cityId} loading={state.loading} error={state.error} />
       )}
     </div>
   );

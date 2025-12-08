@@ -125,6 +125,31 @@ class ProponenteService {
     }
 
     /**
+     * Get all proponentes for a specific city and type
+     */
+    async getProponentesByCityAndType(cityId: string, tipo: 'fisica' | 'juridica' | 'coletivo'): Promise<ProponenteData[]> {
+        try {
+            const q = query(
+                collection(db, this.collectionName),
+                where('cityId', '==', cityId),
+                where('tipo', '==', tipo)
+            );
+
+            const querySnapshot = await getDocs(q);
+            const proponentes: ProponenteData[] = [];
+
+            querySnapshot.forEach((doc) => {
+                proponentes.push({ id: doc.id, ...doc.data() } as ProponenteData);
+            });
+
+            return proponentes;
+        } catch (error) {
+            console.error('Error fetching proponentes by city and type:', error);
+            throw new Error('Falha ao buscar proponentes da cidade por tipo.');
+        }
+    }
+
+    /**
      * Get a specific proponente by ID
      */
     async getProponenteById(proponenteId: string): Promise<ProponenteData | null> {
