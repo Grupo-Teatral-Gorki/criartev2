@@ -19,7 +19,7 @@ export interface UserLogWithId extends UserLog {
   id: string; // document ID from Firestore
 }
 
-export type ActionType = 
+export type ActionType =
   | 'clique_botao'
   | 'tentativa_upload'
   | 'upload_sucesso'
@@ -43,4 +43,6 @@ export type ActionType =
   | 'enviar_projeto'
   | 'atualizar_projeto'
   | 'selecionar_tipo_projeto'
-  | 'envio_email';
+  | 'envio_email'
+  | 'recuperacao_senha'
+  | 'recuperacao_senha_falha';

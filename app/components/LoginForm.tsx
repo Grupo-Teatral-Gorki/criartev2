@@ -32,7 +32,7 @@ export default function LoginForm() {
       });
 
       await signInWithEmailAndPassword(auth, email, password);
-      
+
       // Successful login will be logged by AuthContext
       router.push("/home");
     } catch (error: any) {
@@ -43,7 +43,7 @@ export default function LoginForm() {
         loginMethod: 'email_password',
         timestamp: new Date().toISOString()
       });
-      
+
       setError("Falha ao entrar. Verifique suas credenciais.");
     } finally {
       setIsLoading(false);
@@ -80,3 +80,5 @@ export default function LoginForm() {
     </form>
   );
 }
+
+export { LoginForm };

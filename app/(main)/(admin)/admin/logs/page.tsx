@@ -58,8 +58,11 @@ const LogsPage: React.FC = () => {
     "criar_projeto",
     "enviar_projeto",
     "atualizar_projeto",
-    "selecionar_tipo_projeto"
-  ];
+    "selecionar_tipo_projeto",
+    "envio_email",
+    "recuperacao_senha",
+    "recuperacao_senha_falha"
+  ] as const;
 
   const fetchLogs = async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -182,11 +185,15 @@ const LogsPage: React.FC = () => {
       case "login":
       case "criar_projeto":
       case "enviar_projeto":
+      case "recuperacao_senha":
         return "text-success-600 bg-success-50";
       case "upload_falha":
       case "logout":
+      case "login_falha":
+      case "recuperacao_senha_falha":
         return "text-error-600 bg-error-50";
       case "tentativa_upload":
+      case "tentativa_login":
       case "atualizar_projeto":
       case "selecionar_tipo_projeto":
         return "text-warning-600 bg-warning-50";

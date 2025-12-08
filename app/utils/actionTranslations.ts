@@ -23,7 +23,9 @@ export const actionTranslations: Record<string, string> = {
   'enviar_projeto': 'Enviar Projeto',
   'atualizar_projeto': 'Atualizar Projeto',
   'selecionar_tipo_projeto': 'Seleção de Tipo de Projeto',
-  'envio_email': 'Envio de Email'
+  'envio_email': 'Envio de Email',
+  'recuperacao_senha': 'Recuperação de Senha',
+  'recuperacao_senha_falha': 'Falha na Recuperação de Senha'
 };
 
 export const getActionDisplayName = (action: string): string => {

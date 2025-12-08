@@ -3,6 +3,7 @@
 import { useState } from "react";
 import LoginForm from "../components/LoginForm";
 import RegisterForm from "../components/RegisterForm";
+import ForgotPasswordForm from "../components/ForgotPasswordForm";
 import ThemeToggle from "../components/ThemeToggle";
 import Footer from "../components/Footer";
 import Image from "next/image";
@@ -10,9 +11,12 @@ import { useTheme } from "../context/ThemeContext";
 
 export default function Home() {
   const { theme } = useTheme(); // Theme Context
-  const [tab, setTab] = useState<"login" | "register">("login");
+  const [tab, setTab] = useState<"login" | "register" | "forgot">("login");
 
   const renderForm = () => {
+    if (tab === "forgot") {
+      return <ForgotPasswordForm onBack={() => setTab("login")} />;
+    }
     return tab === "login" ? <LoginForm /> : <RegisterForm />;
   };
 
@@ -48,22 +52,35 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="flex justify-center mb-6 bg-slate-100 dark:bg-slate-700/50 rounded-2xl p-1">
-          {["login", "register"].map((type) => (
-            <button
-              key={type}
-              className={`flex-1 px-6 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${tab === type
-                ? "bg-white dark:bg-slate-600 text-primary-600 dark:text-primary-400 shadow-soft"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
-                }`}
-              onClick={() => setTab(type as "login" | "register")}
-            >
-              {type === "login" ? "Entrar" : "Cadastrar"}
-            </button>
-          ))}
-        </div>
+        {tab !== "forgot" && (
+          <div className="flex justify-center mb-6 bg-slate-100 dark:bg-slate-700/50 rounded-2xl p-1">
+            {["login", "register"].map((type) => (
+              <button
+                key={type}
+                className={`flex-1 px-6 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${tab === type
+                  ? "bg-white dark:bg-slate-600 text-primary-600 dark:text-primary-400 shadow-soft"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                  }`}
+                onClick={() => setTab(type as "login" | "register")}
+              >
+                {type === "login" ? "Entrar" : "Cadastrar"}
+              </button>
+            ))}
+          </div>
+        )}
 
         {renderForm()}
+
+        {tab === "login" && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setTab("forgot")}
+              className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors underline"
+            >
+              Esqueceu sua senha?
+            </button>
+          </div>
+        )}
       </div>
       <Footer />
     </div>
