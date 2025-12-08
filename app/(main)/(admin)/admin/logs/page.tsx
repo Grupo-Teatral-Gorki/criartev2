@@ -38,7 +38,7 @@ const LogsPage: React.FC = () => {
   const actionTypes = [
     "clique_botao",
     "tentativa_upload",
-    "upload_sucesso", 
+    "upload_sucesso",
     "upload_falha",
     "navegacao",
     "login",
@@ -63,7 +63,7 @@ const LogsPage: React.FC = () => {
 
   const fetchLogs = async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
-    
+
     try {
       // Check if user is admin first
       if (!user?.email) {
@@ -72,14 +72,14 @@ const LogsPage: React.FC = () => {
 
       const loggingService = LoggingService.getInstance();
       const isAdmin = await loggingService.isUserAdmin(user.email);
-      
+
       if (!isAdmin) {
         throw new Error("Acesso negado: apenas administradores podem visualizar todos os logs");
       }
 
       // Use the admin method to get all user logs
       const allUserLogs = await loggingService.getAllUserLogs();
-      
+
       // Process the logs to ensure timestamps are properly formatted
       const processedLogs = allUserLogs.map(userLog => ({
         ...userLog,
@@ -91,18 +91,18 @@ const LogsPage: React.FC = () => {
         updatedAt: (userLog.updatedAt as any)?.toDate ? (userLog.updatedAt as any).toDate() : new Date(userLog.updatedAt || Date.now())
       }));
 
-      setState(prev => ({ 
-        ...prev, 
-        logs: processedLogs, 
-        filteredLogs: processedLogs, 
-        loading: false 
+      setState(prev => ({
+        ...prev,
+        logs: processedLogs,
+        filteredLogs: processedLogs,
+        loading: false
       }));
     } catch (error: any) {
       console.error("Error fetching logs:", error);
-      setState(prev => ({ 
-        ...prev, 
-        error: error.message || "Erro ao carregar logs", 
-        loading: false 
+      setState(prev => ({
+        ...prev,
+        error: error.message || "Erro ao carregar logs",
+        loading: false
       }));
     }
   };
@@ -112,14 +112,14 @@ const LogsPage: React.FC = () => {
 
     // Filter by email
     if (state.searchEmail.trim()) {
-      filtered = filtered.filter(log => 
+      filtered = filtered.filter(log =>
         log.user.toLowerCase().includes(state.searchEmail.toLowerCase())
       );
     }
 
     // Filter by action type
     if (state.selectedAction) {
-      filtered = filtered.filter(log => 
+      filtered = filtered.filter(log =>
         log.logs.some(entry => entry.action === state.selectedAction)
       );
     }
@@ -127,7 +127,7 @@ const LogsPage: React.FC = () => {
     // Filter by date
     if (state.dateFilter) {
       const filterDate = new Date(state.dateFilter);
-      filtered = filtered.filter(log => 
+      filtered = filtered.filter(log =>
         log.logs.some(entry => {
           const entryDate = new Date(entry.timestamp);
           return entryDate.toDateString() === filterDate.toDateString();
@@ -238,7 +238,7 @@ const LogsPage: React.FC = () => {
               Filtros
             </h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* Email Filter */}
             <div>
@@ -355,34 +355,35 @@ const LogsPage: React.FC = () => {
                   {userLog.logs
                     .filter(log => !state.selectedAction || log.action === state.selectedAction)
                     .filter(log => !state.dateFilter || new Date(log.timestamp).toDateString() === new Date(state.dateFilter).toDateString())
+                    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
                     .slice(0, 10)
                     .map((log, logIndex) => (
-                    <div key={logIndex} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                      <div className={`p-1.5 rounded-lg ${getActionColor(log.action)}`}>
-                        {getActionIcon(log.action)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-slate-900 dark:text-slate-100">
-                            {getActionDisplayName(log.action)}
-                          </span>
-                          {log.filename && (
-                            <span className="text-xs bg-slate-200 dark:bg-slate-600 px-2 py-1 rounded-full text-slate-600 dark:text-slate-400">
-                              {log.filename}
+                      <div key={logIndex} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                        <div className={`p-1.5 rounded-lg ${getActionColor(log.action)}`}>
+                          {getActionIcon(log.action)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-slate-900 dark:text-slate-100">
+                              {getActionDisplayName(log.action)}
                             </span>
+                            {log.filename && (
+                              <span className="text-xs bg-slate-200 dark:bg-slate-600 px-2 py-1 rounded-full text-slate-600 dark:text-slate-400">
+                                {log.filename}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-500">
+                            {formatTimestamp(log.timestamp)}
+                          </p>
+                          {log.metadata && Object.keys(log.metadata).length > 0 && (
+                            <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                              {JSON.stringify(log.metadata, null, 2)}
+                            </div>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-500">
-                          {formatTimestamp(log.timestamp)}
-                        </p>
-                        {log.metadata && Object.keys(log.metadata).length > 0 && (
-                          <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                            {JSON.stringify(log.metadata, null, 2)}
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             </div>

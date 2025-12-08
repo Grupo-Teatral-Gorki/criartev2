@@ -5,7 +5,7 @@ export const actionTranslations: Record<string, string> = {
   'upload_sucesso': 'Upload Realizado',
   'upload_falha': 'Falha no Upload',
   'navegacao': 'Navegação',
-  'login': 'Login',
+  'login': 'Login Bem-Sucedido',
   'logout': 'Logout',
   'tentativa_login': 'Tentativa de Login',
   'login_falha': 'Falha no Login',
