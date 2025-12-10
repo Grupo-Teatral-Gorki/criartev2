@@ -81,10 +81,14 @@ export default function RegisterForm() {
 
   const validatePassword = () => {
     const { password, confirmPassword } = formData;
-    const isValid = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+    const isValid = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
 
     if (!password || !confirmPassword) {
       return "Os campos de senha são obrigatórios.";
+    }
+
+    if (password.length < 8) {
+      return "A senha deve ter no mínimo 8 caracteres.";
     }
 
     if (!isValid.test(password)) {
