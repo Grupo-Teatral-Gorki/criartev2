@@ -14,60 +14,28 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const agentesQ = query(
-      collection(db, 'agentes'),
-      where('cityId', '==', cityCode)
-    );
-    const coletivosQ = query(
-      collection(db, 'coletivoSemCNPJ'),
-      where('cityId', '==', cityCode)
-    );
-    const espacosQ = query(
-      collection(db, 'espacoCultural'),
-      where('cityId', '==', cityCode)
-    );
     const proponentesQ = query(
       collection(db, 'proponentes'),
       where('cityId', '==', cityCode)
     );
 
-    const [agentesSnap, coletivosSnap, espacosSnap, proponentesSnap] = await Promise.all([
-      getDocs(agentesQ),
-      getDocs(coletivosQ),
-      getDocs(espacosQ),
-      getDocs(proponentesQ),
-    ]);
+    const proponentesSnap = await getDocs(proponentesQ);
 
-    const agentes = agentesSnap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const countsByTipo: Record<string, number> = {};
+    let total = 0;
 
-    const coletivos = coletivosSnap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    const espacos = espacosSnap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    const proponentes = proponentesSnap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    proponentesSnap.docs.forEach((doc) => {
+      const data = doc.data();
+      const tipo = data.tipo || 'sem_tipo';
+      countsByTipo[tipo] = (countsByTipo[tipo] || 0) + 1;
+      total++;
+    });
 
     return NextResponse.json({
       success: true,
       cityCode,
-      counts: {
-        agentes: agentes.length,
-        coletivos: coletivos.length,
-        espacos: espacos.length,
-        proponentes: proponentes.length,
-        total: agentes.length + coletivos.length + espacos.length + proponentes.length,
-      },
+      total,
+      countsByTipo,
     });
   } catch (error) {
     console.error('Mapping API error:', error);
