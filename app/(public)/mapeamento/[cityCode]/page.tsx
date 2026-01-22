@@ -10,6 +10,8 @@ import { useParams } from "next/navigation";
 interface MappingData {
   success: boolean;
   cityCode: string;
+  cityName: string;
+  cityUF: string;
   total: number;
   countsByTipo: Record<string, number>;
 }
@@ -152,10 +154,10 @@ export default function MapeamentoPage() {
             {/* Title */}
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
-                Mapeamento Cultural
+                {data.cityName}{data.cityUF ? ` - ${data.cityUF}` : ''}
               </h1>
               <p className="text-lg text-slate-600 dark:text-slate-400">
-                Cidade: <span className="font-semibold">{cityCode}</span>
+                Mapeamento Cultural de Proponentes
               </p>
             </div>
 

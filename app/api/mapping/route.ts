@@ -19,7 +19,21 @@ export async function GET(request: NextRequest) {
       where('cityId', '==', cityCode)
     );
 
-    const proponentesSnap = await getDocs(proponentesQ);
+    const [proponentesSnap, citiesSnap] = await Promise.all([
+      getDocs(proponentesQ),
+      getDocs(collection(db, 'cities')),
+    ]);
+
+    let cityName = 'Cidade desconhecida';
+    let cityUF = '';
+
+    citiesSnap.forEach((doc) => {
+      const data = doc.data();
+      if (data.cityId === cityCode || doc.id === cityCode) {
+        cityName = data.name || 'Cidade desconhecida';
+        cityUF = data.uf || '';
+      }
+    });
 
     const countsByTipo: Record<string, number> = {};
     let total = 0;
@@ -34,6 +48,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       cityCode,
+      cityName,
+      cityUF,
       total,
       countsByTipo,
     });
