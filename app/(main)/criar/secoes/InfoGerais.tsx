@@ -4,9 +4,11 @@ import { TextAreaInput } from "@/app/components/TextAreaInput";
 import { db } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext";
 import { useCity } from "@/app/context/CityConfigContext";
+import { useLogging } from "@/app/hooks/useLogging";
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   updateDoc,
@@ -56,6 +58,7 @@ const InfoGerais = () => {
   const searchParams = useSearchParams();
   const city = useCity();
   const { dbUser } = useAuth();
+  const loggingService = useLogging();
   const projectId = searchParams.get("projectId");
   const projectType = searchParams.get("state");
 
@@ -98,6 +101,20 @@ const InfoGerais = () => {
       updatedAt: new Date(),
       updatedBy: dbUser?.id,
     });
+
+    // Get project title for email
+    const projectSnap = await getDoc(projectRef);
+    const projectTitle = projectSnap.data()?.projectTitle || projectId;
+
+    // Log update with email notification
+    await loggingService.logProjectUpdate(
+      projectId,
+      "infoGerais",
+      { projectType },
+      dbUser?.email,
+      `${dbUser?.firstName} ${dbUser?.lastName}`,
+      projectTitle
+    );
   };
 
   const getProjectFromDb = async (projectId: string) => {

@@ -22,6 +22,7 @@ import {
 } from "firebase/firestore";
 import Toast from "@/app/components/Toast";
 import { useAuth } from "@/app/context/AuthContext";
+import { useLogging } from "@/app/hooks/useLogging";
 
 interface ProjectDoc {
   name: string;
@@ -51,6 +52,7 @@ const Documentos = () => {
   const [uploadedDocs, setUploadedDocs] = useState<UploadedDocWithPath[]>([]);
 
   const { dbUser } = useAuth();
+  const loggingService = useLogging();
 
   useEffect(() => {
     const projectDetails = city.typesOfProjects.find(
@@ -162,6 +164,17 @@ const Documentos = () => {
       setToastMessage("Arquivos enviados com sucesso!");
       setToastType("success");
       setShowToast(true);
+
+      // Log update with email notification
+      const projectTitle = projectData.projectTitle || projectId;
+      await loggingService.logProjectUpdate(
+        projectId,
+        "documentos",
+        { projectType },
+        dbUser?.email,
+        `${dbUser?.firstName} ${dbUser?.lastName}`,
+        projectTitle
+      );
     } catch (error) {
       console.error("Upload error:", error);
       setToastMessage("Erro ao enviar arquivos");

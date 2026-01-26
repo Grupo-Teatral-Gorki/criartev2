@@ -4,6 +4,7 @@ import Toast from "@/app/components/Toast";
 import UploadFiles from "@/app/components/UploadFiles";
 import { db, storage } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext";
+import { useLogging } from "@/app/hooks/useLogging";
 import { doc, updateDoc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useSearchParams } from "next/navigation";
@@ -30,6 +31,7 @@ const PlanilhaOrcamentaria = () => {
   const [planilhaMessage, setPlanilhaMessage] = useState("");
   const projectId = searchParams.get("projectId");
   const { dbUser } = useAuth();
+  const loggingService = useLogging();
 
   const handleFileChange = (name: string, files: File[]) => {
     setSelectedFiles((prev) => ({ ...prev, [name]: files }));
@@ -78,6 +80,19 @@ const PlanilhaOrcamentaria = () => {
       
       // Clear selected files
       setSelectedFiles({});
+
+      // Log update with email notification
+      const projectRef = doc(db, "projects", projectId);
+      const projectSnap = await getDoc(projectRef);
+      const projectTitle = projectSnap.data()?.projectTitle || projectId;
+      await loggingService.logProjectUpdate(
+        projectId,
+        "planilha",
+        {},
+        dbUser?.email,
+        `${dbUser?.firstName} ${dbUser?.lastName}`,
+        projectTitle
+      );
     } catch (error) {
       console.error("Upload error:", error);
       setToastMessage("Erro ao enviar planilha orçamentária");

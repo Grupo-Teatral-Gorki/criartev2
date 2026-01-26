@@ -85,11 +85,15 @@ const CriarContent = () => {
 
         if (updateTitle) {
           messages.push("Nome do projeto atualizado com sucesso!");
-          // Log project title update
-          await loggingService.logProjectUpdate(projectId, "titulo", {
-            newTitle: updateTitle,
-            projectType: type
-          });
+          // Log project title update with email notification
+          await loggingService.logProjectUpdate(
+            projectId, 
+            "titulo", 
+            { newTitle: updateTitle, projectType: type },
+            loggingService.getCurrentUser() || undefined,
+            projectData?.userName || "Usuário",
+            updateTitle
+          );
         }
 
         if (updateStatus) {

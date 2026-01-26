@@ -2,6 +2,7 @@ import Button from "@/app/components/Button";
 import { SelectInput } from "@/app/components/SelectInput";
 import { db } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext";
+import { useLogging } from "@/app/hooks/useLogging";
 import {
     collection,
     doc,
@@ -19,6 +20,7 @@ const Proponent = () => {
     const [selectedProponent, setSelectedProponent] = useState("");
     const [proponents, setProponents] = useState<any[]>([]);
     const { user, dbUser } = useAuth();
+    const loggingService = useLogging();
     const searchParams = useSearchParams();
     const projectId = searchParams.get("projectId");
 
@@ -60,6 +62,18 @@ const Proponent = () => {
             updatedAt: new Date(),
             updatedBy: dbUser?.id,
         });
+
+        // Log update with email notification
+        const projectSnap = await getDoc(projectRef);
+        const projectTitle = projectSnap.data()?.projectTitle || projectId;
+        await loggingService.logProjectUpdate(
+            projectId,
+            "proponente",
+            {},
+            dbUser?.email,
+            `${dbUser?.firstName} ${dbUser?.lastName}`,
+            projectTitle
+        );
     };
 
     const getDbProponent = async (projectId: string) => {

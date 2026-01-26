@@ -20,6 +20,9 @@ class LoggingService {
   private static instance: LoggingService;
   private currentUser: string | null = null;
   private emailService: EmailService;
+  // Throttle update emails: only send one per project per 30 minutes
+  private updateEmailThrottle: Map<string, number> = new Map();
+  private readonly THROTTLE_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
   private constructor() {
     this.emailService = EmailService.getInstance();
@@ -54,12 +57,17 @@ class LoggingService {
     console.log(`LoggingService: Attempting to log action "${action}" for user: ${this.currentUser}`);
 
     try {
+      // Filter out undefined values from metadata to prevent Firebase errors
+      const cleanMetadata = metadata 
+        ? Object.fromEntries(Object.entries(metadata).filter(([_, v]) => v !== undefined))
+        : undefined;
+
       // ✅ Use Date instead of serverTimestamp inside arrayUnion
       const logEntry: LogEntry = {
         action,
         timestamp: new Date(),
         ...(filename && { filename }),
-        ...(metadata && { metadata })
+        ...(cleanMetadata && Object.keys(cleanMetadata).length > 0 && { metadata: cleanMetadata })
       };
 
       const userLogRef = doc(db, 'logs', this.currentUser);
@@ -327,11 +335,14 @@ class LoggingService {
     }
   }
 
-  // Enhanced project update logging
+  // Enhanced project update logging with email notification
   public async logProjectUpdate(
     projectId: string,
     updateType: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
+    userEmail?: string,
+    userName?: string,
+    projectTitle?: string
   ): Promise<void> {
     try {
       await this.logAction('atualizar_projeto', {
@@ -340,6 +351,39 @@ class LoggingService {
         ...metadata,
         success: true
       });
+
+      // Send email notification if user details are provided (throttled)
+      if (userEmail && userName && projectTitle) {
+        const lastEmailTime = this.updateEmailThrottle.get(projectId) || 0;
+        const now = Date.now();
+        
+        if (now - lastEmailTime > this.THROTTLE_DURATION_MS) {
+          const emailSent = await this.emailService.sendProjectUpdatedEmail(
+            userEmail,
+            userName,
+            projectTitle,
+            updateType
+          );
+
+          if (emailSent) {
+            this.updateEmailThrottle.set(projectId, now);
+            console.log(`[EMAIL THROTTLE] Update email sent for project ${projectId}, next allowed in 30 min`);
+          }
+
+          // Log email attempt
+          await this.logAction('envio_email', {
+            emailType: 'project_updated',
+            projectId,
+            projectTitle,
+            updateType,
+            recipient: userEmail,
+            success: emailSent
+          });
+        } else {
+          const remainingMin = Math.ceil((this.THROTTLE_DURATION_MS - (now - lastEmailTime)) / 60000);
+          console.log(`[EMAIL THROTTLE] Skipping update email for project ${projectId}, ${remainingMin} min until next allowed`);
+        }
+      }
     } catch (error) {
       console.error('Error in logProjectUpdate:', error);
       await this.logAction('atualizar_projeto', {
