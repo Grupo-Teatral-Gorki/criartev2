@@ -6,7 +6,7 @@ const Footer = () => (
       <Image
         alt="Logo Gorki"
         className="max-w-[90px] mr-5 rounded-lg"
-        src="https://styxx-public.s3.sa-east-1.amazonaws.com/gorki.png"
+        src="https://firebasestorage.googleapis.com/v0/b/itapevi-cce4e.firebasestorage.app/o/logo-mark-black.png?alt=media&token=cccb7359-2d40-4bb6-ae92-2eb9530ef283"
         width={90}
         height={0}
       />
