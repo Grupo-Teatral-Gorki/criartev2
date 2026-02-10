@@ -36,12 +36,18 @@ export async function GET(request: NextRequest) {
     });
 
     const countsByTipo: Record<string, number> = {};
+    const countsByArea: Record<string, number> = {};
     let total = 0;
 
     proponentesSnap.docs.forEach((doc) => {
       const data = doc.data();
       const tipo = data.tipo || 'sem_tipo';
       countsByTipo[tipo] = (countsByTipo[tipo] || 0) + 1;
+      
+      // Count by principal area of cultural activity
+      const area = data.perfilDoProponente?.experiencia?.principalAreaAtuacaoCultural || 'sem_area';
+      countsByArea[area] = (countsByArea[area] || 0) + 1;
+      
       total++;
     });
 
@@ -52,6 +58,7 @@ export async function GET(request: NextRequest) {
       cityUF,
       total,
       countsByTipo,
+      countsByArea,
     });
   } catch (error) {
     console.error('Mapping API error:', error);

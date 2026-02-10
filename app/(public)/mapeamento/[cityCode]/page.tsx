@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useTheme } from "@/app/context/ThemeContext";
 import Link from "next/link";
-import { Users, UserCircle, Building2, UsersRound, ArrowLeft } from "lucide-react";
+import { Users, UserCircle, Building2, UsersRound, Palette } from "lucide-react";
 import { useParams } from "next/navigation";
 
 interface MappingData {
@@ -14,6 +14,7 @@ interface MappingData {
   cityUF: string;
   total: number;
   countsByTipo: Record<string, number>;
+  countsByArea: Record<string, number>;
 }
 
 export default function MapeamentoPage() {
@@ -93,6 +94,45 @@ export default function MapeamentoPage() {
     }
   };
 
+  const getAreaLabel = (area: string) => {
+    const areaLabels: Record<string, string> = {
+      arquitetura: "Arquitetura",
+      atividades_artesanais: "Atividades Artesanais",
+      artes_cenicas: "Artes Cênicas",
+      artes_visuais: "Artes Visuais",
+      bibliotecas_literatura: "Bibliotecas e Literatura",
+      cinema_radio_tv: "Cinema, Rádio e TV",
+      musica: "Música",
+      arte_digital_jogos_digitais: "Arte Digital e Jogos Digitais",
+      design: "Design",
+      editorial: "Editorial",
+      moda: "Moda",
+      museus: "Museus",
+      outro: "Outro",
+      sem_area: "Não informado",
+    };
+    return areaLabels[area] || area;
+  };
+
+  const getAreaColor = (index: number) => {
+    const colors = [
+      "from-rose-500 to-rose-600",
+      "from-orange-500 to-orange-600",
+      "from-amber-500 to-amber-600",
+      "from-yellow-500 to-yellow-600",
+      "from-lime-500 to-lime-600",
+      "from-emerald-500 to-emerald-600",
+      "from-teal-500 to-teal-600",
+      "from-cyan-500 to-cyan-600",
+      "from-sky-500 to-sky-600",
+      "from-indigo-500 to-indigo-600",
+      "from-violet-500 to-violet-600",
+      "from-fuchsia-500 to-fuchsia-600",
+      "from-pink-500 to-pink-600",
+    ];
+    return colors[index % colors.length];
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50/30 to-accent-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 relative overflow-hidden">
       {/* Background decoration */}
@@ -161,25 +201,25 @@ export default function MapeamentoPage() {
               </p>
             </div>
 
-            {/* Total Card */}
-            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 shadow-soft border border-white/20 dark:border-slate-700/50 mb-8">
-              <div className="flex flex-col items-center text-center gap-4">
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 text-white">
-                  <Users className="w-10 h-10" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                    Total de Proponentes
-                  </p>
-                  <p className="text-5xl font-bold text-slate-900 dark:text-white">
-                    {data.total}
-                  </p>
+            {/* Counts by Tipo (including Total) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              {/* Total Card */}
+              <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-soft border border-white/20 dark:border-slate-700/50">
+                <div className="flex flex-col items-center text-center gap-4">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 text-white">
+                    <Users className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                      Total de Proponentes
+                    </p>
+                    <p className="text-4xl font-bold text-slate-900 dark:text-white">
+                      {data.total}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Counts by Tipo */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {Object.entries(data.countsByTipo).map(([tipo, count]) => (
                 <div
                   key={tipo}
@@ -209,31 +249,38 @@ export default function MapeamentoPage() {
               ))}
             </div>
 
-            {/* Distribution Chart */}
-            {data.total > 0 && (
+            {/* Distribution Chart by Area */}
+            {data.total > 0 && data.countsByArea && Object.keys(data.countsByArea).length > 0 && (
               <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 shadow-soft border border-white/20 dark:border-slate-700/50 mb-8">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-                  Distribuição por Tipo
-                </h2>
-                <div className="space-y-6">
-                  {Object.entries(data.countsByTipo).map(([tipo, count]) => (
-                    <div key={tipo}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          {getTipoLabel(tipo)}
-                        </span>
-                        <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                          {count} ({Math.round((count / data.total) * 100)}%)
-                        </span>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 text-white">
+                    <Palette className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    Distribuição por Área de Atuação Cultural
+                  </h2>
+                </div>
+                <div className="space-y-4">
+                  {Object.entries(data.countsByArea)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([area, count], index) => (
+                      <div key={area}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            {getAreaLabel(area)}
+                          </span>
+                          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                            {count} ({Math.round((count / data.total) * 100)}%)
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+                          <div
+                            className={`h-full bg-gradient-to-r ${getAreaColor(index)} rounded-full transition-all duration-500`}
+                            style={{ width: `${(count / data.total) * 100}%` }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-                        <div
-                          className={`h-full bg-gradient-to-r ${getTipoColor(tipo)} rounded-full transition-all duration-500`}
-                          style={{ width: `${(count / data.total) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             )}
