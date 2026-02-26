@@ -126,6 +126,20 @@ export const proponenteColetivoForm = {
         "required": true
     },
     {
+        "name": "zona",
+        "label": "Zona:",
+        "type": "select",
+        "placeholder": "Selecione sua zona",
+        "options": [
+            { "value": "zona_sul", "label": "Zona Sul" },
+            { "value": "zona_norte", "label": "Zona Norte" },
+            { "value": "zona_leste", "label": "Zona Leste" },
+            { "value": "zona_oeste", "label": "Zona Oeste" },
+            { "value": "zona_central", "label": "Zona Central" }
+        ],
+        "required": true
+    },
+    {
         "name": "municipio",
         "label": "Município:",
         "type": "text",
@@ -166,6 +180,20 @@ export const proponenteColetivoForm = {
         "name": "bairro",
         "label": "Bairro:",
         "type": "text",
+        "required": true
+    },
+    {
+        "name": "zona",
+        "label": "Zona:",
+        "type": "select",
+        "placeholder": "Selecione sua zona",
+        "options": [
+            { "value": "zona_sul", "label": "Zona Sul" },
+            { "value": "zona_norte", "label": "Zona Norte" },
+            { "value": "zona_leste", "label": "Zona Leste" },
+            { "value": "zona_oeste", "label": "Zona Oeste" },
+            { "value": "zona_central", "label": "Zona Central" }
+        ],
         "required": true
     },
     {

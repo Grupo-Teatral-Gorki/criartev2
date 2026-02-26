@@ -20,6 +20,14 @@ export interface CityStatistics {
     fisica: number;
     juridica: number;
     coletivo: number;
+    zonas?: {
+        zona_sul: number;
+        zona_norte: number;
+        zona_leste: number;
+        zona_oeste: number;
+        zona_central: number;
+        nao_informada: number;
+    };
 }
 
 export interface FilterOptions {
@@ -33,6 +41,37 @@ export interface FilterOptions {
 class ProponenteService {
     private static instance: ProponenteService;
     private collectionName = 'proponentes';
+
+    private normalizeZonaValue(value: unknown): keyof NonNullable<CityStatistics['zonas']> {
+        if (typeof value !== 'string') {
+            return 'nao_informada';
+        }
+
+        const normalized = value
+            .trim()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, '_');
+
+        if (normalized === 'zona_sul') return 'zona_sul';
+        if (normalized === 'zona_norte') return 'zona_norte';
+        if (normalized === 'zona_leste') return 'zona_leste';
+        if (normalized === 'zona_oeste') return 'zona_oeste';
+        if (normalized === 'zona_central') return 'zona_central';
+
+        return 'nao_informada';
+    }
+
+    private extractZonaFromProponente(proponente: ProponenteData): keyof NonNullable<CityStatistics['zonas']> {
+        const zonaRaw =
+            proponente.endereco?.zona ??
+            proponente.enderecoPessoaJuridica?.zona ??
+            proponente.enderecoResponsavel?.zona ??
+            proponente.zona;
+
+        return this.normalizeZonaValue(zonaRaw);
+    }
 
     private constructor() { }
 
@@ -235,7 +274,15 @@ class ProponenteService {
                 totalProponentes: proponentes.length,
                 fisica: 0,
                 juridica: 0,
-                coletivo: 0
+                coletivo: 0,
+                zonas: {
+                    zona_sul: 0,
+                    zona_norte: 0,
+                    zona_leste: 0,
+                    zona_oeste: 0,
+                    zona_central: 0,
+                    nao_informada: 0
+                }
             };
 
             proponentes.forEach((proponente) => {
@@ -245,6 +292,11 @@ class ProponenteService {
                     stats.juridica++;
                 } else if (proponente.tipo === 'coletivo') {
                     stats.coletivo++;
+                }
+
+                const zonaKey = this.extractZonaFromProponente(proponente);
+                if (stats.zonas) {
+                    stats.zonas[zonaKey]++;
                 }
             });
 

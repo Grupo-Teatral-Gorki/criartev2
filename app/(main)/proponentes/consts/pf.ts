@@ -91,6 +91,20 @@ export const proponenteFisicaForm = {
             required: true
         },
         {
+            name: "zona",
+            label: "Zona",
+            type: "select",
+            placeholder: "Selecione sua zona",
+            options: [
+                { value: "zona_sul", label: "Zona Sul" },
+                { value: "zona_norte", label: "Zona Norte" },
+                { value: "zona_leste", label: "Zona Leste" },
+                { value: "zona_oeste", label: "Zona Oeste" },
+                { value: "zona_central", label: "Zona Central" }
+            ],
+            required: true
+        },
+        {
             name: "cidade",
             label: "Cidade",
             type: "string",

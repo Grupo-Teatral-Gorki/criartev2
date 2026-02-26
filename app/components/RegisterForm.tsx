@@ -22,6 +22,7 @@ type CityOption = {
 type CityDoc = {
   cityId: string;
   name: string;
+  uf?: string;
 };
 
 export default function RegisterForm() {
@@ -50,10 +51,12 @@ export default function RegisterForm() {
         ...(doc.data() as CityDoc),
       }));
 
-      const options = docs.map((item) => ({
-        value: item.cityId,
-        label: item.name,
-      })).sort((a, b) => a.label.localeCompare(b.label));
+      const options = docs
+        .map((item) => ({
+          value: item.cityId,
+          label: item.uf ? `${item.name} - ${item.uf}` : item.name,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label));
       setCitiesOptions(options);
       return docs;
     } catch (error) {
@@ -201,7 +204,7 @@ export default function RegisterForm() {
           options={citiesOptions}
           value={formData.selectedCityCode}
           onChange={handleChange}
-          placeholder={loadingCities ? "Carregando cidades..." : "Selecione sua cidade"}
+          placeholder={loadingCities ? "Carregando cidades..." : "Selecione o município"}
           disabled={loadingCities}
         />
 
