@@ -19,6 +19,7 @@ import ProponenteService from "@/app/services/proponenteService";
 const Proponent = () => {
     const [selectedProponent, setSelectedProponent] = useState("");
     const [proponents, setProponents] = useState<any[]>([]);
+    const [projectUnavailable, setProjectUnavailable] = useState(false);
     const { user, dbUser } = useAuth();
     const loggingService = useLogging();
     const searchParams = useSearchParams();
@@ -55,7 +56,12 @@ const Proponent = () => {
 
     const handleProponentChange = async (proponentId: string) => {
         setSelectedProponent(proponentId);
-        if (!projectId) return console.error("Projeto não encontrado");
+        if (!projectId) {
+            setProjectUnavailable(true);
+            console.error("Projeto não encontrado");
+            return;
+        }
+
         const projectRef = doc(db, "projects", projectId);
         await updateDoc(projectRef, {
             proponentId,
@@ -119,11 +125,14 @@ const Proponent = () => {
 
     useEffect(() => {
         if (projectId) {
+            setProjectUnavailable(false);
             getDbProponent(projectId);
+        } else {
+            setProjectUnavailable(true);
         }
 
         getUserProponents();
-    }, [user]);
+    }, [user, projectId]);
 
     return (
         <>
@@ -137,6 +146,13 @@ const Proponent = () => {
                     />
                 </div>
                 <h2 className="mb-4 text-lg">Selecione um Proponente:</h2>
+                {projectUnavailable && (
+                    <div className="p-3 mb-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                            Projeto não identificado no momento. Reabra esta tela pelo fluxo de edição/criação do projeto.
+                        </p>
+                    </div>
+                )}
                 {proponents.length === 0 ? (
                     <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg text-center">
                         <p className="text-slate-600 dark:text-slate-400 mb-2">
@@ -150,6 +166,7 @@ const Proponent = () => {
                     <SelectInput
                         options={proponents}
                         value={selectedProponent}
+                        disabled={projectUnavailable}
                         onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                             handleProponentChange(e.target.value)
                         }

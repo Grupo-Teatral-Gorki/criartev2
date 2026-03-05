@@ -219,6 +219,11 @@ const PlanilhaOrcamentaria = () => {
 
   return (
     <div className="flex flex-col mt-4">
+      {!projectId && (
+        <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg px-3 py-2 mb-4">
+          Projeto não identificado no momento. Reabra esta tela pelo fluxo de edição/criação do projeto.
+        </p>
+      )}
       {planilhaMessage && (
         <p className="col-span-full text-white-600 mt-4 text-xl text-center">
           {planilhaMessage}
@@ -233,7 +238,7 @@ const PlanilhaOrcamentaria = () => {
           size="medium"
           label={uploading ? "Enviando..." : "Enviar Planilha Orçamentária"}
           onClick={handleUpload}
-          disabled={Object.keys(selectedFiles).length === 0 || uploading}
+          disabled={!projectId || Object.keys(selectedFiles).length === 0 || uploading}
         />
       </div>
       

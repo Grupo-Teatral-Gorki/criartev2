@@ -29,6 +29,13 @@ interface ProjectDoc {
   label: string;
 }
 
+type ProjectDetails = {
+  name?: string | null;
+  fields?: {
+    projectDocs?: ProjectDoc[];
+  };
+};
+
 type UploadedDocWithPath = {
   name: string;
   url: string;
@@ -55,10 +62,17 @@ const Documentos = () => {
   const loggingService = useLogging();
 
   useEffect(() => {
-    const projectDetails = city.typesOfProjects.find(
-      (project: { name: string | null }) => project.name === projectType
+    const availableTypes: ProjectDetails[] = Array.isArray(city?.typesOfProjects)
+      ? city.typesOfProjects
+      : [];
+
+    const projectDetails = availableTypes.find(
+      (project) => project?.name === projectType
     );
-    const projectDocsField = projectDetails.fields.projectDocs;
+
+    const projectDocsField = Array.isArray(projectDetails?.fields?.projectDocs)
+      ? projectDetails.fields.projectDocs
+      : [];
 
     if (projectDocsField) {
       setProjectDocs(projectDocsField);
@@ -318,6 +332,11 @@ const Documentos = () => {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {!uploading && projectDocs.map(renderDocumentCard)}
+        {!uploading && projectDocs.length === 0 && (
+          <p className="text-sm text-slate-500 dark:text-slate-400 col-span-full">
+            Configuração de documentos indisponível para este tipo de projeto no momento.
+          </p>
+        )}
       </div>
       <Toast
         message={toastMessage}

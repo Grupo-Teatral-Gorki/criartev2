@@ -45,15 +45,24 @@ const modalidade = [
 ];
 
 type FormValues = Record<string, string>;
+type GeneralInfoField = {
+  name: string;
+  label?: string;
+  value?: string;
+};
+
+type ProjectDetails = {
+  name?: string | null;
+  fields?: {
+    generalInfo?: GeneralInfoField[];
+  };
+};
 
 const InfoGerais = () => {
-  const [detalhesProjeto, setDetalhesProjetos] = useState<any>([]);
+  const [detalhesProjeto, setDetalhesProjetos] = useState<GeneralInfoField[]>([]);
   const [formValues, setFormValues] = useState<FormValues>({
     categoria: "",
     modalidade: "",
-    ...Object.fromEntries(
-      detalhesProjeto.map((field: { value: any }) => [field.value, ""])
-    ),
   });
   const searchParams = useSearchParams();
   const city = useCity();
@@ -63,27 +72,38 @@ const InfoGerais = () => {
   const projectType = searchParams.get("state");
 
   useEffect(() => {
-    const projectDetails = city.city.typesOfProjects.find(
-      (project: { name: string | null }) => project.name === projectType
+    const availableTypes: ProjectDetails[] = Array.isArray(city?.city?.typesOfProjects)
+      ? city.city.typesOfProjects
+      : [];
+
+    const projectDetails = availableTypes.find(
+      (project) => project?.name === projectType
     );
-    const generalInfoFields = projectDetails.fields.generalInfo;
+
+    const generalInfoFields = Array.isArray(projectDetails?.fields?.generalInfo)
+      ? projectDetails.fields.generalInfo
+      : [];
 
     setDetalhesProjetos(generalInfoFields);
 
     const newFields = Object.fromEntries(
-      generalInfoFields.map((field: { name: any }) => [field.name, ""])
-    ); // Log the new fields
+      generalInfoFields
+        .filter((field) => field?.name)
+        .map((field) => [field.name, ""])
+    );
+
     setFormValues((prev) => ({
+      ...prev,
       categoria: prev.categoria || "",
       modalidade: prev.modalidade || "",
       ...newFields,
     }));
-  }, [city]);
+  }, [city?.city?.typesOfProjects, projectType]);
 
   useEffect(() => {
     if (!projectId) return;
     getProjectFromDb(projectId);
-  }, []);
+  }, [projectId]);
 
   const handleChange = (
     key: keyof FormValues,
@@ -161,16 +181,16 @@ const InfoGerais = () => {
         <Button
           label={"Atualizar Projeto"}
           size="medium"
-          onClick={() => handleUpdateProject(projectId!)}
+          onClick={() => {
+            if (projectId) {
+              handleUpdateProject(projectId);
+            }
+          }}
+          disabled={!projectId}
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 mt-4 gap-5">
-        {detalhesProjeto.map(
-          (field: {
-            name: React.Key | null | undefined;
-            label: string | undefined;
-            value: string;
-          }) => (
+        {detalhesProjeto.map((field) => (
             <TextAreaInput
               key={field.name}
               label={field.label}
@@ -179,7 +199,11 @@ const InfoGerais = () => {
                 handleChange(field.name as string, e.target.value)
               }
             />
-          )
+          ))}
+        {detalhesProjeto.length === 0 && (
+          <p className="text-sm text-slate-500 dark:text-slate-400 col-span-full">
+            Configuração de informações gerais indisponível para este tipo de projeto no momento.
+          </p>
         )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 mt-4 gap-5">
