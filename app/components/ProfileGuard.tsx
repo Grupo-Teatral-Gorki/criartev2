@@ -5,6 +5,9 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { isProfileComplete } from '../utils/profileUtils';
 
+const POLICY_ROUTE = '/politica-dados';
+const PROFILE_EXCLUDED_PATHS = ['/', '/login', '/register', '/profile'];
+
 interface ProfileGuardProps {
   children: React.ReactNode;
 }
@@ -16,19 +19,20 @@ const ProfileGuard: React.FC<ProfileGuardProps> = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
   const [hasRedirected, setHasRedirected] = useState(false);
 
-  // Pages that don't require profile completion check
-  const excludedPaths = [
-    '/',
-    '/login',
-    '/register',
-    '/profile'
-  ];
+  const policyAccepted = Boolean(dbUser?.dataPolicyAccepted && dbUser?.dataPolicyAcceptedAt);
 
   useEffect(() => {
     if (loading) return;
 
+    // Block navigation for authenticated users until policy acceptance
+    if (dbUser && !policyAccepted && pathname !== POLICY_ROUTE) {
+      const returnTo = encodeURIComponent(pathname || '/home');
+      router.push(`${POLICY_ROUTE}?returnTo=${returnTo}`);
+      return;
+    }
+
     // Skip check for excluded paths
-    if (excludedPaths.includes(pathname)) {
+    if (PROFILE_EXCLUDED_PATHS.includes(pathname) || pathname === POLICY_ROUTE) {
       setIsChecking(false);
       return;
     }
@@ -48,7 +52,14 @@ const ProfileGuard: React.FC<ProfileGuardProps> = ({ children }) => {
     }
 
     setIsChecking(false);
-  }, [dbUser, loading, pathname, router, hasRedirected]);
+  }, [
+    dbUser,
+    loading,
+    pathname,
+    router,
+    hasRedirected,
+    policyAccepted,
+  ]);
 
   // Reset redirect flag when user changes or profile becomes complete
   useEffect(() => {

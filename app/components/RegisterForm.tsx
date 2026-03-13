@@ -11,6 +11,7 @@ import {
 import { auth } from "../config/firebaseconfig";
 import { doc, setDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../config/firebaseconfig";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import LoggingService from "../services/loggingService";
 
@@ -31,10 +32,12 @@ export default function RegisterForm() {
     password: "",
     confirmPassword: "",
     selectedCityCode: "",
+    dataPolicyAccepted: false,
   });
   const [errors, setErrors] = useState({
     password: "",
     register: "",
+    dataPolicy: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [citiesOptions, setCitiesOptions] = useState<CityOption[]>([]);
@@ -78,8 +81,16 @@ export default function RegisterForm() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    const nextValue = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
+
+    if (name === "dataPolicyAccepted") {
+      setErrors((prev) => ({
+        ...prev,
+        dataPolicy: nextValue ? "" : prev.dataPolicy,
+      }));
+    }
   };
 
   const validatePassword = () => {
@@ -107,11 +118,19 @@ export default function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({ password: "", register: "" });
+    setErrors({ password: "", register: "", dataPolicy: "" });
 
     const passwordError = validatePassword();
     if (passwordError) {
       setErrors((prev) => ({ ...prev, password: passwordError }));
+      return;
+    }
+
+    if (!formData.dataPolicyAccepted) {
+      setErrors((prev) => ({
+        ...prev,
+        dataPolicy: "Você precisa aceitar a política de dados para continuar.",
+      }));
       return;
     }
 
@@ -139,6 +158,9 @@ export default function RegisterForm() {
         cityId: formData.selectedCityCode,
         email: formData.email,
         userRole: ["user"],
+        dataPolicyAccepted: true,
+        dataPolicyAcceptedAt: new Date(),
+        dataPolicyVersion: "pending-policy-text-v1",
         createdAt: new Date(),
       });
 
@@ -208,7 +230,31 @@ export default function RegisterForm() {
           disabled={loadingCities}
         />
 
+        <label className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white/60 dark:bg-slate-800/60">
+          <input
+            type="checkbox"
+            name="dataPolicyAccepted"
+            checked={formData.dataPolicyAccepted}
+            onChange={handleChange}
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+          />
+          <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+            <p>Li e aceito os Termos de uso e a Política de privacidade.</p>
+            <Link
+              href="/legal/data-policy"
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex mt-1 text-primary-600 dark:text-primary-400 underline hover:text-primary-700 dark:hover:text-primary-300"
+            >
+              Ler documento completo
+            </Link>
+          </div>
+          
+        </label>
+
         {errors.password && <InputError message={errors.password} />}
+        {errors.dataPolicy && <InputError message={errors.dataPolicy} />}
         {errors.register && <InputError message={errors.register} />}
       </div>
 

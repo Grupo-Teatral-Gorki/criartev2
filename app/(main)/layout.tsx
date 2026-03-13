@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AuthProvider } from "../context/AuthContext";
 import Header from "../components/Header";
 import AuthGuard from "../components/AuthGuard";
 
@@ -25,15 +24,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col align-center justify-center bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100`}
-      >
-        <AuthProvider>
-          <Header />
-          <AuthGuard>{children}</AuthGuard>
-        </AuthProvider>
-      </body>
-    </html>
+    <div
+      className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col align-center justify-center bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen`}
+    >
+        <Header />
+        <AuthGuard>{children}</AuthGuard>
+    </div>
   );
 }
