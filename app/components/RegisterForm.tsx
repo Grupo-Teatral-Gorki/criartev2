@@ -239,7 +239,7 @@ export default function RegisterForm() {
             className="mt-1 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
           />
           <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-            <p>Li e aceito os Termos de uso e a Política de privacidade.</p>
+            <p>Li e aceito a Política de Dados.</p>
             <Link
               href="/legal/data-policy"
               target="_blank"
