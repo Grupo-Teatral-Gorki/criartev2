@@ -283,6 +283,7 @@ export default function PessoaJuridicaPage() {
                     key={field.name}
                     label={field.label}
                     options={field.options}
+                    placeholder={field.placeholder}
                     value={value}
                     onChange={(e: any) => handleInputChange(field.name, e.target.value)}
                     required={field.required}

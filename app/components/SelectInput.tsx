@@ -12,6 +12,7 @@ export function SelectInput({
   options,
   label,
   className = "",
+  placeholder = "Selecione uma opção",
   value,
   onChange,
   id,
@@ -39,7 +40,7 @@ export function SelectInput({
         onChange={handleChange}
       >
         <option value="" disabled hidden>
-          Selecione uma opção
+          {placeholder}
         </option>
         {options.map((option: any, index: number) => (
           <option key={index} value={option.value} className="py-2">

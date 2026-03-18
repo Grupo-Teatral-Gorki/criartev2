@@ -96,6 +96,24 @@ export default function CityMappingPage() {
 
     const hasActiveFilters = Object.values(filters).some(v => v);
 
+    const zonaStats = statistics?.zonas ?? {
+        zona_sul: 0,
+        zona_norte: 0,
+        zona_leste: 0,
+        zona_oeste: 0,
+        zona_central: 0,
+        nao_informada: 0
+    };
+
+    const zonaDistribution = [
+        { key: 'zona_sul', label: 'Zona Sul', value: zonaStats.zona_sul, barClass: 'from-emerald-500 to-emerald-600' },
+        { key: 'zona_norte', label: 'Zona Norte', value: zonaStats.zona_norte, barClass: 'from-sky-500 to-sky-600' },
+        { key: 'zona_leste', label: 'Zona Leste', value: zonaStats.zona_leste, barClass: 'from-amber-500 to-amber-600' },
+        { key: 'zona_oeste', label: 'Zona Oeste', value: zonaStats.zona_oeste, barClass: 'from-fuchsia-500 to-fuchsia-600' },
+        { key: 'zona_central', label: 'Zona Central', value: zonaStats.zona_central, barClass: 'from-indigo-500 to-indigo-600' },
+        { key: 'nao_informada', label: 'Não informada', value: zonaStats.nao_informada, barClass: 'from-slate-500 to-slate-600' }
+    ];
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50/30 to-accent-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
             {/* Main Content */}
@@ -379,6 +397,40 @@ export default function CityMappingPage() {
                                             ></div>
                                         </div>
                                     </div>
+                                </div>
+                            ) : (
+                                <p className="text-center text-slate-600 dark:text-slate-400 py-8">
+                                    Nenhum proponente cadastrado nesta cidade ainda.
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Zone Breakdown Chart */}
+                        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 shadow-soft border border-white/20 dark:border-slate-700/50 mb-8">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Distribuição por Zona</h2>
+
+                            {statistics.totalProponentes > 0 ? (
+                                <div className="space-y-6">
+                                    {zonaDistribution.map((zona) => {
+                                        const percent = Math.round((zona.value / statistics.totalProponentes) * 100);
+
+                                        return (
+                                            <div key={zona.key}>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{zona.label}</span>
+                                                    <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                                                        {zona.value} ({percent}%)
+                                                    </span>
+                                                </div>
+                                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+                                                    <div
+                                                        className={`h-full bg-gradient-to-r ${zona.barClass} rounded-full transition-all duration-500`}
+                                                        style={{ width: `${(zona.value / statistics.totalProponentes) * 100}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <p className="text-center text-slate-600 dark:text-slate-400 py-8">

@@ -20,6 +20,7 @@ class LoggingService {
   private static instance: LoggingService;
   private currentUser: string | null = null;
   private emailService: EmailService;
+  private readonly debugEnabled = process.env.NEXT_PUBLIC_LOGGING_DEBUG === 'true';
   // Throttle update emails: only send one per project per 30 minutes
   private updateEmailThrottle: Map<string, number> = new Map();
   private readonly THROTTLE_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -35,9 +36,22 @@ class LoggingService {
     return LoggingService.instance;
   }
 
-  public setCurrentUser(userEmail: string) {
-    this.currentUser = userEmail;
-    console.log(`LoggingService: Current user set to: ${userEmail}`);
+  private debugLog(message: string, meta?: Record<string, unknown>) {
+    if (!this.debugEnabled) return;
+    console.log(message, meta ?? '');
+  }
+
+  private debugWarn(message: string, meta?: Record<string, unknown>) {
+    if (!this.debugEnabled) return;
+    console.warn(message, meta ?? '');
+  }
+
+  public setCurrentUser(userEmail: string | null) {
+    const normalizedEmail = userEmail?.trim() ? userEmail : null;
+    this.currentUser = normalizedEmail;
+    this.debugLog('LoggingService: Current user updated', {
+      hasUser: Boolean(normalizedEmail),
+    });
   }
 
   public getCurrentUser(): string | null {
@@ -50,11 +64,14 @@ class LoggingService {
     filename?: string
   ): Promise<void> {
     if (!this.currentUser) {
-      console.warn('LoggingService: No user set, cannot log action');
+      this.debugWarn('LoggingService: No user set, cannot log action', { action });
       return;
     }
 
-    console.log(`LoggingService: Attempting to log action "${action}" for user: ${this.currentUser}`);
+    this.debugLog('LoggingService: Attempting to log action', {
+      action,
+      user: this.currentUser,
+    });
 
     try {
       // Filter out undefined values from metadata to prevent Firebase errors
@@ -92,7 +109,10 @@ class LoggingService {
         await setDoc(userLogRef, newUserLog);
       }
 
-      console.log(`Successfully logged action: ${action} for user: ${this.currentUser}`);
+      this.debugLog('LoggingService: Successfully logged action', {
+        action,
+        user: this.currentUser,
+      });
     } catch (error: any) {
       console.error(`Error logging action "${action}" for user ${this.currentUser}:`, error);
       console.error('Error details:', {
@@ -226,11 +246,15 @@ class LoggingService {
         const userDoc = querySnapshot.docs[0];
         const userData = userDoc.data();
         const userRole = userData.userRole || [];
-        console.log(`Admin check for ${userEmail}:`, { userRole, isAdmin: userRole.includes('admin') || userRole.includes('administrador') });
+        this.debugLog('LoggingService: Admin check', {
+          userEmail,
+          userRole,
+          isAdmin: userRole.includes('admin') || userRole.includes('administrador'),
+        });
         return userRole.includes('admin') || userRole.includes('administrador');
       }
       
-      console.log(`No user found with email: ${userEmail}`);
+      this.debugWarn('LoggingService: No user found for admin check', { userEmail });
       return false;
     } catch (error) {
       console.error(`Error checking admin status for user ${userEmail}:`, error);
@@ -367,7 +391,10 @@ class LoggingService {
 
           if (emailSent) {
             this.updateEmailThrottle.set(projectId, now);
-            console.log(`[EMAIL THROTTLE] Update email sent for project ${projectId}, next allowed in 30 min`);
+            this.debugLog('[EMAIL THROTTLE] Update email sent', {
+              projectId,
+              nextAllowedInMinutes: 30,
+            });
           }
 
           // Log email attempt
@@ -381,7 +408,10 @@ class LoggingService {
           });
         } else {
           const remainingMin = Math.ceil((this.THROTTLE_DURATION_MS - (now - lastEmailTime)) / 60000);
-          console.log(`[EMAIL THROTTLE] Skipping update email for project ${projectId}, ${remainingMin} min until next allowed`);
+          this.debugLog('[EMAIL THROTTLE] Skipping update email', {
+            projectId,
+            remainingMin,
+          });
         }
       }
     } catch (error) {

@@ -27,6 +27,8 @@ const CriarContent = () => {
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const [projectData, setProjectData] = useState<any>(null);
   const loggingService = useLogging();
+  const validTypes = ["fomento", "premiacao", "culturaViva", "areasPerifericas", "subsidio"] as const;
+  const hasValidType = type ? validTypes.includes(type as (typeof validTypes)[number]) : false;
 
   const handleSendProject = async (
     updateTitle?: string,
@@ -243,6 +245,11 @@ const CriarContent = () => {
           {type === "culturaViva" && <CulturaViva />}
           {type === "areasPerifericas" && <AreasPerifericas />}
           {type === "subsidio" && <Subsidio />}
+          {!hasValidType && (
+            <div className="rounded-lg border border-yellow-300 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 p-4 text-sm text-yellow-800 dark:text-yellow-200">
+              Tipo de projeto inválido ou ausente. Volte para seleção de tipo e tente novamente.
+            </div>
+          )}
         </div>
       </div>
       <Toast

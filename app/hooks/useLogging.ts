@@ -14,7 +14,7 @@ export const useLogging = () => {
       if (currentUser?.email) {
         loggingService.setCurrentUser(currentUser.email);
       } else {
-        loggingService.setCurrentUser('');
+        loggingService.setCurrentUser(null);
       }
     });
 

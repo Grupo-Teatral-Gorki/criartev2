@@ -86,12 +86,27 @@ const pfValueLabels = createValueLabelMap(proponenteFisicaForm);
 const pjValueLabels = createValueLabelMap(proponenteJuridicaForm);
 const coletivoValueLabels = createValueLabelMap(proponenteColetivoForm);
 
+const zonaValueLabels: Record<string, string> = {
+    zona_sul: 'Zona Sul',
+    zona_norte: 'Zona Norte',
+    zona_leste: 'Zona Leste',
+    zona_oeste: 'Zona Oeste',
+    zona_central: 'Zona Central',
+    // Legacy variants
+    'Zona Sul': 'Zona Sul',
+    'Zona Norte': 'Zona Norte',
+    'Zona Leste': 'Zona Leste',
+    'Zona Oeste': 'Zona Oeste',
+    'Zona Central': 'Zona Central'
+};
+
 // Merge all value labels
 const valueLabels: Record<string, Record<string, string>> = {
     ...pfValueLabels,
     ...pjValueLabels,
     ...coletivoValueLabels,
     // Additional common mappings
+    zona: zonaValueLabels,
     possuiDomicilioNoBrasil: {
         'true': 'Sim',
         'false': 'Não'

@@ -44,16 +44,35 @@ export default function Header() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [citiesOptions, setCitiesOptions] = useState<CityOption[]>([]);
   const [selectedCity, setSelectedCity] = useState("");
+  const [changingCity, setChangingCity] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [testEmailLoading, setTestEmailLoading] = useState(false);
-  const { dbUser, updateCityId } = useAuth();
+  const { dbUser, updateCityId, refreshUserData } = useAuth();
   const router = useRouter();
   const userRole = dbUser?.userRole || [];
   const loggingService = useLogging();
 
   const handleCityChange = (cityId: string) => {
     setSelectedCity(cityId);
-    updateCityId(cityId);
+  };
+
+  const handleSelectCity = async () => {
+    if (!selectedCity || selectedCity === dbUser?.cityId) {
+      setModalIsOpen(false);
+      return;
+    }
+
+    try {
+      setChangingCity(true);
+      await updateCityId(selectedCity);
+      await refreshUserData();
+      setModalIsOpen(false);
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to change city", error);
+    } finally {
+      setChangingCity(false);
+    }
   };
 
   const fetchAllCities = async () => {
@@ -308,7 +327,10 @@ export default function Header() {
                 <div className="flex items-center gap-3">
                   <button
                     className="px-3 py-1.5 text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all duration-200 border border-primary-200 dark:border-primary-800 hover:border-primary-300 dark:hover:border-primary-700"
-                    onClick={() => setModalIsOpen(true)}
+                    onClick={() => {
+                      setSelectedCity(dbUser?.cityId || "");
+                      setModalIsOpen(true);
+                    }}
                   >
                     Trocar Cidade
                   </button>
@@ -333,9 +355,10 @@ export default function Header() {
           />
           <div className="w-full flex justify-end mt-4">
             <Button
-              label={"Selecionar"}
+              label={changingCity ? "Atualizando..." : "Selecionar"}
               size="medium"
-              onClick={() => setModalIsOpen(false)}
+              disabled={!selectedCity || changingCity}
+              onClick={handleSelectCity}
             />
           </div>
         </div>

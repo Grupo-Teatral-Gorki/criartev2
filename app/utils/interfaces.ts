@@ -41,6 +41,9 @@ export interface UserProfile {
   userType: number;
   photoUrl: string; // "https://robohash.org/placeholder.png" (string)
   userRole: string[];
+  dataPolicyAccepted?: boolean;
+  dataPolicyAcceptedAt?: string | Date;
+  dataPolicyVersion?: string;
 }
 
 export interface AuthContextType {

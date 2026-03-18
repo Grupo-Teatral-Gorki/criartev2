@@ -21,6 +21,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateCityId: (newCityId: string) => Promise<void>;
   refreshUserData: () => Promise<void>;
+  acceptDataPolicy: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -110,6 +111,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const acceptDataPolicy = async () => {
+    if (!user) return;
+
+    const acceptedAt = new Date();
+    const userDocRef = doc(db, "users", user.uid);
+
+    try {
+      await updateDoc(userDocRef, {
+        dataPolicyAccepted: true,
+        dataPolicyAcceptedAt: acceptedAt,
+        dataPolicyVersion: "pending-policy-text-v1",
+        updatedAt: acceptedAt,
+        updatedBy: dbUser?.id,
+      });
+
+      setDbUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              dataPolicyAccepted: true,
+              dataPolicyAcceptedAt: acceptedAt,
+              dataPolicyVersion: "pending-policy-text-v1",
+            }
+          : prev
+      );
+    } catch (error) {
+      console.error("Failed to accept data policy", error);
+      throw error;
+    }
+  };
+
   const refreshUserData = async () => {
     if (!user) return;
 
@@ -128,7 +160,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, dbUser, loading, logout, updateCityId, refreshUserData }}
+      value={{
+        user,
+        dbUser,
+        loading,
+        logout,
+        updateCityId,
+        refreshUserData,
+        acceptDataPolicy,
+      }}
     >
       {children}
     </AuthContext.Provider>
