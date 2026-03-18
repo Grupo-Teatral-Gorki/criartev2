@@ -55,14 +55,16 @@ const Documentos = () => {
   const loggingService = useLogging();
 
   useEffect(() => {
+    if (!city?.typesOfProjects) return;
+    
     const projectDetails = city.typesOfProjects.find(
       (project: { name: string | null }) => project.name === projectType
     );
+    
+    if (!projectDetails?.fields?.projectDocs) return;
+    
     const projectDocsField = projectDetails.fields.projectDocs;
-
-    if (projectDocsField) {
-      setProjectDocs(projectDocsField);
-    }
+    setProjectDocs(projectDocsField);
   }, [city, projectType]);
 
   const handleFileChange = (name: string, files: File[]) => {

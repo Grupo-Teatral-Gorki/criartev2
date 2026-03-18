@@ -110,10 +110,12 @@ export default function ProponentesPage() {
                         Gerencie seus cadastros de proponentes culturais
                     </p>
                 </div>
-                <Button
-                    label="+ Novo Proponente"
-                    onClick={() => setShowNewOptions(!showNewOptions)}
-                />
+                {!loading && proponentes.length > 0 && (
+                    <Button
+                        label="+ Novo Proponente"
+                        onClick={() => setShowNewOptions(!showNewOptions)}
+                    />
+                )}
             </div>
 
             {/* New Proponente Options */}

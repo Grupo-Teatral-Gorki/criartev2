@@ -1,6 +1,7 @@
 import Button from "@/app/components/Button";
 import { SelectInput } from "@/app/components/SelectInput";
 import { TextAreaInput } from "@/app/components/TextAreaInput";
+import { TextInput } from "@/app/components/TextInput";
 import { db } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext";
 import { useCity } from "@/app/context/CityConfigContext";
@@ -17,44 +18,24 @@ import {
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
-const opcoesCategoria = [
-  { value: "musica_bandas_grupos", label: "Música - Bandas Ou Grupos" },
-  { value: "musica_duplas_trios", label: "Música - Duplas Ou Trios" },
-  {
-    value: "musica_artista_solo",
-    label: "Música - Artista Vocal E/Ou Instrumental Solo",
-  },
-  { value: "artes_plasticas", label: "Artes Plásticas" },
-  { value: "fotografia", label: "Fotografia" },
-  { value: "artesanato", label: "Artesanato" },
-  { value: "teatro", label: "Teatro" },
-  { value: "danca", label: "Dança" },
-  {
-    value: "cultura_afro_brasileira",
-    label: "Cultura Afro-Brasileira E Tradição",
-  },
-  { value: "literatura", label: "Literatura" },
-  { value: "eventos_mostra", label: "Eventos Culturais - Mostra" },
-  { value: "eventos_festival", label: "Eventos Culturais - Festival" },
-  { value: "contacao_historias", label: "Contação De Histórias" },
-];
+interface FieldOption {
+  value: string;
+  label: string;
+}
 
-const modalidade = [
-  { value: "1", label: "Módulo 1" },
-  { value: "2", label: "Módulo 2" },
-];
+interface FieldConfig {
+  name: string;
+  label: string;
+  type?: "text" | "textarea" | "select" | "multiselect" | "radio" | "checkbox" | "file";
+  required?: boolean;
+  options?: FieldOption[];
+}
 
-type FormValues = Record<string, string>;
+type FormValues = Record<string, string | string[]>;
 
 const InfoGerais = () => {
-  const [detalhesProjeto, setDetalhesProjetos] = useState<any>([]);
-  const [formValues, setFormValues] = useState<FormValues>({
-    categoria: "",
-    modalidade: "",
-    ...Object.fromEntries(
-      detalhesProjeto.map((field: { value: any }) => [field.value, ""])
-    ),
-  });
+  const [detalhesProjeto, setDetalhesProjetos] = useState<FieldConfig[]>([]);
+  const [formValues, setFormValues] = useState<FormValues>({});
   const searchParams = useSearchParams();
   const city = useCity();
   const { dbUser } = useAuth();
@@ -63,22 +44,33 @@ const InfoGerais = () => {
   const projectType = searchParams.get("state");
 
   useEffect(() => {
+    if (!city?.city?.typesOfProjects) return;
+    
     const projectDetails = city.city.typesOfProjects.find(
       (project: { name: string | null }) => project.name === projectType
     );
-    const generalInfoFields = projectDetails.fields.generalInfo;
+    
+    if (!projectDetails?.fields?.generalInfo) return;
+    
+    const generalInfoFields = projectDetails.fields.generalInfo as FieldConfig[];
 
     setDetalhesProjetos(generalInfoFields);
 
-    const newFields = Object.fromEntries(
-      generalInfoFields.map((field: { name: any }) => [field.name, ""])
-    ); // Log the new fields
+    // Initialize form values based on field types
+    const newFields: FormValues = {};
+    generalInfoFields.forEach((field) => {
+      if (field.type === "multiselect") {
+        newFields[field.name] = [];
+      } else {
+        newFields[field.name] = "";
+      }
+    });
+    
     setFormValues((prev) => ({
-      categoria: prev.categoria || "",
-      modalidade: prev.modalidade || "",
+      ...prev,
       ...newFields,
     }));
-  }, [city]);
+  }, [city, projectType]);
 
   useEffect(() => {
     if (!projectId) return;
@@ -146,14 +138,164 @@ const InfoGerais = () => {
     }
   };
 
-  const camposSelect = [
-    { key: "modalidade", label: "Modalidade do Projeto", options: modalidade },
-    {
-      key: "categoria",
-      label: "Categoria do Projeto",
-      options: opcoesCategoria,
-    },
-  ];
+  const renderField = (field: FieldConfig) => {
+    const fieldType = field.type || "textarea";
+    const fieldValue = formValues[field.name] || "";
+
+    switch (fieldType) {
+      case "text":
+        return (
+          <TextInput
+            key={field.name}
+            label={field.label}
+            value={fieldValue as string}
+            onChange={(e: any) => handleChange(field.name, e.target.value)}
+          />
+        );
+      
+      case "textarea":
+        return (
+          <TextAreaInput
+            key={field.name}
+            label={field.label}
+            value={fieldValue as string}
+            onChange={(e) => handleChange(field.name, e.target.value)}
+          />
+        );
+      
+      case "select":
+        return (
+          <SelectInput
+            key={field.name}
+            label={field.label}
+            options={field.options || []}
+            value={fieldValue as string}
+            onChange={(e: any) => handleChange(field.name, e)}
+          />
+        );
+      
+      case "multiselect":
+        return (
+          <div key={field.name} className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-navy">{field.label}</label>
+            <div className="flex flex-wrap items-center gap-2 px-3 border border-gray-200 rounded-lg bg-white h-[52px]">
+              {(field.options || []).map((opt) => {
+                const isChecked = Array.isArray(fieldValue) ? fieldValue.includes(opt.value) : false;
+                return (
+                  <label
+                    key={opt.value}
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer transition-all border ${
+                      isChecked
+                        ? "bg-navy text-white border-navy"
+                        : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={isChecked}
+                      onChange={(e) => {
+                        const currentValues = Array.isArray(fieldValue) ? fieldValue : [];
+                        if (e.target.checked) {
+                          setFormValues((prev) => ({
+                            ...prev,
+                            [field.name]: [...currentValues, opt.value],
+                          }));
+                        } else {
+                          setFormValues((prev) => ({
+                            ...prev,
+                            [field.name]: currentValues.filter((v) => v !== opt.value),
+                          }));
+                        }
+                      }}
+                    />
+                    {isChecked && (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                    {opt.label}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        );
+      
+      case "radio":
+        return (
+          <div key={field.name} className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-navy">{field.label}</label>
+            <div className="flex flex-wrap items-center gap-2 px-3 border border-gray-200 rounded-lg bg-white h-[52px]">
+              {(field.options || []).map((opt) => {
+                const isSelected = fieldValue === opt.value;
+                return (
+                  <label
+                    key={opt.value}
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer transition-all border ${
+                      isSelected
+                        ? "bg-navy text-white border-navy"
+                        : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      className="sr-only"
+                      name={field.name}
+                      value={opt.value}
+                      checked={isSelected}
+                      onChange={(e) => handleChange(field.name, e.target.value)}
+                    />
+                    {isSelected && (
+                      <span className="w-2 h-2 bg-white rounded-full" />
+                    )}
+                    {opt.label}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        );
+      
+      case "checkbox":
+        const isCheckedBox = fieldValue === "true";
+        return (
+          <div key={field.name} className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-navy">{field.label}</label>
+            <div className="flex items-center px-3 border border-gray-200 rounded-lg bg-white h-[52px]">
+            <label className="inline-flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors w-full">
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                isCheckedBox ? "bg-navy border-navy" : "bg-white border-gray-300"
+              }`}>
+                {isCheckedBox && (
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={isCheckedBox}
+                onChange={(e) => handleChange(field.name, e.target.checked ? "true" : "false")}
+              />
+              <span className="text-sm text-gray-700">Sim</span>
+            </label>
+            </div>
+          </div>
+        );
+      
+      default:
+        return (
+          <TextAreaInput
+            key={field.name}
+            label={field.label}
+            value={fieldValue as string}
+            onChange={(e) => handleChange(field.name, e.target.value)}
+          />
+        );
+    }
+  };
 
   return (
     <div>
@@ -165,33 +307,7 @@ const InfoGerais = () => {
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 mt-4 gap-5">
-        {detalhesProjeto.map(
-          (field: {
-            name: React.Key | null | undefined;
-            label: string | undefined;
-            value: string;
-          }) => (
-            <TextAreaInput
-              key={field.name}
-              label={field.label}
-              value={formValues[field.name as string] || ""}
-              onChange={(e) =>
-                handleChange(field.name as string, e.target.value)
-              }
-            />
-          )
-        )}
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 mt-4 gap-5">
-        {camposSelect.map((field) => (
-          <SelectInput
-            key={field.key}
-            label={field.label}
-            options={field.options}
-            value={formValues[field.key] || ""}
-            onChange={(e: any) => handleChange(field.key, e)}
-          />
-        ))}
+        {detalhesProjeto.map((field: FieldConfig) => renderField(field))}
       </div>
     </div>
   );
