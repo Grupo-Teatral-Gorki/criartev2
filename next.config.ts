@@ -55,8 +55,6 @@ const nextConfig: NextConfig = {
   staticPageGenerationTimeout: 180,
   // Optimize production builds
   productionBrowserSourceMaps: false,
-  // Enable SWC minification for faster builds
-  swcMinify: true,
 };
 
 export default nextConfig;
