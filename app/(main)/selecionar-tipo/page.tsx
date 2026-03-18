@@ -125,7 +125,7 @@ const SelecionarTipoProjeto = () => {
   };
 
   return (
-    <div className="w-full overflow-y-auto flex flex-col items-center justify-center px-8 md:px-36 gap-8">
+    <div className="w-full overflow-y-auto flex flex-col items-center px-4 sm:px-8 lg:px-16 gap-8">
       <div className="w-full flex items-center justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}
@@ -140,16 +140,14 @@ const SelecionarTipoProjeto = () => {
         {loading && <p className="text-2xl">Carregando tipos de projeto...</p>}
         {projectTypes &&
           projectTypes.map((type) => (
-            <>
-              <TypeProjectCard
-                key={type.name}
-                available={type.available}
-                description={type.description}
-                label={type.label}
-                name={type.name}
-                onClick={() => createEmptyProjectForUser(type.name)}
-              />
-            </>
+            <TypeProjectCard
+              key={type.name}
+              available={type.available}
+              description={type.description}
+              label={type.label}
+              name={type.name}
+              onClick={() => createEmptyProjectForUser(type.name)}
+            />
           ))}
       </div>
       {!projectTypes && (

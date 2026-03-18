@@ -86,9 +86,8 @@ const Habilitacao = () => {
   };
 
   return (
-    <div className="w-full overflow-y-auto flex flex-col sm:px-36">
-      {/* ajustar centralização */}
-      <div className="w-full flex gap-12 bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
+    <div className="w-full overflow-y-auto flex flex-col px-4 sm:px-8 lg:px-16">
+      <div className="w-full flex items-center justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}
           onClick={() => router.push("/meusprojetos")}
@@ -96,7 +95,7 @@ const Habilitacao = () => {
         />
         <h2 className="text-2xl font-bold">Habilitação</h2>
       </div>
-      <div className="flex flex-col items-center justify-center px-4">
+      <div className="flex flex-col w-full">
         <div className="mt-4 w-full flex justify-end">
           <Button
             className="mr-4"

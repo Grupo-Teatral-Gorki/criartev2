@@ -176,7 +176,7 @@ const CriarContent = () => {
   }, [projectId]);
 
   return (
-    <div className="w-full overflow-y-auto flex flex-col items-center justify-center p-1 sm:px-36">
+    <div className="w-full overflow-y-auto flex flex-col items-center px-4 sm:px-8 lg:px-16">
       <div className="w-full flex items-center justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}

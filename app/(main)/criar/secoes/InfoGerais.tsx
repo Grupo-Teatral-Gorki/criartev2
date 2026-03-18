@@ -25,13 +25,13 @@ interface FieldOption {
 
 interface FieldConfig {
   name: string;
-  label: string;
+  label?: string;
   type?: "text" | "textarea" | "select" | "multiselect" | "radio" | "checkbox" | "file";
   required?: boolean;
   options?: FieldOption[];
 }
 
-type FormValues = Record<string, string>;
+type FormValues = Record<string, string | string[]>;
 type GeneralInfoField = {
   name: string;
   label?: string;

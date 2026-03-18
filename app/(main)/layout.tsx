@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <div
-      className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col align-center justify-center bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen`}
     >
         <Header />
         <AuthGuard>{children}</AuthGuard>

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PDFDocument } from "pdf-lib"; // Import for PDF compression
 import { useLogging } from "../hooks/useLogging";
 
@@ -110,15 +110,22 @@ export default function FileUploader({
       (file): file is File => file !== null
     );
 
-    setFiles((prevFiles) => {
-      const updatedFiles = [...prevFiles, ...validFiles];
-      onFilesChange(updatedFiles);
-      return updatedFiles;
-    });
+    setFiles((prevFiles) => [...prevFiles, ...validFiles]);
   };
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+  // Sync files state with parent component via useEffect to avoid setState during render
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    onFilesChange(files);
+  }, [files]);
+
+  const handleDrop = (event: React.DragEvent<HTMLElement>) => {
     event.preventDefault();
+    event.currentTarget.classList.remove('border-primary', 'bg-primary/5');
     handleFiles(event.dataTransfer.files);
   };
 
@@ -174,7 +181,7 @@ export default function FileUploader({
       const pdfDoc = await PDFDocument.load(pdfBytes);
       const pdfBytesCompressed = await pdfDoc.save({ useObjectStreams: false });
 
-      return new File([pdfBytesCompressed], file.name, {
+      return new File([pdfBytesCompressed as BlobPart], file.name, {
         type: "application/pdf",
       });
     } catch (error) {
@@ -184,15 +191,24 @@ export default function FileUploader({
   };
 
   return (
-    <div className="w-full mx-auto p-4">
+    <div className="w-full">
       {/* Drag-and-Drop Area */}
-      <div
-        className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 flex flex-col items-center justify-center text-gray-600 dark:text-gray-300 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition  min-h-[200px]"
-        onDragOver={(e) => e.preventDefault()}
+      <label
+        htmlFor={`fileInput-${name}`}
+        className="group border-2 border-dashed border-gray-200 dark:border-slate-600 rounded-lg p-4 flex items-center justify-center gap-3 text-gray-500 dark:text-gray-400 cursor-pointer hover:border-primary hover:bg-primary/5 dark:hover:border-primary dark:hover:bg-primary/10 transition-all duration-200"
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.currentTarget.classList.add('border-primary', 'bg-primary/5');
+        }}
+        onDragLeave={(e) => {
+          e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
+        }}
         onDrop={handleDrop}
       >
-        <p className="text-center whitespace-normal break-words">{label}</p>
-
+        <svg className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+        <span className="text-sm font-medium group-hover:text-primary transition-colors">{label}</span>
         <input
           type="file"
           multiple
@@ -201,26 +217,26 @@ export default function FileUploader({
           id={`fileInput-${name}`}
           onChange={(e) => handleFiles(e.target.files)}
         />
-        <label
-          htmlFor={`fileInput-${name}`}
-          className="mt-2 px-4 py-2 bg-[#1d4a5d] text-white rounded cursor-pointer hover:bg-[#173b4a] transition"
-        >
-          Escolher Arquivo
-        </label>
-      </div>
+      </label>
 
       {/* Uploaded Files List */}
       {files.length > 0 && (
-        <ul className="mt-4 space-y-2">
+        <div className="mt-2 space-y-1">
           {files.map((file, index) => (
-            <li
+            <div
               key={index}
-              className="text-gray-800 dark:text-gray-200 text-sm"
+              className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 rounded-md text-sm"
             >
-              📄 {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-            </li>
+              <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-green-700 dark:text-green-300 truncate flex-1">{file.name}</span>
+              <span className="text-green-600 dark:text-green-400 text-xs">
+                {(file.size / 1024 / 1024).toFixed(2)} MB
+              </span>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

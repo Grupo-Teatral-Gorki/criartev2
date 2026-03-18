@@ -258,56 +258,96 @@ const Documentos = () => {
       fileName = uploadedDoc.name;
     }
 
+    const isUploaded = uploadedDoc && !selectedFile;
+    const isSelected = !!selectedFile;
+
     return (
-      <div key={doc.name} className="border rounded-lg p-4 mb-4">
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex-1">
-            <h4 className="font-medium text-gray-800">{doc.label}</h4>
-            
-            {/* Icon-sized iframe preview above the text */}
-            {hasFile && previewUrl && (
-              <div className="flex items-center gap-2 mt-1">
-                <div className="w-36 h-36 border rounded overflow-hidden flex-shrink-0 relative">
-                  <iframe
-                    src={previewUrl}
-                    className="absolute border-0"
-                    title={`Preview of ${fileName}`}
-                    style={{ 
-                      pointerEvents: 'none',
-                      width: '900px',
-                      height: '900px',
-                      transform: 'scale(0.2)',
-                      transformOrigin: 'top left',
-                      left: '0',
-                      top: '0'
-                    }}
-                  />
-                </div>
-                <div className="flex-1">
-                  {selectedFile && (
-                    <p className="text-sm text-green-600">
-                      Arquivo selecionado: {selectedFile.name}
-                    </p>
-                  )}
-                  {uploadedDoc && !selectedFile && (
-                    <p className="text-sm text-blue-600">
-                      Arquivo enviado
-                    </p>
-                  )}
-                </div>
-              </div>
+      <div 
+        key={doc.name} 
+        className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border-2 transition-all duration-200 overflow-hidden ${
+          isUploaded 
+            ? 'border-green-200 dark:border-green-800' 
+            : isSelected 
+              ? 'border-orange-200 dark:border-orange-800' 
+              : 'border-gray-100 dark:border-slate-700 hover:border-gray-200 dark:hover:border-slate-600'
+        }`}
+      >
+        {/* Header */}
+        <div className={`px-4 py-3 border-b ${
+          isUploaded 
+            ? 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800' 
+            : isSelected 
+              ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800' 
+              : 'bg-gray-50 dark:bg-slate-700/50 border-gray-100 dark:border-slate-700'
+        }`}>
+          <div className="flex items-center justify-between">
+            <h4 className="font-semibold text-gray-800 dark:text-gray-100">{doc.label}</h4>
+            {isUploaded && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Enviado
+              </span>
             )}
-            
-
+            {isSelected && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+                Pendente
+              </span>
+            )}
           </div>
-
         </div>
-        
-        <UploadFiles
-          name={doc.name}
-          label={doc.label}
-          onFilesChange={(files) => handleFileChange(doc.name, files)}
-        />
+
+        {/* Preview Section */}
+        {hasFile && previewUrl && (
+          <div className="p-4 bg-gray-50 dark:bg-slate-900/50">
+            <div className="flex items-start gap-4">
+              <div className="w-24 h-24 rounded-lg border-2 border-gray-200 dark:border-slate-600 overflow-hidden flex-shrink-0 relative bg-white shadow-inner">
+                <iframe
+                  src={previewUrl}
+                  className="absolute border-0"
+                  title={`Preview of ${fileName}`}
+                  style={{ 
+                    pointerEvents: 'none',
+                    width: '600px',
+                    height: '600px',
+                    transform: 'scale(0.16)',
+                    transformOrigin: 'top left',
+                    left: '0',
+                    top: '0'
+                  }}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                  {selectedFile?.name || 'Documento'}
+                </p>
+                {selectedFile && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                )}
+                {isUploaded && (
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                    Clique abaixo para substituir
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Upload Section */}
+        <div className="p-2">
+          <UploadFiles
+            name={doc.name}
+            label={hasFile ? "Substituir arquivo" : `Enviar ${doc.label}`}
+            onFilesChange={(files) => handleFileChange(doc.name, files)}
+          />
+        </div>
       </div>
     );
   };
