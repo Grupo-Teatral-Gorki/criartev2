@@ -146,7 +146,7 @@ const ConfigNewCity = () => {
             Será criado: <span className="font-semibold">{form.name} - {form.uf}</span>
           </p>
           <p className="text-xs text-slate-500 mt-1">
-            Após criar o município, use "Editar Estrutura de Projetos" para configurar os tipos de projeto.
+            Após criar o município, use &quot;Editar Estrutura de Projetos&quot; para configurar os tipos de projeto.
           </p>
         </div>
       )}
