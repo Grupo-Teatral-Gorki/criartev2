@@ -43,21 +43,15 @@ const getOptionsWithOther = (options?: FieldOption[]) => {
 const getOtherFieldKey = (fieldName: string) => `${fieldName}__outro`;
 
 type FormValues = Record<string, string | string[]>;
-type GeneralInfoField = {
-  name: string;
-  label?: string;
-  value?: string;
-};
-
 type ProjectDetails = {
   name?: string | null;
   fields?: {
-    generalInfo?: GeneralInfoField[];
+    generalInfo?: FieldConfig[];
   };
 };
 
 const InfoGerais = () => {
-  const [detalhesProjeto, setDetalhesProjetos] = useState<GeneralInfoField[]>([]);
+  const [detalhesProjeto, setDetalhesProjetos] = useState<FieldConfig[]>([]);
   const [formValues, setFormValues] = useState<FormValues>({
     categoria: "",
     modalidade: "",

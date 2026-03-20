@@ -7,6 +7,8 @@ import {
   getDocs,
   doc,
   updateDoc,
+  query,
+  where,
 } from "firebase/firestore";
 import { SelectInput } from "@/app/components/SelectInput";
 import Button from "@/app/components/Button";
@@ -61,6 +63,7 @@ interface ProjectTypeTemplate {
 
 type City = {
   id: string;
+  cityId?: string;
   name: string;
   uf: string;
   typesOfProjects?: Project[];
@@ -98,6 +101,61 @@ const toFieldKey = (label: string) =>
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
 
+const OTHER_OPTION: FieldOption = { value: "outro", label: "Outro" };
+
+const getOptionsWithOther = (options?: FieldOption[]) => {
+  const safeOptions = Array.isArray(options) ? options : [];
+  return safeOptions.some((opt) => opt.value === OTHER_OPTION.value)
+    ? safeOptions
+    : [...safeOptions, OTHER_OPTION];
+};
+
+const normalizeText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[;,.]+$/g, "")
+    .replace(/\s+/g, " ");
+
+const mapLegacySelectionToOptionValue = (
+  rawValue: string,
+  options: FieldOption[]
+) => {
+  if (options.some((opt) => opt.value === rawValue)) {
+    return rawValue;
+  }
+
+  const rawNormalized = normalizeText(rawValue);
+  const rawKey = toFieldKey(rawValue);
+
+  const matchedOption = options.find((opt) => {
+    const optionLabelNormalized = normalizeText(opt.label || "");
+    const optionValueNormalized = normalizeText(opt.value || "");
+    const optionLabelKey = toFieldKey(opt.label || "");
+    const optionValueKey = toFieldKey(opt.value || "");
+
+    return (
+      rawNormalized === optionLabelNormalized ||
+      rawNormalized === optionValueNormalized ||
+      rawKey === optionLabelKey ||
+      rawKey === optionValueKey ||
+      rawKey === opt.value
+    );
+  });
+
+  if (matchedOption) {
+    return matchedOption.value;
+  }
+
+  if (rawNormalized === "outro" || rawNormalized === "outra") {
+    return OTHER_OPTION.value;
+  }
+
+  return rawValue;
+};
+
 const EditCityProjects = () => {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCityId, setSelectedCityId] = useState("");
@@ -111,6 +169,7 @@ const EditCityProjects = () => {
   const [templates, setTemplates] = useState<ProjectTypeTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [enforceUniqueFichaTecnicaCpf, setEnforceUniqueFichaTecnicaCpf] = useState(false);
+  const [migratingMultiselectValues, setMigratingMultiselectValues] = useState(false);
 
   // New project form state
   const [showAddProject, setShowAddProject] = useState(false);
@@ -276,6 +335,104 @@ const EditCityProjects = () => {
     if (!selectedCityId) return;
 
     await persistProjects(projects, "Estrutura de projetos atualizada com sucesso!");
+  };
+
+  const handleMigrateExistingMultiselectValues = async () => {
+    if (!selectedCity?.cityId || migratingMultiselectValues) {
+      return;
+    }
+
+    setMigratingMultiselectValues(true);
+    try {
+      const projectConfigMap = new Map(
+        projects.map((project) => [project.name, project])
+      );
+
+      const projectsQuery = query(
+        collection(db, "projects"),
+        where("cityId", "==", selectedCity.cityId)
+      );
+      const projectsSnapshot = await getDocs(projectsQuery);
+
+      let updatedProjectsCount = 0;
+      let updatedFieldsCount = 0;
+
+      for (const projectDoc of projectsSnapshot.docs) {
+        const projectData = projectDoc.data() as {
+          projectType?: string;
+          generalInfo?: Record<string, unknown>;
+        };
+
+        const projectType = projectData.projectType || "";
+        const configuredType = projectConfigMap.get(projectType);
+        if (!configuredType) continue;
+
+        const generalInfoFields = configuredType.fields?.generalInfo || [];
+        const existingGeneralInfo =
+          projectData.generalInfo && typeof projectData.generalInfo === "object"
+            ? { ...projectData.generalInfo }
+            : {};
+
+        let projectChanged = false;
+
+        for (const field of generalInfoFields) {
+          if (field.type !== "multiselect" || !field.name) continue;
+
+          const rawCurrentValue = existingGeneralInfo[field.name];
+          if (!Array.isArray(rawCurrentValue) || rawCurrentValue.length === 0) {
+            continue;
+          }
+
+          const currentSelections = rawCurrentValue.map((item) => String(item));
+          const optionsWithOther = getOptionsWithOther(field.options);
+          const migratedSelections = currentSelections
+            .map((selection) =>
+              mapLegacySelectionToOptionValue(selection, optionsWithOther)
+            )
+            .filter(Boolean);
+
+          const dedupedSelections = Array.from(new Set(migratedSelections));
+
+          const isSame =
+            dedupedSelections.length === currentSelections.length &&
+            dedupedSelections.every((value, idx) => value === currentSelections[idx]);
+
+          if (!isSame) {
+            existingGeneralInfo[field.name] = dedupedSelections;
+            projectChanged = true;
+            updatedFieldsCount += 1;
+          }
+        }
+
+        if (projectChanged) {
+          await updateDoc(doc(db, "projects", projectDoc.id), {
+            generalInfo: existingGeneralInfo,
+            updatedAt: new Date(),
+          });
+          updatedProjectsCount += 1;
+        }
+      }
+
+      if (updatedProjectsCount === 0) {
+        setToastType("success");
+        setToastMessage("Nenhum valor antigo de seleção múltipla para migrar.");
+        setShowToast(true);
+        return;
+      }
+
+      setToastType("success");
+      setToastMessage(
+        `Migração concluída: ${updatedProjectsCount} projeto(s) e ${updatedFieldsCount} campo(s) atualizados.`
+      );
+      setShowToast(true);
+    } catch (error) {
+      console.error("Erro ao migrar valores legados de multiselect:", error);
+      setToastType("error");
+      setToastMessage("Erro ao migrar seleções múltiplas existentes.");
+      setShowToast(true);
+    } finally {
+      setMigratingMultiselectValues(false);
+    }
   };
 
   const handleApplyTemplate = () => {
@@ -1262,7 +1419,13 @@ const EditCityProjects = () => {
           )}
 
           {/* Save Button */}
-          <div className="mt-6 flex justify-end">
+          <div className="mt-6 flex justify-end gap-2">
+            <Button
+              label={migratingMultiselectValues ? "Migrando..." : "Migrar seleções múltiplas antigas"}
+              onClick={handleMigrateExistingMultiselectValues}
+              disabled={!selectedCity?.cityId || migratingMultiselectValues || saving}
+              variant="outlined"
+            />
             <Button
               label={saving ? "Salvando..." : "Salvar Alterações"}
               onClick={handleSaveChanges}
