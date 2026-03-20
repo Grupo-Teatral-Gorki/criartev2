@@ -16,6 +16,7 @@ interface FormState {
   name: string;
   typesOfProjects: [];
   processStage: string;
+  enforceUniqueFichaTecnicaCpf: boolean;
 }
 
 const ConfigNewCity = () => {
@@ -93,6 +94,7 @@ const ConfigNewCity = () => {
     name: "",
     uf: "",
     typesOfProjects: [],
+    enforceUniqueFichaTecnicaCpf: false,
   });
 
   function getUniqueUFsAsLabelValue() {
@@ -167,6 +169,7 @@ const ConfigNewCity = () => {
         name: "",
         uf: "",
         typesOfProjects: [],
+        enforceUniqueFichaTecnicaCpf: false,
       });
     } catch (error) {
       console.error("Erro ao adicionar documento:", error);
@@ -275,6 +278,24 @@ const ConfigNewCity = () => {
           </p>
         </div>
       )}
+
+      <div className="mt-4 p-3 bg-slate-50 rounded border">
+        <label className="inline-flex items-start gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={form.enforceUniqueFichaTecnicaCpf}
+            onChange={(e) =>
+              setForm((prev) => ({
+                ...prev,
+                enforceUniqueFichaTecnicaCpf: e.target.checked,
+              }))
+            }
+          />
+          <span>
+            Impedir CPF repetido em mais de uma ficha técnica neste município
+          </span>
+        </label>
+      </div>
 
       <div className="mt-6">
         <Button

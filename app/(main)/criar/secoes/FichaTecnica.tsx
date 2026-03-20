@@ -3,7 +3,7 @@ import Toast from "@/app/components/Toast";
 import { db } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext";
 import { applyCPFMask } from "@/app/utils/masks";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -18,6 +18,8 @@ const EMPTY_ROW: FichaTecnicaItem = {
   cargo: "",
   cpf: "",
 };
+
+const normalizeCpf = (cpf: string) => cpf.replace(/\D/g, "");
 
 const FichaTecnica = () => {
   const searchParams = useSearchParams();
@@ -91,6 +93,72 @@ const FichaTecnica = () => {
       );
 
       const projectRef = doc(db, "projects", projectId);
+
+      const projectSnap = await getDoc(projectRef);
+      if (!projectSnap.exists()) {
+        setToastType("error");
+        setToastMessage("Projeto não encontrado.");
+        setShowToast(true);
+        return;
+      }
+
+      const projectData = projectSnap.data();
+      const cityId = projectData.cityId;
+
+      if (cityId) {
+        const cityQuery = query(collection(db, "cities"), where("cityId", "==", cityId));
+        const citySnapshot = await getDocs(cityQuery);
+        const cityDoc = citySnapshot.docs[0];
+        const enforceUniqueCpf = Boolean(cityDoc?.data()?.enforceUniqueFichaTecnicaCpf);
+
+        if (enforceUniqueCpf) {
+          const currentProjectCpfs = new Set(
+            filteredRows
+              .map((row) => normalizeCpf(row.cpf))
+              .filter((cpf) => cpf.length === 11)
+          );
+
+          if (currentProjectCpfs.size > 0) {
+            const sameCityProjectsQuery = query(
+              collection(db, "projects"),
+              where("cityId", "==", cityId)
+            );
+            const sameCityProjectsSnapshot = await getDocs(sameCityProjectsQuery);
+
+            let conflictingCpf = "";
+            for (const cityProjectDoc of sameCityProjectsSnapshot.docs) {
+              if (cityProjectDoc.id === projectId) continue;
+
+              const cityProjectData = cityProjectDoc.data();
+              const existingRows = Array.isArray(cityProjectData.fichaTecnica)
+                ? (cityProjectData.fichaTecnica as FichaTecnicaItem[])
+                : [];
+
+              const hasConflict = existingRows.some((row) =>
+                currentProjectCpfs.has(normalizeCpf(row.cpf || ""))
+              );
+
+              if (hasConflict) {
+                const conflictRow = existingRows.find((row) =>
+                  currentProjectCpfs.has(normalizeCpf(row.cpf || ""))
+                );
+                conflictingCpf = conflictRow?.cpf || "CPF informado";
+                break;
+              }
+            }
+
+            if (conflictingCpf) {
+              setToastType("error");
+              setToastMessage(
+                `Este município não permite CPF em mais de uma ficha técnica. Conflito encontrado: ${conflictingCpf}.`
+              );
+              setShowToast(true);
+              return;
+            }
+          }
+        }
+      }
+
       await updateDoc(projectRef, {
         fichaTecnica: filteredRows,
         updatedAt: new Date(),

@@ -64,6 +64,7 @@ type City = {
   name: string;
   uf: string;
   typesOfProjects?: Project[];
+  enforceUniqueFichaTecnicaCpf?: boolean;
 };
 
 const SECTION_OPTIONS = [
@@ -100,6 +101,7 @@ const EditCityProjects = () => {
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const [templates, setTemplates] = useState<ProjectTypeTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [enforceUniqueFichaTecnicaCpf, setEnforceUniqueFichaTecnicaCpf] = useState(false);
 
   // New project form state
   const [showAddProject, setShowAddProject] = useState(false);
@@ -210,11 +212,13 @@ const EditCityProjects = () => {
       const city = cities.find((c) => c.id === selectedCityId);
       setSelectedCity(city || null);
       setProjects(city?.typesOfProjects || []);
+      setEnforceUniqueFichaTecnicaCpf(Boolean(city?.enforceUniqueFichaTecnicaCpf));
       setExpandedProject(null);
       setShowAddProject(false);
     } else {
       setSelectedCity(null);
       setProjects([]);
+      setEnforceUniqueFichaTecnicaCpf(false);
     }
   }, [selectedCityId, cities]);
 
@@ -226,6 +230,7 @@ const EditCityProjects = () => {
       const cityRef = doc(db, "cities", selectedCityId);
       await updateDoc(cityRef, {
         typesOfProjects: nextProjects,
+        enforceUniqueFichaTecnicaCpf,
         updatedAt: new Date(),
       });
 
@@ -234,7 +239,13 @@ const EditCityProjects = () => {
 
       setCities((prev) =>
         prev.map((c) =>
-          c.id === selectedCityId ? { ...c, typesOfProjects: nextProjects } : c
+          c.id === selectedCityId
+            ? {
+                ...c,
+                typesOfProjects: nextProjects,
+                enforceUniqueFichaTecnicaCpf,
+              }
+            : c
         )
       );
 
@@ -512,6 +523,21 @@ const EditCityProjects = () => {
         }
         label="Selecione o município"
       />
+
+      {selectedCity && (
+        <div className="mt-4 p-3 border rounded bg-slate-50 dark:bg-slate-900/40">
+          <label className="inline-flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+            <input
+              type="checkbox"
+              checked={enforceUniqueFichaTecnicaCpf}
+              onChange={(e) => setEnforceUniqueFichaTecnicaCpf(e.target.checked)}
+            />
+            <span>
+              Impedir que o mesmo CPF apareça em mais de uma ficha técnica neste município
+            </span>
+          </label>
+        </div>
+      )}
 
       {selectedCity && (
         <div className="mt-4 p-4 border rounded-lg bg-slate-50 dark:bg-slate-900/40">
