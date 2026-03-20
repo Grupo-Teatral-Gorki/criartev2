@@ -43,6 +43,12 @@ const AdminHome = () => {
           href={"/admin/review-config"}
           icon={"reviewers"}
         />
+        <CardLink
+          title={"Modelos de Tipo de Projeto"}
+          description={""}
+          href={"/admin/project-type-templates"}
+          icon={"templates"}
+        />
       </div>
     </div>
   );

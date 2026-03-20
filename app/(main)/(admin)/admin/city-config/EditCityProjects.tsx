@@ -11,7 +11,7 @@ import {
 import { SelectInput } from "@/app/components/SelectInput";
 import Button from "@/app/components/Button";
 import Toast from "@/app/components/Toast";
-import { Trash2, Plus, ChevronDown, ChevronUp, Edit2, Save, X } from "lucide-react";
+import { Trash2, Plus, ChevronDown, ChevronUp, Edit2, X } from "lucide-react";
 
 interface FieldOption {
   value: string;
@@ -50,6 +50,13 @@ interface Project {
   available: boolean;
   acceptedProponentTypes?: ProponenteTipo[];
   fields: Fields;
+}
+
+interface ProjectTypeTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  project: Project;
 }
 
 type City = {
@@ -91,6 +98,8 @@ const EditCityProjects = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [templates, setTemplates] = useState<ProjectTypeTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
 
   // New project form state
   const [showAddProject, setShowAddProject] = useState(false);
@@ -130,6 +139,42 @@ const EditCityProjects = () => {
 
   const db = getFirestore();
 
+  const cloneProject = (project: Project): Project => ({
+    ...project,
+    acceptedProponentTypes: project.acceptedProponentTypes
+      ? [...project.acceptedProponentTypes]
+      : [...DEFAULT_PROPONENT_TYPES],
+    fields: Object.fromEntries(
+      Object.entries(project.fields || {}).map(([sectionKey, sectionFields]) => [
+        sectionKey,
+        sectionFields.map((field) => ({
+          ...field,
+          options: field.options ? [...field.options] : [],
+        })),
+      ])
+    ),
+  });
+
+  const fetchTemplates = async () => {
+    try {
+      const templatesCol = collection(db, "projectTypeTemplates");
+      const snapshot = await getDocs(templatesCol);
+      const templateList = snapshot.docs.map((templateDoc) => {
+        const data = templateDoc.data() as Omit<ProjectTypeTemplate, "id">;
+        return {
+          id: templateDoc.id,
+          name: data.name,
+          description: data.description || "",
+          project: data.project,
+        };
+      });
+
+      setTemplates(templateList);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+    }
+  };
+
   const fetchCities = async () => {
     try {
       const citiesCol = collection(db, "cities");
@@ -146,9 +191,11 @@ const EditCityProjects = () => {
 
   useEffect(() => {
     fetchCities();
+    fetchTemplates();
 
     const handleConfigRefresh = () => {
       fetchCities();
+      fetchTemplates();
     };
 
     window.addEventListener("city-config-updated", handleConfigRefresh);
@@ -171,29 +218,29 @@ const EditCityProjects = () => {
     }
   }, [selectedCityId, cities]);
 
-  const handleSaveChanges = async () => {
+  const persistProjects = async (nextProjects: Project[], successMessage: string) => {
     if (!selectedCityId) return;
 
     setSaving(true);
     try {
       const cityRef = doc(db, "cities", selectedCityId);
-      await updateDoc(cityRef, { 
-        typesOfProjects: projects,
-        updatedAt: new Date()
+      await updateDoc(cityRef, {
+        typesOfProjects: nextProjects,
+        updatedAt: new Date(),
       });
 
       await fetchCities();
       window.dispatchEvent(new Event("city-config-updated"));
 
-      // Update local cities state
       setCities((prev) =>
         prev.map((c) =>
-          c.id === selectedCityId ? { ...c, typesOfProjects: projects } : c
+          c.id === selectedCityId ? { ...c, typesOfProjects: nextProjects } : c
         )
       );
 
+      setProjects(nextProjects);
       setToastType("success");
-      setToastMessage("Estrutura de projetos atualizada com sucesso!");
+      setToastMessage(successMessage);
       setShowToast(true);
     } catch (error) {
       console.error("Error updating city projects:", error);
@@ -203,6 +250,41 @@ const EditCityProjects = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveChanges = async () => {
+    if (!selectedCityId) return;
+
+    await persistProjects(projects, "Estrutura de projetos atualizada com sucesso!");
+  };
+
+  const handleApplyTemplate = () => {
+    if (!selectedCityId) {
+      setToastType("error");
+      setToastMessage("Selecione um município para aplicar o modelo.");
+      setShowToast(true);
+      return;
+    }
+
+    if (!selectedTemplateId) {
+      setToastType("error");
+      setToastMessage("Selecione um modelo para aplicar.");
+      setShowToast(true);
+      return;
+    }
+
+    const template = templates.find((item) => item.id === selectedTemplateId);
+    if (!template) {
+      setToastType("error");
+      setToastMessage("Modelo não encontrado.");
+      setShowToast(true);
+      return;
+    }
+
+    setProjects((prev) => [...prev, cloneProject(template.project)]);
+    setToastType("success");
+    setToastMessage(`Modelo \"${template.name}\" aplicado. Agora você pode editar e salvar no município.`);
+    setShowToast(true);
   };
 
   const handleToggleAvailable = (projectIdx: number) => {
@@ -430,6 +512,43 @@ const EditCityProjects = () => {
         }
         label="Selecione o município"
       />
+
+      {selectedCity && (
+        <div className="mt-4 p-4 border rounded-lg bg-slate-50 dark:bg-slate-900/40">
+          <h3 className="text-base font-semibold mb-2">Aplicar modelo no município</h3>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+            O modelo será copiado para este município. Depois da aplicação, você pode editar livremente sem alterar o modelo original.
+          </p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 items-end">
+            <div className="lg:col-span-2">
+              <SelectInput
+                options={templates.map((template) => ({
+                  value: template.id,
+                  label: template.description
+                    ? `${template.name} - ${template.description}`
+                    : template.name,
+                }))}
+                value={selectedTemplateId}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                  setSelectedTemplateId(e.target.value)
+                }
+                label="Selecione o modelo"
+              />
+            </div>
+            <Button
+              label="Aplicar Modelo"
+              onClick={handleApplyTemplate}
+              disabled={!selectedTemplateId}
+              size="small"
+            />
+          </div>
+          {templates.length === 0 && (
+            <p className="text-xs text-slate-500 mt-2">
+              Nenhum modelo encontrado. Crie modelos em /admin/project-type-templates.
+            </p>
+          )}
+        </div>
+      )}
 
       {selectedCity && (
         <div className="mt-6">
