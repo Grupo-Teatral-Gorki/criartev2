@@ -20,6 +20,7 @@ type ProponenteTipo = "fisica" | "juridica" | "coletivo";
 interface FieldItem {
   name: string;
   label: string;
+  description?: string;
   type: "text" | "textarea" | "select" | "multiselect" | "radio" | "checkbox" | "file";
   required?: boolean;
   placeholder?: string;
@@ -92,6 +93,7 @@ const ProjectTypeTemplatesPage = () => {
   const [newField, setNewField] = useState<FieldItem>({
     name: "",
     label: "",
+    description: "",
     type: "text",
     required: false,
     options: [],
@@ -171,17 +173,22 @@ const ProjectTypeTemplatesPage = () => {
   };
 
   const resetNewField = () => {
-    setNewField({ name: "", label: "", type: "text", required: false, options: [] });
+    setNewField({ name: "", label: "", description: "", type: "text", required: false, options: [] });
     setNewOptionValue("");
     setNewOptionLabel("");
   };
 
   const handleAddField = (sectionKey: string) => {
-    if (!newField.name.trim() || !newField.label.trim()) return;
+    if (!newField.name.trim() || !newField.label.trim() || !newField.description?.trim()) {
+      setToastType("error");
+      setToastMessage("Preencha key, rótulo e descrição do campo.");
+      setShowToast(true);
+      return;
+    }
 
     const fieldToAdd: FieldItem = FILE_ONLY_SECTIONS.includes(sectionKey)
-      ? { ...newField, type: "file", options: [] }
-      : { ...newField, options: newField.options || [] };
+      ? { ...newField, description: newField.description?.trim(), type: "file", options: [] }
+      : { ...newField, description: newField.description?.trim(), options: newField.options || [] };
 
     setNewProject((prev) => ({
       ...prev,
@@ -391,6 +398,19 @@ const ProjectTypeTemplatesPage = () => {
                           />
                         </div>
 
+                        <textarea
+                          placeholder="Descrição do campo"
+                          value={newField.description || ""}
+                          onChange={(e) =>
+                            setNewField((prev) => ({
+                              ...prev,
+                              description: e.target.value,
+                            }))
+                          }
+                          rows={2}
+                          className="mb-2 w-full border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                        />
+
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-2">
                           {FILE_ONLY_SECTIONS.includes(sectionKey) ? (
                             <div className="flex items-center text-sm text-slate-500">
@@ -507,6 +527,11 @@ const ProjectTypeTemplatesPage = () => {
                         {fields.map((field, idx) => (
                           <li key={idx} className="text-xs bg-white dark:bg-slate-800 rounded p-2 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
                             <span className="font-medium">{field.label}</span> ({field.name})
+                            {field.description && (
+                              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                {field.description}
+                              </p>
+                            )}
                           </li>
                         ))}
                       </ul>
