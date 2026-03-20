@@ -31,6 +31,17 @@ interface FieldConfig {
   options?: FieldOption[];
 }
 
+const OTHER_OPTION: FieldOption = { value: "outro", label: "Outro" };
+
+const getOptionsWithOther = (options?: FieldOption[]) => {
+  const safeOptions = Array.isArray(options) ? options : [];
+  return safeOptions.some((opt) => opt.value === OTHER_OPTION.value)
+    ? safeOptions
+    : [...safeOptions, OTHER_OPTION];
+};
+
+const getOtherFieldKey = (fieldName: string) => `${fieldName}__outro`;
+
 type FormValues = Record<string, string | string[]>;
 type GeneralInfoField = {
   name: string;
@@ -178,96 +189,138 @@ const InfoGerais = () => {
           />
         );
       
-      case "select":
-        return (
-          <SelectInput
-            key={field.name}
-            label={field.label}
-            options={field.options || []}
-            value={fieldValue as string}
-            onChange={(e: any) => handleChange(field.name, e)}
-          />
-        );
-      
-      case "multiselect":
+      case "select": {
+        const optionsWithOther = getOptionsWithOther(field.options);
+        const otherFieldKey = getOtherFieldKey(field.name);
+        const selectedValue = fieldValue as string;
+        const showOtherInput = selectedValue === OTHER_OPTION.value;
         return (
           <div key={field.name} className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-navy">{field.label}</label>
-            <div className="flex flex-wrap items-center gap-2 px-3 border border-gray-200 rounded-lg bg-white h-[52px]">
-              {(field.options || []).map((opt) => {
-                const isChecked = Array.isArray(fieldValue) ? fieldValue.includes(opt.value) : false;
-                return (
-                  <label
-                    key={opt.value}
-                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer transition-all border ${
-                      isChecked
-                        ? "bg-navy text-white border-navy"
-                        : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      checked={isChecked}
-                      onChange={(e) => {
-                        const currentValues = Array.isArray(fieldValue) ? fieldValue : [];
-                        if (e.target.checked) {
-                          setFormValues((prev) => ({
-                            ...prev,
-                            [field.name]: [...currentValues, opt.value],
-                          }));
-                        } else {
-                          setFormValues((prev) => ({
-                            ...prev,
-                            [field.name]: currentValues.filter((v) => v !== opt.value),
-                          }));
-                        }
-                      }}
-                    />
-                    {isChecked && (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                    {opt.label}
-                  </label>
-                );
-              })}
+            <SelectInput
+              label={field.label}
+              options={optionsWithOther}
+              value={selectedValue}
+              onChange={(e: any) => {
+                const nextValue = e?.target?.value || "";
+                setFormValues((prev) => ({
+                  ...prev,
+                  [field.name]: nextValue,
+                  [otherFieldKey]:
+                    nextValue === OTHER_OPTION.value
+                      ? typeof prev[otherFieldKey] === "string"
+                        ? prev[otherFieldKey]
+                        : ""
+                      : "",
+                }));
+              }}
+            />
+            {showOtherInput && (
+              <TextInput
+                label="Outro"
+                value={(formValues[otherFieldKey] as string) || ""}
+                onChange={(e: any) => handleChange(otherFieldKey, e.target.value)}
+                placeholder="Digite o outro"
+              />
+            )}
+          </div>
+        );
+      }
+      
+      case "multiselect": {
+        const multiselectOptionsWithOther = getOptionsWithOther(field.options);
+        const multiselectValues = Array.isArray(fieldValue) ? fieldValue : [];
+        const multiselectOtherFieldKey = getOtherFieldKey(field.name);
+        const isOtherSelected = multiselectValues.includes(OTHER_OPTION.value);
+        return (
+          <div key={field.name} className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-navy dark:text-slate-200">{field.label}</label>
+            <div className="border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 p-3 max-h-56 overflow-y-auto">
+              <div className="space-y-2">
+                {multiselectOptionsWithOther.map((opt) => {
+                  const isChecked = multiselectValues.includes(opt.value);
+                  return (
+                    <label
+                      key={opt.value}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800"
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 accent-navy"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const currentValues = Array.isArray(fieldValue) ? fieldValue : [];
+                          if (e.target.checked) {
+                            setFormValues((prev) => ({
+                              ...prev,
+                              [field.name]: [...currentValues, opt.value],
+                            }));
+                          } else {
+                            setFormValues((prev) => ({
+                              ...prev,
+                              [field.name]: currentValues.filter((v) => v !== opt.value),
+                              [multiselectOtherFieldKey]:
+                                opt.value === OTHER_OPTION.value
+                                  ? ""
+                                  : prev[multiselectOtherFieldKey],
+                            }));
+                          }
+                        }}
+                      />
+                      <span className="text-sm text-gray-700 dark:text-slate-200">{opt.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              {isOtherSelected && (
+                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
+                  <TextInput
+                    label="Outro"
+                    value={(formValues[multiselectOtherFieldKey] as string) || ""}
+                    onChange={(e: any) =>
+                      handleChange(multiselectOtherFieldKey, e.target.value)
+                    }
+                    placeholder="Digite o outro"
+                  />
+                </div>
+              )}
             </div>
           </div>
         );
+      }
       
       case "radio":
         return (
           <div key={field.name} className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-navy">{field.label}</label>
-            <div className="flex flex-wrap items-center gap-2 px-3 border border-gray-200 rounded-lg bg-white h-[52px]">
-              {(field.options || []).map((opt) => {
-                const isSelected = fieldValue === opt.value;
-                return (
-                  <label
-                    key={opt.value}
-                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer transition-all border ${
-                      isSelected
-                        ? "bg-navy text-white border-navy"
-                        : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      className="sr-only"
-                      name={field.name}
-                      value={opt.value}
-                      checked={isSelected}
-                      onChange={(e) => handleChange(field.name, e.target.value)}
-                    />
-                    {isSelected && (
-                      <span className="w-2 h-2 bg-white rounded-full" />
-                    )}
-                    {opt.label}
-                  </label>
-                );
-              })}
+            <label className="text-sm font-medium text-navy dark:text-slate-200">{field.label}</label>
+            <div className="border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 p-3 max-h-40 overflow-y-auto">
+              <div className="flex flex-wrap items-start gap-2">
+                {(field.options || []).map((opt) => {
+                  const isSelected = fieldValue === opt.value;
+                  return (
+                    <label
+                      key={opt.value}
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer transition-all border ${
+                        isSelected
+                          ? "bg-navy text-white border-navy"
+                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        className="sr-only"
+                        name={field.name}
+                        value={opt.value}
+                        checked={isSelected}
+                        onChange={(e) => handleChange(field.name, e.target.value)}
+                      />
+                      {isSelected && (
+                        <span className="w-2 h-2 bg-white rounded-full" />
+                      )}
+                      {opt.label}
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           </div>
         );
@@ -276,11 +329,11 @@ const InfoGerais = () => {
         const isCheckedBox = fieldValue === "true";
         return (
           <div key={field.name} className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-navy">{field.label}</label>
-            <div className="flex items-center px-3 border border-gray-200 rounded-lg bg-white h-[52px]">
-            <label className="inline-flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors w-full">
+            <label className="text-sm font-medium text-navy dark:text-slate-200">{field.label}</label>
+            <div className="flex items-center px-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 h-[52px]">
+            <label className="inline-flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors w-full rounded px-1">
               <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                isCheckedBox ? "bg-navy border-navy" : "bg-white border-gray-300"
+                isCheckedBox ? "bg-navy border-navy" : "bg-white border-gray-300 dark:bg-slate-900 dark:border-slate-600"
               }`}>
                 {isCheckedBox && (
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,7 +347,7 @@ const InfoGerais = () => {
                 checked={isCheckedBox}
                 onChange={(e) => handleChange(field.name, e.target.checked ? "true" : "false")}
               />
-              <span className="text-sm text-gray-700">Sim</span>
+              <span className="text-sm text-gray-700 dark:text-slate-200">Sim</span>
             </label>
             </div>
           </div>

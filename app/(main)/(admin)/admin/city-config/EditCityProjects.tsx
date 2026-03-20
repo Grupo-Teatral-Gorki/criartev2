@@ -922,10 +922,30 @@ const EditCityProjects = () => {
                                         <div className="mb-2 p-2 bg-slate-100 dark:bg-slate-600 rounded">
                                           <div className="text-xs font-medium mb-1">Opções:</div>
                                           {(newField.options || []).map((opt, optIdx) => (
-                                            <div key={optIdx} className="flex gap-1 mb-1 text-xs">
-                                              <span className="flex-1 p-1 bg-white dark:bg-slate-500 rounded">
-                                                {opt.label} ({opt.value})
-                                              </span>
+                                            <div key={optIdx} className="grid grid-cols-2 gap-1 mb-1 text-xs">
+                                              <input
+                                                type="text"
+                                                value={opt.value}
+                                                readOnly
+                                                className="border border-slate-200 dark:border-slate-500 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-700"
+                                              />
+                                              <div className="flex gap-1">
+                                                <input
+                                                  type="text"
+                                                  value={opt.label}
+                                                  onChange={(e) => {
+                                                    const label = e.target.value;
+                                                    setNewField((prev) => ({
+                                                      ...prev,
+                                                      options: (prev.options || []).map((existingOpt, i) =>
+                                                        i === optIdx
+                                                          ? { label, value: toFieldKey(label) }
+                                                          : existingOpt
+                                                      ),
+                                                    }));
+                                                  }}
+                                                  className="border border-slate-200 dark:border-slate-500 p-1 rounded text-xs flex-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-700"
+                                                />
                                               <button
                                                 onClick={() =>
                                                   setNewField((prev) => ({
@@ -937,6 +957,7 @@ const EditCityProjects = () => {
                                               >
                                                 <X size={12} />
                                               </button>
+                                              </div>
                                             </div>
                                           ))}
                                           <div className="flex gap-1 mt-1">
@@ -944,14 +965,21 @@ const EditCityProjects = () => {
                                               type="text"
                                               placeholder="Valor"
                                               value={newOptionValue}
-                                              onChange={(e) => setNewOptionValue(e.target.value)}
+                                              readOnly
                                               className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs flex-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                             />
+                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 w-full">
+                                              Gerado automaticamente pelo rótulo.
+                                            </p>
                                             <input
                                               type="text"
                                               placeholder="Rótulo"
                                               value={newOptionLabel}
-                                              onChange={(e) => setNewOptionLabel(e.target.value)}
+                                              onChange={(e) => {
+                                                const label = e.target.value;
+                                                setNewOptionLabel(label);
+                                                setNewOptionValue(toFieldKey(label));
+                                              }}
                                               className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs flex-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                             />
                                             <button
@@ -1078,10 +1106,30 @@ const EditCityProjects = () => {
                                               <div className="p-2 bg-slate-100 dark:bg-slate-600 rounded text-xs">
                                                 <div className="font-medium mb-1">Opções:</div>
                                                 {(editFieldValue.options || []).map((opt, optIdx) => (
-                                                  <div key={optIdx} className="flex gap-1 mb-1">
-                                                    <span className="flex-1 p-1 bg-white dark:bg-slate-500 rounded">
-                                                      {opt.label} ({opt.value})
-                                                    </span>
+                                                  <div key={optIdx} className="grid grid-cols-2 gap-1 mb-1">
+                                                    <input
+                                                      type="text"
+                                                      value={opt.value}
+                                                      readOnly
+                                                      className="border border-slate-200 dark:border-slate-500 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-700"
+                                                    />
+                                                    <div className="flex gap-1">
+                                                      <input
+                                                        type="text"
+                                                        value={opt.label}
+                                                        onChange={(e) => {
+                                                          const label = e.target.value;
+                                                          setEditFieldValue((prev) => ({
+                                                            ...prev,
+                                                            options: (prev.options || []).map((existingOpt, i) =>
+                                                              i === optIdx
+                                                                ? { label, value: toFieldKey(label) }
+                                                                : existingOpt
+                                                            ),
+                                                          }));
+                                                        }}
+                                                        className="border border-slate-200 dark:border-slate-500 p-1 rounded text-xs flex-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-700"
+                                                      />
                                                     <button
                                                       onClick={() =>
                                                         setEditFieldValue((prev) => ({
@@ -1093,6 +1141,7 @@ const EditCityProjects = () => {
                                                     >
                                                       <X size={12} />
                                                     </button>
+                                                    </div>
                                                   </div>
                                                 ))}
                                                 <div className="flex gap-1 mt-1">
@@ -1100,14 +1149,21 @@ const EditCityProjects = () => {
                                                     type="text"
                                                     placeholder="Valor"
                                                     value={editOptionValue}
-                                                    onChange={(e) => setEditOptionValue(e.target.value)}
+                                                    readOnly
                                                     className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs flex-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                                   />
+                                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 w-full">
+                                                    Gerado automaticamente pelo rótulo.
+                                                  </p>
                                                   <input
                                                     type="text"
                                                     placeholder="Rótulo"
                                                     value={editOptionLabel}
-                                                    onChange={(e) => setEditOptionLabel(e.target.value)}
+                                                    onChange={(e) => {
+                                                      const label = e.target.value;
+                                                      setEditOptionLabel(label);
+                                                      setEditOptionValue(toFieldKey(label));
+                                                    }}
                                                     className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs flex-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                                   />
                                                   <button

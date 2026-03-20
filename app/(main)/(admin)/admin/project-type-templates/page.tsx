@@ -179,9 +179,9 @@ const ProjectTypeTemplatesPage = () => {
   };
 
   const handleAddField = (sectionKey: string) => {
-    if (!newField.name.trim() || !newField.label.trim() || !newField.description?.trim()) {
+    if (!newField.name.trim() || !newField.label.trim()) {
       setToastType("error");
-      setToastMessage("Preencha key, rótulo e descrição do campo.");
+      setToastMessage("Preencha key e rótulo do campo.");
       setShowToast(true);
       return;
     }
@@ -399,7 +399,7 @@ const ProjectTypeTemplatesPage = () => {
                         </div>
 
                         <textarea
-                          placeholder="Descrição do campo"
+                          placeholder="Descrição do campo (opcional)"
                           value={newField.description || ""}
                           onChange={(e) =>
                             setNewField((prev) => ({
@@ -468,14 +468,21 @@ const ProjectTypeTemplatesPage = () => {
                                 <input
                                   type="text"
                                   value={newOptionValue}
-                                  onChange={(e) => setNewOptionValue(e.target.value)}
+                                  readOnly
                                   className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                   placeholder="Valor"
                                 />
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 lg:col-span-3">
+                                  Gerado automaticamente pelo rótulo.
+                                </p>
                                 <input
                                   type="text"
                                   value={newOptionLabel}
-                                  onChange={(e) => setNewOptionLabel(e.target.value)}
+                                  onChange={(e) => {
+                                    const label = e.target.value;
+                                    setNewOptionLabel(label);
+                                    setNewOptionValue(toFieldKey(label));
+                                  }}
                                   className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                   placeholder="Rótulo"
                                 />
