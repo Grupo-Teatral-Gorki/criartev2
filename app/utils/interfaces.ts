@@ -10,6 +10,10 @@ export interface LoginResponse {
   };
 }
 
+export type UserType = 0 | 1;
+
+export type ProponenteTipo = "fisica" | "juridica" | "coletivo";
+
 export interface User {
   id: string;
   cityId: string;
@@ -22,6 +26,7 @@ export interface ProjectTypesType {
   description: string;
   name: string;
   label: string;
+  acceptedProponentTypes?: ProponenteTipo[];
 }
 
 export interface City {

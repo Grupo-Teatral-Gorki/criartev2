@@ -37,22 +37,32 @@ const ConfigProcess = () => {
   const db = getFirestore();
   const emailService = EmailService.getInstance();
 
+  const fetchCities = async () => {
+    try {
+      const citiesCol = collection(db, "cities");
+      const snapshot = await getDocs(citiesCol);
+      const cityList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as City[];
+      setCities(cityList);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        const citiesCol = collection(db, "cities");
-        const snapshot = await getDocs(citiesCol);
-        const cityList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as City[];
-        setCities(cityList);
-      } catch (error) {
-        console.error("Error fetching cities:", error);
-      }
+    fetchCities();
+
+    const handleConfigRefresh = () => {
+      fetchCities();
     };
 
-    fetchCities();
+    window.addEventListener("city-config-updated", handleConfigRefresh);
+
+    return () => {
+      window.removeEventListener("city-config-updated", handleConfigRefresh);
+    };
   }, [db]);
 
   useEffect(() => {
@@ -98,6 +108,9 @@ const ConfigProcess = () => {
       const cityRef = doc(db, "cities", selectedCity);
       await updateDoc(cityRef, { processStage: selectedStage });
       setSavedStage(selectedStage);
+      await fetchCities();
+
+      window.dispatchEvent(new Event("city-config-updated"));
 
       // Get city name for email
       const city = cities.find((c) => c.id === selectedCity);

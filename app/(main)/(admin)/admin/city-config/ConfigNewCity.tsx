@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import cities from "@/data/cities.json";
 import { SelectInput } from "@/app/components/SelectInput";
 import { addDoc, collection } from "firebase/firestore";
-import { db } from "@/app/config/firebaseconfig";
+import { db, storage } from "@/app/config/firebaseconfig";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import Toast from "@/app/components/Toast";
-import { TextInput } from "@/app/components/TextInput";
 import Button from "@/app/components/Button";
 
 interface FormState {
@@ -19,13 +19,72 @@ interface FormState {
 }
 
 const ConfigNewCity = () => {
+  const MAX_LOGO_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
   const [selectedUF, setSelectedUF] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
-  const [cityLogoUrl, setCityLogoUrl] = useState("");
+  const [cityLogoFile, setCityLogoFile] = useState<File | null>(null);
+  const [cityLogoPreviewUrl, setCityLogoPreviewUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
+
+  const compressImageIfNeeded = async (file: File): Promise<File> => {
+    if (file.size <= MAX_LOGO_SIZE_BYTES) return file;
+
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+
+          if (!ctx) {
+            resolve(file);
+            return;
+          }
+
+          let width = img.width;
+          let height = img.height;
+          const maxDimension = 1920;
+
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                resolve(file);
+                return;
+              }
+
+              const compressed = new File([blob], file.name, { type: file.type });
+              resolve(compressed);
+            },
+            file.type,
+            0.7
+          );
+        };
+
+        img.src = event.target?.result as string;
+      };
+
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
+  };
 
   const [form, setForm] = useState<FormState>({
     cityId: "",
@@ -60,16 +119,47 @@ const ConfigNewCity = () => {
       return;
     }
 
+    if (!cityLogoFile) {
+      setShowToast(true);
+      setToastType("error");
+      setToastMessage("Faça o upload do brasão do município.");
+      return;
+    }
+
     setSaving(true);
     try {
-      const docRef = await addDoc(collection(db, "cities"), form);
+      const fileToUpload = await compressImageIfNeeded(cityLogoFile);
+
+      if (fileToUpload.size > MAX_LOGO_SIZE_BYTES) {
+        setShowToast(true);
+        setToastType("error");
+        setToastMessage("O brasão deve ter no máximo 5MB após compressão.");
+        setSaving(false);
+        return;
+      }
+
+      const safeFileName = fileToUpload.name.replace(/\s+/g, "-").toLowerCase();
+      const logoRef = ref(
+        storage,
+        `city-logos/${form.cityId}/${Date.now()}-${safeFileName}`
+      );
+
+      await uploadBytes(logoRef, fileToUpload);
+      const uploadedLogoUrl = await getDownloadURL(logoRef);
+
+      const docRef = await addDoc(collection(db, "cities"), {
+        ...form,
+        cityLogoUrl: uploadedLogoUrl,
+      });
       setShowToast(true);
       setToastType("success");
       setToastMessage(`Município criado com sucesso! ID: ${docRef.id}`);
+      window.dispatchEvent(new Event("city-config-updated"));
       // Reset form
       setSelectedUF("");
       setSelectedCity("");
-      setCityLogoUrl("");
+      setCityLogoFile(null);
+      setCityLogoPreviewUrl("");
       setForm({
         cityId: "",
         processStage: "closed",
@@ -86,6 +176,31 @@ const ConfigNewCity = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    const maxSizeBytes = MAX_LOGO_SIZE_BYTES;
+
+    if (!allowedTypes.includes(file.type)) {
+      setShowToast(true);
+      setToastType("error");
+      setToastMessage("Formato inválido. Use PNG, JPG ou WEBP.");
+      return;
+    }
+
+    if (file.size > maxSizeBytes) {
+      setShowToast(true);
+      setToastType("error");
+      setToastMessage("Arquivo muito grande. Tamanho máximo: 5MB.");
+      return;
+    }
+
+    setCityLogoFile(file);
+    setCityLogoPreviewUrl(URL.createObjectURL(file));
   };
 
   return (
@@ -127,18 +242,28 @@ const ConfigNewCity = () => {
         />
       </div>
 
-      <TextInput
-        type="text"
-        label="URL Logo do município"
-        value={cityLogoUrl}
-        onChange={(e: any) => {
-          setCityLogoUrl(e.target.value);
-          setForm((prev) => ({
-            ...prev,
-            cityLogoUrl: e.target.value,
-          }));
-        }}
-      />
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Upload do brasão do município
+        </label>
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/jpg,image/webp"
+          onChange={handleLogoFileChange}
+          className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+        />
+        <p className="mt-1 text-xs text-slate-500">Formatos: PNG, JPG, WEBP (máx. 5MB)</p>
+
+        {cityLogoPreviewUrl && (
+          <div className="mt-3 w-24 h-24 rounded-md border border-slate-200 overflow-hidden bg-slate-50">
+            <img
+              src={cityLogoPreviewUrl}
+              alt="Prévia do brasão"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+      </div>
 
       {form.name && (
         <div className="mt-4 p-3 bg-slate-50 rounded border">
@@ -155,7 +280,7 @@ const ConfigNewCity = () => {
         <Button
           label={saving ? "Salvando..." : "Criar Município"}
           onClick={handleSubmitToFirebase}
-          disabled={saving || !form.name}
+          disabled={saving || !form.name || !cityLogoFile}
         />
       </div>
 

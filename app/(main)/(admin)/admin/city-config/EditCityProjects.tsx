@@ -18,6 +18,8 @@ interface FieldOption {
   label: string;
 }
 
+type ProponenteTipo = "fisica" | "juridica" | "coletivo";
+
 interface FieldItem {
   name: string;
   label: string;
@@ -46,6 +48,7 @@ interface Project {
   label: string;
   description: string;
   available: boolean;
+  acceptedProponentTypes?: ProponenteTipo[];
   fields: Fields;
 }
 
@@ -70,6 +73,14 @@ const PROJECT_TYPE_OPTIONS = [
   { value: "premiacao", label: "Premiação" },
 ];
 
+const PROPONENT_TYPE_OPTIONS: { value: ProponenteTipo; label: string }[] = [
+  { value: "fisica", label: "Pessoa Física" },
+  { value: "juridica", label: "Pessoa Jurídica" },
+  { value: "coletivo", label: "Coletivo" },
+];
+
+const DEFAULT_PROPONENT_TYPES: ProponenteTipo[] = ["fisica", "juridica", "coletivo"];
+
 const EditCityProjects = () => {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCityId, setSelectedCityId] = useState("");
@@ -88,6 +99,7 @@ const EditCityProjects = () => {
     label: "",
     description: "",
     available: true,
+    acceptedProponentTypes: [...DEFAULT_PROPONENT_TYPES],
     fields: {},
   });
 
@@ -113,25 +125,37 @@ const EditCityProjects = () => {
   const [newOptionLabel, setNewOptionLabel] = useState("");
   const [editOptionValue, setEditOptionValue] = useState("");
   const [editOptionLabel, setEditOptionLabel] = useState("");
+  const [editingProjectDescriptionIdx, setEditingProjectDescriptionIdx] = useState<number | null>(null);
+  const [descriptionDraft, setDescriptionDraft] = useState("");
 
   const db = getFirestore();
 
+  const fetchCities = async () => {
+    try {
+      const citiesCol = collection(db, "cities");
+      const snapshot = await getDocs(citiesCol);
+      const cityList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as City[];
+      setCities(cityList);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        const citiesCol = collection(db, "cities");
-        const snapshot = await getDocs(citiesCol);
-        const cityList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as City[];
-        setCities(cityList);
-      } catch (error) {
-        console.error("Error fetching cities:", error);
-      }
+    fetchCities();
+
+    const handleConfigRefresh = () => {
+      fetchCities();
     };
 
-    fetchCities();
+    window.addEventListener("city-config-updated", handleConfigRefresh);
+
+    return () => {
+      window.removeEventListener("city-config-updated", handleConfigRefresh);
+    };
   }, [db]);
 
   useEffect(() => {
@@ -157,6 +181,9 @@ const EditCityProjects = () => {
         typesOfProjects: projects,
         updatedAt: new Date()
       });
+
+      await fetchCities();
+      window.dispatchEvent(new Event("city-config-updated"));
 
       // Update local cities state
       setCities((prev) =>
@@ -192,6 +219,31 @@ const EditCityProjects = () => {
     }
   };
 
+  const handleOpenDescriptionModal = (projectIdx: number) => {
+    setEditingProjectDescriptionIdx(projectIdx);
+    setDescriptionDraft(projects[projectIdx]?.description || "");
+  };
+
+  const handleSaveDescription = () => {
+    if (editingProjectDescriptionIdx === null) return;
+
+    setProjects((prev) =>
+      prev.map((project, idx) =>
+        idx === editingProjectDescriptionIdx
+          ? { ...project, description: descriptionDraft.trim() }
+          : project
+      )
+    );
+
+    setEditingProjectDescriptionIdx(null);
+    setDescriptionDraft("");
+  };
+
+  const handleCancelDescriptionEdit = () => {
+    setEditingProjectDescriptionIdx(null);
+    setDescriptionDraft("");
+  };
+
   const handleAddProject = () => {
     if (!newProject.name || !newProject.label) return;
     setProjects((prev) => [...prev, newProject]);
@@ -200,9 +252,44 @@ const EditCityProjects = () => {
       label: "",
       description: "",
       available: true,
+      acceptedProponentTypes: [...DEFAULT_PROPONENT_TYPES],
       fields: {},
     });
     setShowAddProject(false);
+  };
+
+  const handleToggleProjectProponentType = (projectIdx: number, tipo: ProponenteTipo) => {
+    setProjects((prev) =>
+      prev.map((project, idx) => {
+        if (idx !== projectIdx) return project;
+
+        const currentTypes =
+          project.acceptedProponentTypes && project.acceptedProponentTypes.length > 0
+            ? project.acceptedProponentTypes
+            : [...DEFAULT_PROPONENT_TYPES];
+
+        const updatedTypes = currentTypes.includes(tipo)
+          ? currentTypes.filter((item) => item !== tipo)
+          : [...currentTypes, tipo];
+
+        return { ...project, acceptedProponentTypes: updatedTypes };
+      })
+    );
+  };
+
+  const handleToggleNewProjectProponentType = (tipo: ProponenteTipo) => {
+    setNewProject((prev) => {
+      const currentTypes =
+        prev.acceptedProponentTypes && prev.acceptedProponentTypes.length > 0
+          ? prev.acceptedProponentTypes
+          : [...DEFAULT_PROPONENT_TYPES];
+
+      const updatedTypes = currentTypes.includes(tipo)
+        ? currentTypes.filter((item) => item !== tipo)
+        : [...currentTypes, tipo];
+
+      return { ...prev, acceptedProponentTypes: updatedTypes };
+    });
   };
 
   const handleAddSection = (projectIdx: number) => {
@@ -395,6 +482,24 @@ const EditCityProjects = () => {
                   placeholder="Descrição do tipo de projeto"
                 />
               </div>
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-2">Tipos de proponente aceitos</label>
+                <div className="flex flex-wrap gap-3">
+                  {PROPONENT_TYPE_OPTIONS.map((option) => {
+                    const checked = (newProject.acceptedProponentTypes || DEFAULT_PROPONENT_TYPES).includes(option.value);
+                    return (
+                      <label key={option.value} className="inline-flex items-center gap-2 text-sm text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => handleToggleNewProjectProponentType(option.value)}
+                        />
+                        {option.label}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
               <div className="flex gap-2">
                 <Button label="Adicionar" onClick={handleAddProject} size="small" />
                 <Button
@@ -473,9 +578,40 @@ const EditCityProjects = () => {
                   {/* Expanded Project Content */}
                   {expandedProject === projectIdx && (
                     <div className="p-4 border-t">
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                        {project.description || "Sem descrição"}
-                      </p>
+                      <div className="mb-4 flex items-start justify-between gap-3">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          {project.description || "placeholder"}
+                        </p>
+                        <button
+                          onClick={() => handleOpenDescriptionModal(projectIdx)}
+                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 whitespace-nowrap"
+                        >
+                          <Edit2 size={14} /> Editar descrição
+                        </button>
+                      </div>
+
+                      <div className="mb-4">
+                        <p className="text-sm font-medium mb-2">Tipos de proponente aceitos</p>
+                        <div className="flex flex-wrap gap-3">
+                          {PROPONENT_TYPE_OPTIONS.map((option) => {
+                            const selectedTypes =
+                              project.acceptedProponentTypes && project.acceptedProponentTypes.length > 0
+                                ? project.acceptedProponentTypes
+                                : DEFAULT_PROPONENT_TYPES;
+
+                            return (
+                              <label key={`${projectIdx}-${option.value}`} className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedTypes.includes(option.value)}
+                                  onChange={() => handleToggleProjectProponentType(projectIdx, option.value)}
+                                />
+                                {option.label}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
 
                       {/* Sections */}
                       <div className="space-y-4">
@@ -934,6 +1070,42 @@ const EditCityProjects = () => {
         type={toastType}
         onClose={() => setShowToast(false)}
       />
+
+      {editingProjectDescriptionIdx !== null && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="w-full max-w-xl rounded-lg bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-700">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+              <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                Editar descrição do tipo de projeto
+              </h4>
+            </div>
+
+            <div className="p-4">
+              <textarea
+                value={descriptionDraft}
+                onChange={(e) => setDescriptionDraft(e.target.value)}
+                className="w-full min-h-[140px] border border-slate-300 dark:border-slate-600 rounded p-3 text-sm text-navy"
+                placeholder="Digite a descrição do tipo de projeto"
+              />
+            </div>
+
+            <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-2">
+              <button
+                onClick={handleCancelDescriptionEdit}
+                className="px-3 py-1.5 rounded bg-slate-200 text-slate-800 hover:bg-slate-300 text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveDescription}
+                className="px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm"
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

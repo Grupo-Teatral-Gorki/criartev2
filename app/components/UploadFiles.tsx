@@ -16,7 +16,7 @@ export default function FileUploader({
 }: FileUploaderProps) {
   const [files, setFiles] = useState<File[]>([]);
   const loggingService = useLogging();
-  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const ALLOWED_TYPES = [
     "image/png",
     "image/jpeg",
@@ -24,6 +24,15 @@ export default function FileUploader({
     "image/webp",
     "application/pdf",
   ];
+  const ALLOWED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".pdf"];
+
+  const isAllowedFile = (file: File) => {
+    const lowerName = file.name.toLowerCase();
+    const hasAllowedExtension = ALLOWED_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+    const hasAllowedMime = ALLOWED_TYPES.includes(file.type);
+
+    return hasAllowedExtension && hasAllowedMime;
+  };
 
   const handleFiles = async (newFiles: FileList | null) => {
     if (!newFiles) return;
@@ -37,15 +46,19 @@ export default function FileUploader({
           component: name
         });
 
-        if (!ALLOWED_TYPES.includes(file.type)) {
+        if (!isAllowedFile(file)) {
           // Log failure due to unsupported file type
           await loggingService.logFileUploadFailure(
             file.name, 
             "Unsupported file type", 
-            { fileType: file.type, allowedTypes: ALLOWED_TYPES }
+            {
+              fileType: file.type,
+              allowedTypes: ALLOWED_TYPES,
+              allowedExtensions: ALLOWED_EXTENSIONS,
+            }
           );
           alert(
-            `"${file.name}" is not a supported file type. Only images and PDFs are allowed.`
+            `"${file.name}" não é um tipo de arquivo permitido. Apenas imagens (PNG/JPG/WEBP) e PDF são aceitos.`
           );
           return null;
         }
@@ -53,6 +66,15 @@ export default function FileUploader({
           if (file.type.startsWith("image/")) {
             try {
               const compressedFile = await compressImage(file);
+              if (compressedFile.size > MAX_FILE_SIZE) {
+                await loggingService.logFileUploadFailure(
+                  file.name,
+                  "Image remains too large after compression",
+                  { originalSize: file.size, compressedSize: compressedFile.size, maxSize: MAX_FILE_SIZE }
+                );
+                alert(`"${file.name}" excede 5MB mesmo após compressão.`);
+                return null;
+              }
               await loggingService.logFileUploadSuccess(file.name, {
                 originalSize: file.size,
                 compressedSize: compressedFile.size,
@@ -70,6 +92,15 @@ export default function FileUploader({
           } else if (file.type === "application/pdf") {
             try {
               const compressedFile = await compressPDF(file);
+              if (compressedFile.size > MAX_FILE_SIZE) {
+                await loggingService.logFileUploadFailure(
+                  file.name,
+                  "PDF remains too large after compression",
+                  { originalSize: file.size, compressedSize: compressedFile.size, maxSize: MAX_FILE_SIZE }
+                );
+                alert(`"${file.name}" excede 5MB mesmo após compressão.`);
+                return null;
+              }
               await loggingService.logFileUploadSuccess(file.name, {
                 originalSize: file.size,
                 compressedSize: compressedFile.size,
@@ -91,7 +122,7 @@ export default function FileUploader({
               { fileSize: file.size, maxSize: MAX_FILE_SIZE }
             );
             alert(
-              `"${file.name}" is too large (max 2MB) and cannot be uploaded.`
+              `"${file.name}" é muito grande (máx. 5MB) e não pode ser enviado.`
             );
             return null;
           }

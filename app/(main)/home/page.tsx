@@ -92,7 +92,7 @@ const Home = () => {
                     src={city?.cityLogoUrl || "https://picsum.photos/200"}
                     width={160}
                     height={160}
-                    className="rounded-xl object-cover"
+                    className="rounded-xl object-contain w-full h-full p-2"
                   />
                 </div>
                 {city && (

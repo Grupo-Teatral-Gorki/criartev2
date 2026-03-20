@@ -2,6 +2,7 @@ import Tabs from "@/app/components/Tabs";
 import Documentos from "../secoes/Documentos";
 import PlanilhaOrcamentaria from "../secoes/PlanilhaOrcamentaria";
 import Proponente from "../secoes/Proponente";
+import FichaTecnica from "../secoes/FichaTecnica";
 
 const Premiacao = () => {
   const tabs = [
@@ -16,6 +17,10 @@ const Premiacao = () => {
     {
       label: "Planilha Orçamentária",
       content: <PlanilhaOrcamentaria />,
+    },
+    {
+      label: "Ficha Técnica",
+      content: <FichaTecnica />,
     },
   ];
   return <Tabs tabs={tabs} />;

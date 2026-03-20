@@ -3,6 +3,7 @@ import InfoGerais from "../secoes/InfoGerais";
 import Documentos from "../secoes/Documentos";
 import Proponente from "../secoes/Proponente";
 import PlanilhaOrcamentaria from "../secoes/PlanilhaOrcamentaria";
+import FichaTecnica from "../secoes/FichaTecnica";
 
 const Fomento = () => {
   const tabs = [
@@ -21,6 +22,10 @@ const Fomento = () => {
     {
       label: "Planilha Orçamentária",
       content: <PlanilhaOrcamentaria />,
+    },
+    {
+      label: "Ficha Técnica",
+      content: <FichaTecnica />,
     },
   ];
   return <Tabs tabs={tabs} />;

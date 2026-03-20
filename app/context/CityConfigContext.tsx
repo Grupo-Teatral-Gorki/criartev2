@@ -28,31 +28,41 @@ export const CityProvider = ({ children }: { children: React.ReactNode }) => {
   const [city, setCity] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchCity = async () => {
-      if (!dbUser?.cityId) {
-        setCity(null);
-        setLoading(false);
-        return;
-      }
-
-      const q = query(
-        collection(db, "cities"),
-        where("cityId", "==", dbUser.cityId)
-      );
-      const snapshot = await getDocs(q);
-
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0];
-        setCity({ id: doc.id, ...doc.data() } as any);
-      } else {
-        setCity(null);
-      }
-
+  const fetchCity = async () => {
+    if (!dbUser?.cityId) {
+      setCity(null);
       setLoading(false);
+      return;
+    }
+
+    const q = query(
+      collection(db, "cities"),
+      where("cityId", "==", dbUser.cityId)
+    );
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      setCity({ id: doc.id, ...doc.data() } as any);
+    } else {
+      setCity(null);
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchCity();
+
+    const handleConfigRefresh = () => {
+      fetchCity();
     };
 
-    fetchCity();
+    window.addEventListener("city-config-updated", handleConfigRefresh);
+
+    return () => {
+      window.removeEventListener("city-config-updated", handleConfigRefresh);
+    };
   }, [dbUser?.cityId]);
 
   return (
