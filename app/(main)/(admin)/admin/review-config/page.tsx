@@ -105,14 +105,14 @@ const ProjectList: React.FC = () => {
 
   return (
     <div className="w-full p-4">
-      <h2 className="text-2xl font-semibold mb-6">Projetos</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-slate-900 dark:text-slate-100">Projetos</h2>
       {projects.length === 0 ? (
-        <div className="flex flex-col items-center justify-center mt-20 text-gray-500 space-y-4">
+        <div className="flex flex-col items-center justify-center mt-20 text-slate-500 dark:text-slate-400 space-y-4">
           <FolderOpen className="w-16 h-16" />
-          <p className="text-lg font-semibold">
+          <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
             Nenhum projeto disponível para atribuição.
           </p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-slate-400 dark:text-slate-500">
             Todos os projetos foram avaliados ou ainda não há projetos enviados.
           </p>
         </div>
@@ -121,17 +121,17 @@ const ProjectList: React.FC = () => {
           {projects.map((project) => (
             <div
               key={project.projectId}
-              className="bg-white shadow-sm border border-gray-200 rounded-2xl p-6 space-y-3 transition hover:shadow-md max-h-[200px]"
+              className="bg-white/85 dark:bg-slate-800/80 shadow-soft border border-slate-200 dark:border-slate-700 rounded-2xl p-6 space-y-3 transition hover:shadow-soft-lg max-h-[200px]"
             >
-              <p className="text-sm text-gray-600">
-                <span className="font-medium text-gray-800">ID:</span>{" "}
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                <span className="font-medium text-slate-800 dark:text-slate-200">ID:</span>{" "}
                 {project.registrationNumber}
               </p>
-              <p className="text-base font-semibold text-gray-900">
+              <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 {project.projectTitle}
               </p>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Definir Parecerista
                 </label>
                 <SelectInput

@@ -89,6 +89,15 @@ const PROPONENT_TYPE_OPTIONS: { value: ProponenteTipo; label: string }[] = [
 
 const DEFAULT_PROPONENT_TYPES: ProponenteTipo[] = ["fisica", "juridica", "coletivo"];
 
+const toFieldKey = (label: string) =>
+  label
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
 const EditCityProjects = () => {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCityId, setSelectedCityId] = useState("");
@@ -509,7 +518,7 @@ const EditCityProjects = () => {
   };
 
   return (
-    <div className="text-navy">
+    <div className="text-slate-900 dark:text-slate-100">
       <h2 className="text-2xl font-bold mb-4">Editar Estrutura de Projetos</h2>
 
       <SelectInput
@@ -610,7 +619,7 @@ const EditCityProjects = () => {
                     onChange={(e) =>
                       setNewProject((prev) => ({ ...prev, label: e.target.value }))
                     }
-                    className="border p-2 rounded w-full text-navy"
+                    className="border border-slate-200 dark:border-slate-600 p-2 rounded w-full text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                     placeholder="Ex: Fomento Cultural"
                   />
                 </div>
@@ -622,7 +631,7 @@ const EditCityProjects = () => {
                   onChange={(e) =>
                     setNewProject((prev) => ({ ...prev, description: e.target.value }))
                   }
-                  className="border p-2 rounded w-full text-navy"
+                  className="border border-slate-200 dark:border-slate-600 p-2 rounded w-full text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                   rows={2}
                   placeholder="Descrição do tipo de projeto"
                 />
@@ -850,25 +859,24 @@ const EditCityProjects = () => {
                                           type="text"
                                           placeholder="Nome (key)"
                                           value={newField.name}
-                                          onChange={(e) =>
-                                            setNewField((prev) => ({
-                                              ...prev,
-                                              name: e.target.value,
-                                            }))
-                                          }
-                                          className="border p-1 rounded text-sm text-navy"
+                                          readOnly
+                                          className="border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                         />
                                         <input
                                           type="text"
                                           placeholder="Rótulo"
                                           value={newField.label}
                                           onChange={(e) =>
-                                            setNewField((prev) => ({
-                                              ...prev,
-                                              label: e.target.value,
-                                            }))
+                                            setNewField((prev) => {
+                                              const label = e.target.value;
+                                              return {
+                                                ...prev,
+                                                label,
+                                                name: toFieldKey(label),
+                                              };
+                                            })
                                           }
-                                          className="border p-1 rounded text-sm text-navy"
+                                          className="border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                         />
                                       </div>
                                       <div className="grid grid-cols-2 gap-2 mb-2">
@@ -885,7 +893,7 @@ const EditCityProjects = () => {
                                                 type: e.target.value as FieldItem["type"],
                                               }))
                                             }
-                                            className="border p-1 rounded text-sm text-navy"
+                                            className="border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                           >
                                             {FIELD_TYPES.map((ft) => (
                                               <option key={ft.value} value={ft.value}>
@@ -937,14 +945,14 @@ const EditCityProjects = () => {
                                               placeholder="Valor"
                                               value={newOptionValue}
                                               onChange={(e) => setNewOptionValue(e.target.value)}
-                                              className="border p-1 rounded text-xs flex-1 text-navy"
+                                              className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs flex-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                             />
                                             <input
                                               type="text"
                                               placeholder="Rótulo"
                                               value={newOptionLabel}
                                               onChange={(e) => setNewOptionLabel(e.target.value)}
-                                              className="border p-1 rounded text-xs flex-1 text-navy"
+                                              className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs flex-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                             />
                                             <button
                                               onClick={() => {
@@ -1009,25 +1017,24 @@ const EditCityProjects = () => {
                                                 type="text"
                                                 placeholder="Nome (key)"
                                                 value={editFieldValue.name}
-                                                onChange={(e) =>
-                                                  setEditFieldValue((prev) => ({
-                                                    ...prev,
-                                                    name: e.target.value,
-                                                  }))
-                                                }
-                                                className="border p-1 rounded text-xs text-navy"
+                                                readOnly
+                                                className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                               />
                                               <input
                                                 type="text"
                                                 placeholder="Rótulo"
                                                 value={editFieldValue.label}
                                                 onChange={(e) =>
-                                                  setEditFieldValue((prev) => ({
-                                                    ...prev,
-                                                    label: e.target.value,
-                                                  }))
+                                                  setEditFieldValue((prev) => {
+                                                    const label = e.target.value;
+                                                    return {
+                                                      ...prev,
+                                                      label,
+                                                      name: toFieldKey(label),
+                                                    };
+                                                  })
                                                 }
-                                                className="border p-1 rounded text-xs text-navy"
+                                                className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                               />
                                             </div>
                                             <div className="grid grid-cols-2 gap-2">
@@ -1044,7 +1051,7 @@ const EditCityProjects = () => {
                                                       type: e.target.value as FieldItem["type"],
                                                     }))
                                                   }
-                                                  className="border p-1 rounded text-xs text-navy"
+                                                  className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                                 >
                                                   {FIELD_TYPES.map((ft) => (
                                                     <option key={ft.value} value={ft.value}>
@@ -1094,14 +1101,14 @@ const EditCityProjects = () => {
                                                     placeholder="Valor"
                                                     value={editOptionValue}
                                                     onChange={(e) => setEditOptionValue(e.target.value)}
-                                                    className="border p-1 rounded text-xs flex-1 text-navy"
+                                                    className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs flex-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                                   />
                                                   <input
                                                     type="text"
                                                     placeholder="Rótulo"
                                                     value={editOptionLabel}
                                                     onChange={(e) => setEditOptionLabel(e.target.value)}
-                                                    className="border p-1 rounded text-xs flex-1 text-navy"
+                                                    className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs flex-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                                   />
                                                   <button
                                                     onClick={() => {
@@ -1229,7 +1236,7 @@ const EditCityProjects = () => {
               <textarea
                 value={descriptionDraft}
                 onChange={(e) => setDescriptionDraft(e.target.value)}
-                className="w-full min-h-[140px] border border-slate-300 dark:border-slate-600 rounded p-3 text-sm text-navy"
+                className="w-full min-h-[140px] border border-slate-300 dark:border-slate-600 rounded p-3 text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                 placeholder="Digite a descrição do tipo de projeto"
               />
             </div>

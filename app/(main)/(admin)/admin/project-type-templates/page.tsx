@@ -70,6 +70,15 @@ const PROPONENT_TYPE_OPTIONS: { value: ProponenteTipo; label: string }[] = [
   { value: "coletivo", label: "Coletivo" },
 ];
 
+const toFieldKey = (label: string) =>
+  label
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
 const ProjectTypeTemplatesPage = () => {
   const db = getFirestore();
 
@@ -235,28 +244,28 @@ const ProjectTypeTemplatesPage = () => {
 
   return (
     <div className="flex items-center flex-col justify-center gap-6 px-4 py-8">
-      <div className="p-6 w-full max-w-6xl bg-white shadow-lg rounded-lg">
-        <h2 className="text-2xl font-bold mb-2 text-navy">Modelos de Tipo de Projeto</h2>
-        <p className="text-sm text-slate-600 mb-5">
+      <div className="p-6 w-full max-w-6xl rounded-2xl bg-white/85 dark:bg-slate-800/80 backdrop-blur-xl border border-white/40 dark:border-slate-700/60 shadow-soft-lg">
+        <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-slate-100">Modelos de Tipo de Projeto</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-300 mb-5">
           Crie modelos do zero para reutilizar depois nos municípios.
         </p>
 
-        <div className="mt-6 border rounded-lg p-4 bg-slate-50">
-          <h3 className="text-lg font-semibold mb-4">Criar novo modelo do zero</h3>
+        <div className="mt-6 border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-50/90 dark:bg-slate-900/50">
+          <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-slate-100">Criar novo modelo do zero</h3>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
             <input
               type="text"
               value={newTemplateName}
               onChange={(e) => setNewTemplateName(e.target.value)}
-              className="border p-2 rounded text-sm text-navy"
+              className="border border-slate-200 dark:border-slate-600 p-2 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
               placeholder="Nome do modelo"
             />
             <input
               type="text"
               value={newTemplateDescription}
               onChange={(e) => setNewTemplateDescription(e.target.value)}
-              className="border p-2 rounded text-sm text-navy"
+              className="border border-slate-200 dark:border-slate-600 p-2 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
               placeholder="Descrição curta (opcional)"
             />
           </div>
@@ -271,39 +280,39 @@ const ProjectTypeTemplatesPage = () => {
               }
             />
             <div>
-              <label className="block text-sm font-medium mb-1">Rótulo visível</label>
+              <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Rótulo visível</label>
               <input
                 type="text"
                 value={newProject.label}
                 onChange={(e) =>
                   setNewProject((prev) => ({ ...prev, label: e.target.value }))
                 }
-                className="border p-2 rounded text-sm text-navy w-full"
+                className="border border-slate-200 dark:border-slate-600 p-2 rounded text-sm text-slate-900 dark:text-slate-100 w-full bg-white dark:bg-slate-800"
                 placeholder="Ex: Fomento Cultural"
               />
             </div>
           </div>
 
           <div className="mb-3">
-            <label className="block text-sm font-medium mb-1">Descrição do tipo</label>
+            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Descrição do tipo</label>
             <textarea
               value={newProject.description}
               onChange={(e) =>
                 setNewProject((prev) => ({ ...prev, description: e.target.value }))
               }
-              className="border p-2 rounded text-sm text-navy w-full"
+              className="border border-slate-200 dark:border-slate-600 p-2 rounded text-sm text-slate-900 dark:text-slate-100 w-full bg-white dark:bg-slate-800"
               rows={3}
               placeholder="Descrição do tipo de projeto"
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Tipos de proponente aceitos</label>
+            <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Tipos de proponente aceitos</label>
             <div className="flex flex-wrap gap-3">
               {PROPONENT_TYPE_OPTIONS.map((option) => {
                 const checked = (newProject.acceptedProponentTypes || DEFAULT_PROPONENT_TYPES).includes(option.value);
                 return (
-                  <label key={option.value} className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <label key={option.value} className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                     <input
                       type="checkbox"
                       checked={checked}
@@ -316,8 +325,8 @@ const ProjectTypeTemplatesPage = () => {
             </div>
           </div>
 
-          <div className="mb-4 border rounded bg-white p-3">
-            <h4 className="font-medium mb-2">Seções e campos</h4>
+          <div className="mb-4 border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 p-3">
+            <h4 className="font-medium mb-2 text-slate-900 dark:text-slate-100">Seções e campos</h4>
             <div className="flex flex-col lg:flex-row gap-2 mb-3">
               <SelectInput
                 options={SECTION_OPTIONS}
@@ -329,13 +338,13 @@ const ProjectTypeTemplatesPage = () => {
             </div>
 
             {Object.keys(newProject.fields).length === 0 ? (
-              <p className="text-xs text-slate-500">Nenhuma seção adicionada.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Nenhuma seção adicionada.</p>
             ) : (
               <div className="space-y-3">
                 {Object.entries(newProject.fields).map(([sectionKey, fields]) => (
-                  <div key={sectionKey} className="border rounded p-3 bg-slate-50">
+                  <div key={sectionKey} className="border border-slate-200 dark:border-slate-700 rounded p-3 bg-slate-50 dark:bg-slate-900/50">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {SECTION_OPTIONS.find((s) => s.value === sectionKey)?.label || sectionKey}
                       </span>
                       <div className="flex gap-2">
@@ -355,28 +364,37 @@ const ProjectTypeTemplatesPage = () => {
                     </div>
 
                     {addingFieldToSection === sectionKey && (
-                      <div className="mb-2 p-2 bg-white border rounded">
+                      <div className="mb-2 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-2">
                           <input
                             type="text"
                             placeholder="Nome (key)"
                             value={newField.name}
-                            onChange={(e) => setNewField((prev) => ({ ...prev, name: e.target.value }))}
-                            className="border p-1 rounded text-sm text-navy"
+                            readOnly
+                            className="border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                           />
                           <input
                             type="text"
                             placeholder="Rótulo"
                             value={newField.label}
-                            onChange={(e) => setNewField((prev) => ({ ...prev, label: e.target.value }))}
-                            className="border p-1 rounded text-sm text-navy"
+                            onChange={(e) =>
+                              setNewField((prev) => {
+                                const label = e.target.value;
+                                return {
+                                  ...prev,
+                                  label,
+                                  name: toFieldKey(label),
+                                };
+                              })
+                            }
+                            className="border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                           />
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-2">
                           {FILE_ONLY_SECTIONS.includes(sectionKey) ? (
                             <div className="flex items-center text-sm text-slate-500">
-                              <span className="px-2 py-1 bg-slate-100 rounded">Tipo: Arquivo</span>
+                              <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700/60 rounded text-slate-700 dark:text-slate-200">Tipo: Arquivo</span>
                             </div>
                           ) : (
                             <select
@@ -384,7 +402,7 @@ const ProjectTypeTemplatesPage = () => {
                               onChange={(e) =>
                                 setNewField((prev) => ({ ...prev, type: e.target.value as FieldItem["type"] }))
                               }
-                              className="border p-1 rounded text-sm text-navy"
+                              className="border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                             >
                               {FIELD_TYPES.map((fieldType) => (
                                 <option key={fieldType.value} value={fieldType.value}>
@@ -393,7 +411,7 @@ const ProjectTypeTemplatesPage = () => {
                               ))}
                             </select>
                           )}
-                          <label className="flex items-center gap-2 text-sm">
+                          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                             <input
                               type="checkbox"
                               checked={newField.required || false}
@@ -407,10 +425,10 @@ const ProjectTypeTemplatesPage = () => {
 
                         {!FILE_ONLY_SECTIONS.includes(sectionKey) &&
                           ["select", "multiselect", "radio"].includes(newField.type) && (
-                            <div className="p-2 bg-slate-100 rounded mb-2">
-                              <p className="text-xs font-medium mb-1">Opções do campo</p>
+                            <div className="p-2 bg-slate-100 dark:bg-slate-900 rounded mb-2">
+                              <p className="text-xs font-medium mb-1 text-slate-700 dark:text-slate-200">Opções do campo</p>
                               {(newField.options || []).map((opt, idx) => (
-                                <div key={idx} className="flex items-center justify-between text-xs mb-1">
+                                <div key={idx} className="flex items-center justify-between text-xs mb-1 text-slate-700 dark:text-slate-300">
                                   <span>{opt.label} ({opt.value})</span>
                                   <button
                                     onClick={() =>
@@ -431,14 +449,14 @@ const ProjectTypeTemplatesPage = () => {
                                   type="text"
                                   value={newOptionValue}
                                   onChange={(e) => setNewOptionValue(e.target.value)}
-                                  className="border p-1 rounded text-xs text-navy"
+                                  className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                   placeholder="Valor"
                                 />
                                 <input
                                   type="text"
                                   value={newOptionLabel}
                                   onChange={(e) => setNewOptionLabel(e.target.value)}
-                                  className="border p-1 rounded text-xs text-navy"
+                                  className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                   placeholder="Rótulo"
                                 />
                                 <button
@@ -483,11 +501,11 @@ const ProjectTypeTemplatesPage = () => {
                     )}
 
                     {fields.length === 0 ? (
-                      <p className="text-xs text-slate-500">Nenhum campo nessa seção.</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Nenhum campo nessa seção.</p>
                     ) : (
                       <ul className="space-y-1">
                         {fields.map((field, idx) => (
-                          <li key={idx} className="text-xs bg-white rounded p-2">
+                          <li key={idx} className="text-xs bg-white dark:bg-slate-800 rounded p-2 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
                             <span className="font-medium">{field.label}</span> ({field.name})
                           </li>
                         ))}

@@ -25,10 +25,24 @@ export default function RootLayout({
 }>) {
   return (
     <div
-      className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased relative flex flex-col min-h-screen text-slate-900 dark:text-slate-100 bg-gradient-to-br from-slate-100 via-primary-50/30 to-accent-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900`}
     >
+      <div className="pointer-events-none absolute inset-0 opacity-30 dark:opacity-40" aria-hidden>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-100/20 to-accent-100/20 dark:from-primary-900/10 dark:to-accent-900/10" />
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.15) 1px, transparent 0)",
+            backgroundSize: "20px 20px",
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 flex min-h-screen flex-col">
         <Header />
         <AuthGuard>{children}</AuthGuard>
+      </div>
     </div>
   );
 }

@@ -137,8 +137,8 @@ const ConfigProcess = () => {
   };
 
   return (
-    <div className="text-navy">
-      <h2 className="text-2xl font-bold mb-4 text-navy">
+    <div className="text-slate-900 dark:text-slate-100">
+      <h2 className="text-2xl font-bold mb-4 text-slate-900 dark:text-slate-100">
         Altere a etapa do município
       </h2>
       <SelectInput
@@ -152,7 +152,7 @@ const ConfigProcess = () => {
       />
 
       {selectedCity && (
-        <div className="mt-4 text-navy">
+        <div className="mt-4 text-slate-900 dark:text-slate-100">
           <div className="mb-2 font-medium">Selecione a etapa:</div>
           <div className="flex flex-col gap-2 mb-4">
             {stages.map((stage) => (
@@ -175,8 +175,8 @@ const ConfigProcess = () => {
           />
           
           {emailStatus && (
-            <div className="mt-4 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
-              <p className="font-medium text-navy dark:text-white">
+            <div className="mt-4 p-4 bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-lg">
+              <p className="font-medium text-slate-900 dark:text-slate-100">
                 Emails enviados:
               </p>
               <p className="text-sm text-green-600 dark:text-green-400">

@@ -207,8 +207,8 @@ const ConfigNewCity = () => {
   };
 
   return (
-    <div className="text-navy">
-      <h2 className="text-2xl font-bold mb-4">Novo Município</h2>
+    <div className="text-slate-900 dark:text-slate-100">
+      <h2 className="text-2xl font-bold mb-4 text-slate-900 dark:text-slate-100">Novo Município</h2>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <SelectInput
@@ -246,19 +246,19 @@ const ConfigNewCity = () => {
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium text-slate-700 mb-2">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
           Upload do brasão do município
         </label>
         <input
           type="file"
           accept="image/png,image/jpeg,image/jpg,image/webp"
           onChange={handleLogoFileChange}
-          className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+          className="block w-full text-sm text-slate-600 dark:text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900/30 dark:file:text-primary-300"
         />
-        <p className="mt-1 text-xs text-slate-500">Formatos: PNG, JPG, WEBP (máx. 5MB)</p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Formatos: PNG, JPG, WEBP (máx. 5MB)</p>
 
         {cityLogoPreviewUrl && (
-          <div className="mt-3 w-24 h-24 rounded-md border border-slate-200 overflow-hidden bg-slate-50">
+          <div className="mt-3 w-24 h-24 rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900/50">
             <img
               src={cityLogoPreviewUrl}
               alt="Prévia do brasão"
@@ -269,18 +269,18 @@ const ConfigNewCity = () => {
       </div>
 
       {form.name && (
-        <div className="mt-4 p-3 bg-slate-50 rounded border">
-          <p className="text-sm text-slate-600">
+        <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded border border-slate-200 dark:border-slate-700">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
             Será criado: <span className="font-semibold">{form.name} - {form.uf}</span>
           </p>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Após criar o município, use &quot;Editar Estrutura de Projetos&quot; para configurar os tipos de projeto.
           </p>
         </div>
       )}
 
-      <div className="mt-4 p-3 bg-slate-50 rounded border">
-        <label className="inline-flex items-start gap-2 text-sm text-slate-700">
+      <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded border border-slate-200 dark:border-slate-700">
+        <label className="inline-flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
           <input
             type="checkbox"
             checked={form.enforceUniqueFichaTecnicaCpf}
