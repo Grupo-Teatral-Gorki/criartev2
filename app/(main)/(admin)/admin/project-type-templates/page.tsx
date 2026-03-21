@@ -4,7 +4,10 @@ import React, { useEffect, useState } from "react";
 import {
   addDoc,
   collection,
+  doc,
+  getDocs,
   getFirestore,
+  updateDoc,
 } from "firebase/firestore";
 import { SelectInput } from "@/app/components/SelectInput";
 import Button from "@/app/components/Button";
@@ -38,6 +41,13 @@ interface Project {
   available: boolean;
   acceptedProponentTypes?: ProponenteTipo[];
   fields: Fields;
+}
+
+interface ProjectTypeTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  project: Project;
 }
 
 const DEFAULT_PROPONENT_TYPES: ProponenteTipo[] = ["fisica", "juridica", "coletivo"];
@@ -85,6 +95,9 @@ const ProjectTypeTemplatesPage = () => {
 
   const [saving, setSaving] = useState(false);
   const [creatingTemplate, setCreatingTemplate] = useState(false);
+  const [templates, setTemplates] = useState<ProjectTypeTemplate[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
 
   const [newTemplateName, setNewTemplateName] = useState("");
   const [newTemplateDescription, setNewTemplateDescription] = useState("");
@@ -98,8 +111,19 @@ const ProjectTypeTemplatesPage = () => {
     required: false,
     options: [],
   });
+  const [editingField, setEditingField] = useState<{ sectionKey: string; fieldIdx: number } | null>(null);
+  const [editFieldValue, setEditFieldValue] = useState<FieldItem>({
+    name: "",
+    label: "",
+    description: "",
+    type: "text",
+    required: false,
+    options: [],
+  });
   const [newOptionValue, setNewOptionValue] = useState("");
   const [newOptionLabel, setNewOptionLabel] = useState("");
+  const [editOptionValue, setEditOptionValue] = useState("");
+  const [editOptionLabel, setEditOptionLabel] = useState("");
 
   const [newProject, setNewProject] = useState<Project>({
     name: "",
@@ -129,6 +153,63 @@ const ProjectTypeTemplatesPage = () => {
       ])
     ),
   });
+
+  const fetchTemplates = async () => {
+    setLoadingTemplates(true);
+    try {
+      const templatesSnapshot = await getDocs(collection(db, "projectTypeTemplates"));
+      const templateList = templatesSnapshot.docs.map((templateDoc) => {
+        const data = templateDoc.data() as Omit<ProjectTypeTemplate, "id">;
+        return {
+          id: templateDoc.id,
+          name: data.name,
+          description: data.description || "",
+          project: cloneProject(data.project),
+        };
+      });
+
+      setTemplates(templateList);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      setToastType("error");
+      setToastMessage("Erro ao carregar modelos existentes.");
+      setShowToast(true);
+    } finally {
+      setLoadingTemplates(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
+  const resetTemplateForm = () => {
+    setEditingTemplateId(null);
+    setNewTemplateName("");
+    setNewTemplateDescription("");
+    setNewSectionKey("");
+    setAddingFieldToSection(null);
+    resetNewField();
+    setNewProject({
+      name: "",
+      label: "",
+      description: "",
+      available: true,
+      acceptedProponentTypes: [...DEFAULT_PROPONENT_TYPES],
+      fields: {},
+    });
+  };
+
+  const handleStartEditTemplate = (template: ProjectTypeTemplate) => {
+    setEditingTemplateId(template.id);
+    setNewTemplateName(template.name || "");
+    setNewTemplateDescription(template.description || "");
+    setNewSectionKey("");
+    setAddingFieldToSection(null);
+    resetNewField();
+    setNewProject(cloneProject(template.project));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   useEffect(() => {
     if (newProject.name && !newTemplateName.trim()) {
@@ -178,6 +259,13 @@ const ProjectTypeTemplatesPage = () => {
     setNewOptionLabel("");
   };
 
+  const resetEditField = () => {
+    setEditingField(null);
+    setEditFieldValue({ name: "", label: "", description: "", type: "text", required: false, options: [] });
+    setEditOptionValue("");
+    setEditOptionLabel("");
+  };
+
   const handleAddField = (sectionKey: string) => {
     if (!newField.name.trim() || !newField.label.trim()) {
       setToastType("error");
@@ -202,7 +290,68 @@ const ProjectTypeTemplatesPage = () => {
     resetNewField();
   };
 
-  const handleCreateTemplate = async () => {
+  const handleRemoveField = (sectionKey: string, fieldIdx: number) => {
+    if (!confirm("Remover este campo da seção?")) return;
+
+    setNewProject((prev) => ({
+      ...prev,
+      fields: {
+        ...prev.fields,
+        [sectionKey]: (prev.fields[sectionKey] || []).filter((_, idx) => idx !== fieldIdx),
+      },
+    }));
+
+    if (editingField?.sectionKey === sectionKey && editingField.fieldIdx === fieldIdx) {
+      resetEditField();
+    }
+  };
+
+  const handleStartEditField = (sectionKey: string, fieldIdx: number, field: FieldItem) => {
+    setAddingFieldToSection(null);
+    setEditingField({ sectionKey, fieldIdx });
+    setEditFieldValue({
+      ...field,
+      options: field.options ? [...field.options] : [],
+    });
+    setEditOptionValue("");
+    setEditOptionLabel("");
+  };
+
+  const handleSaveEditField = (sectionKey: string) => {
+    if (!editFieldValue.name.trim() || !editFieldValue.label.trim()) {
+      setToastType("error");
+      setToastMessage("Preencha key e rótulo do campo.");
+      setShowToast(true);
+      return;
+    }
+
+    const fieldToSave: FieldItem = FILE_ONLY_SECTIONS.includes(sectionKey)
+      ? {
+          ...editFieldValue,
+          description: editFieldValue.description?.trim(),
+          type: "file",
+          options: [],
+        }
+      : {
+          ...editFieldValue,
+          description: editFieldValue.description?.trim(),
+          options: editFieldValue.options || [],
+        };
+
+    setNewProject((prev) => ({
+      ...prev,
+      fields: {
+        ...prev.fields,
+        [sectionKey]: (prev.fields[sectionKey] || []).map((field, idx) =>
+          idx === editingField?.fieldIdx ? fieldToSave : field
+        ),
+      },
+    }));
+
+    resetEditField();
+  };
+
+  const handleSaveTemplate = async () => {
     if (!newTemplateName.trim() || !newProject.name || !newProject.label) {
       setToastType("error");
       setToastMessage("Preencha nome do modelo, nome interno e rótulo.");
@@ -213,35 +362,32 @@ const ProjectTypeTemplatesPage = () => {
     setCreatingTemplate(true);
     setSaving(true);
     try {
-      await addDoc(collection(db, "projectTypeTemplates"), {
+      const payload = {
         name: newTemplateName.trim(),
         description: newTemplateDescription.trim(),
         project: cloneProject(newProject),
-        createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      };
 
-      setNewTemplateName("");
-      setNewTemplateDescription("");
-      setNewSectionKey("");
-      setAddingFieldToSection(null);
-      resetNewField();
-      setNewProject({
-        name: "",
-        label: "",
-        description: "",
-        available: true,
-        acceptedProponentTypes: [...DEFAULT_PROPONENT_TYPES],
-        fields: {},
-      });
+      if (editingTemplateId) {
+        await updateDoc(doc(db, "projectTypeTemplates", editingTemplateId), payload);
+      } else {
+        await addDoc(collection(db, "projectTypeTemplates"), {
+          ...payload,
+          createdAt: new Date(),
+        });
+      }
+
+      resetTemplateForm();
+      await fetchTemplates();
 
       setToastType("success");
-      setToastMessage("Modelo criado com sucesso!");
+      setToastMessage(editingTemplateId ? "Modelo atualizado com sucesso!" : "Modelo criado com sucesso!");
       setShowToast(true);
     } catch (error) {
-      console.error("Error creating template:", error);
+      console.error("Error saving template:", error);
       setToastType("error");
-      setToastMessage("Erro ao criar modelo.");
+      setToastMessage(editingTemplateId ? "Erro ao atualizar modelo." : "Erro ao criar modelo.");
       setShowToast(true);
     } finally {
       setCreatingTemplate(false);
@@ -257,8 +403,51 @@ const ProjectTypeTemplatesPage = () => {
           Crie modelos do zero para reutilizar depois nos municípios.
         </p>
 
+        <div className="mb-6 border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-white dark:bg-slate-900/40">
+          <h3 className="text-base font-semibold mb-2 text-slate-900 dark:text-slate-100">Modelos existentes</h3>
+          {loadingTemplates ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400">Carregando modelos...</p>
+          ) : templates.length === 0 ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400">Nenhum modelo criado ainda.</p>
+          ) : (
+            <div className="space-y-2">
+              {templates.map((template) => (
+                <div
+                  key={template.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{template.name}</p>
+                    {template.description && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{template.description}</p>
+                    )}
+                  </div>
+                  <Button
+                    label={editingTemplateId === template.id ? "Editando" : "Editar"}
+                    size="small"
+                    variant={editingTemplateId === template.id ? "default" : "outlined"}
+                    onClick={() => handleStartEditTemplate(template)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="mt-6 border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-50/90 dark:bg-slate-900/50">
-          <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-slate-100">Criar novo modelo do zero</h3>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              {editingTemplateId ? "Editar modelo" : "Criar novo modelo do zero"}
+            </h3>
+            {editingTemplateId && (
+              <Button
+                label="Novo modelo"
+                variant="outlined"
+                size="small"
+                onClick={resetTemplateForm}
+              />
+            )}
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
             <input
@@ -533,11 +722,215 @@ const ProjectTypeTemplatesPage = () => {
                       <ul className="space-y-1">
                         {fields.map((field, idx) => (
                           <li key={idx} className="text-xs bg-white dark:bg-slate-800 rounded p-2 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
-                            <span className="font-medium">{field.label}</span> ({field.name})
-                            {field.description && (
-                              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                                {field.description}
-                              </p>
+                            {editingField?.sectionKey === sectionKey && editingField.fieldIdx === idx ? (
+                              <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-2">
+                                  <input
+                                    type="text"
+                                    value={editFieldValue.name}
+                                    readOnly
+                                    className="border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={editFieldValue.label}
+                                    onChange={(e) =>
+                                      setEditFieldValue((prev) => ({
+                                        ...prev,
+                                        label: e.target.value,
+                                      }))
+                                    }
+                                    className="border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                                  />
+                                </div>
+
+                                <textarea
+                                  value={editFieldValue.description || ""}
+                                  onChange={(e) =>
+                                    setEditFieldValue((prev) => ({
+                                      ...prev,
+                                      description: e.target.value,
+                                    }))
+                                  }
+                                  rows={2}
+                                  className="mb-2 w-full border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                                />
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-2">
+                                  {FILE_ONLY_SECTIONS.includes(sectionKey) ? (
+                                    <div className="flex items-center text-sm text-slate-500">
+                                      <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700/60 rounded text-slate-700 dark:text-slate-200">Tipo: Arquivo</span>
+                                    </div>
+                                  ) : (
+                                    <select
+                                      value={editFieldValue.type}
+                                      onChange={(e) =>
+                                        setEditFieldValue((prev) => ({
+                                          ...prev,
+                                          type: e.target.value as FieldItem["type"],
+                                        }))
+                                      }
+                                      className="border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                                    >
+                                      {FIELD_TYPES.map((fieldType) => (
+                                        <option key={fieldType.value} value={fieldType.value}>
+                                          {fieldType.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  )}
+                                  <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                                    <input
+                                      type="checkbox"
+                                      checked={editFieldValue.required || false}
+                                      onChange={(e) =>
+                                        setEditFieldValue((prev) => ({
+                                          ...prev,
+                                          required: e.target.checked,
+                                        }))
+                                      }
+                                    />
+                                    Obrigatório
+                                  </label>
+                                </div>
+
+                                {!FILE_ONLY_SECTIONS.includes(sectionKey) &&
+                                  ["select", "multiselect", "radio"].includes(editFieldValue.type) && (
+                                    <div className="p-2 bg-slate-100 dark:bg-slate-900 rounded mb-2">
+                                      <p className="text-xs font-medium mb-1 text-slate-700 dark:text-slate-200">Opções do campo</p>
+                                      {(editFieldValue.options || []).map((opt, optionIdx) => (
+                                        <div key={optionIdx} className="grid grid-cols-2 gap-1 mb-1">
+                                          <input
+                                            type="text"
+                                            value={opt.value}
+                                            readOnly
+                                            className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                                          />
+                                          <div className="flex gap-1">
+                                            <input
+                                              type="text"
+                                              value={opt.label}
+                                              onChange={(e) =>
+                                                setEditFieldValue((prev) => ({
+                                                  ...prev,
+                                                  options: (prev.options || []).map((existing, existingIdx) =>
+                                                    existingIdx === optionIdx
+                                                      ? { ...existing, label: e.target.value }
+                                                      : existing
+                                                  ),
+                                                }))
+                                              }
+                                              className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs flex-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                                            />
+                                            <button
+                                              onClick={() =>
+                                                setEditFieldValue((prev) => ({
+                                                  ...prev,
+                                                  options: (prev.options || []).filter((_, i) => i !== optionIdx),
+                                                }))
+                                              }
+                                              className="text-red-500"
+                                            >
+                                              Remover
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ))}
+
+                                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-1 mt-2">
+                                        <input
+                                          type="text"
+                                          value={editOptionValue}
+                                          readOnly
+                                          className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                                          placeholder="Valor"
+                                        />
+                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 lg:col-span-3">
+                                          Gerado automaticamente pelo rótulo.
+                                        </p>
+                                        <input
+                                          type="text"
+                                          value={editOptionLabel}
+                                          onChange={(e) => {
+                                            const label = e.target.value;
+                                            setEditOptionLabel(label);
+                                            setEditOptionValue(toFieldKey(label));
+                                          }}
+                                          className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                                          placeholder="Rótulo"
+                                        />
+                                        <button
+                                          onClick={() => {
+                                            if (!editOptionValue || !editOptionLabel) return;
+                                            setEditFieldValue((prev) => ({
+                                              ...prev,
+                                              options: [
+                                                ...(prev.options || []),
+                                                { value: editOptionValue, label: editOptionLabel },
+                                              ],
+                                            }));
+                                            setEditOptionValue("");
+                                            setEditOptionLabel("");
+                                          }}
+                                          className="bg-blue-600 text-white text-xs rounded px-2 py-1"
+                                        >
+                                          Adicionar opção
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                <div className="flex gap-2 justify-end">
+                                  <button
+                                    onClick={() => handleSaveEditField(sectionKey)}
+                                    className="px-2 py-1 bg-green-600 text-white rounded text-xs"
+                                  >
+                                    Salvar
+                                  </button>
+                                  <button
+                                    onClick={resetEditField}
+                                    className="px-2 py-1 bg-slate-300 text-slate-700 rounded text-xs"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex items-start justify-between gap-2">
+                                  <div>
+                                    <span className="font-medium">{field.label}</span> ({field.name})
+                                    <span className="ml-2 text-[11px] px-1.5 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-200 rounded">
+                                      {FIELD_TYPES.find((ft) => ft.value === field.type)?.label || field.type}
+                                    </span>
+                                    {field.required && <span className="ml-1 text-red-500">*</span>}
+                                    {field.description && (
+                                      <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                        {field.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-2 shrink-0">
+                                    <button
+                                      onClick={() => handleStartEditField(sectionKey, idx, field)}
+                                      className="text-xs text-blue-600 hover:text-blue-700"
+                                    >
+                                      Editar
+                                    </button>
+                                    <button
+                                      onClick={() => handleRemoveField(sectionKey, idx)}
+                                      className="text-xs text-red-600 hover:text-red-700"
+                                    >
+                                      Remover
+                                    </button>
+                                  </div>
+                                </div>
+                                {field.options && field.options.length > 0 && (
+                                  <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                    {field.options.length} opção(ões)
+                                  </p>
+                                )}
+                              </>
                             )}
                           </li>
                         ))}
@@ -550,8 +943,8 @@ const ProjectTypeTemplatesPage = () => {
           </div>
 
           <Button
-            label={creatingTemplate ? "Criando..." : "Criar modelo do zero"}
-            onClick={handleCreateTemplate}
+            label={creatingTemplate ? (editingTemplateId ? "Salvando..." : "Criando...") : (editingTemplateId ? "Salvar alterações" : "Criar modelo do zero")}
+            onClick={handleSaveTemplate}
             disabled={
               creatingTemplate ||
               !newTemplateName.trim() ||
