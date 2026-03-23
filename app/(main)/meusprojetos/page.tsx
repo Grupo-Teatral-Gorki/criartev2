@@ -68,6 +68,7 @@ const MeusProjetos = () => {
             router.push("/selecionar-tipo");
           }}
           size="medium"
+          disabled={city?.processStage !== "open"}
         />
       </div>
 

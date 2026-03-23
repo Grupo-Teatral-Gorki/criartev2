@@ -49,6 +49,12 @@ const AdminHome = () => {
           href={"/admin/project-type-templates"}
           icon={"templates"}
         />
+        <CardLink
+          title={"Gerenciar Usuários"}
+          description={""}
+          href={"/admin/users"}
+          icon={"users"}
+        />
       </div>
     </div>
   );

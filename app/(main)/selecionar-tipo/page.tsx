@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext";
+import { useCity } from "@/app/context/CityConfigContext";
 import { useEffect, useState } from "react";
 import { ProjectTypesType } from "@/app/utils/interfaces";
 
@@ -22,8 +23,10 @@ const SelecionarTipoProjeto = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { dbUser } = useAuth();
+  const { city } = useCity();
   const cityId = dbUser?.cityId;
   const loggingService = useLogging();
+  const isInscriptionOpen = city?.processStage === "open";
 
   useEffect(() => {
     const fetchCity = async () => {
@@ -54,6 +57,11 @@ const SelecionarTipoProjeto = () => {
   }, [cityId]);
 
   const createEmptyProjectForUser = async (type: string) => {
+    if (!isInscriptionOpen) {
+      console.error("Inscriptions are closed");
+      return { success: false, error: "Inscriptions are closed" };
+    }
+
     if (!dbUser) {
       console.error("User not authenticated");
       return { success: false, error: "User not authenticated" };

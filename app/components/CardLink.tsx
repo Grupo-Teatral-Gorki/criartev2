@@ -1,17 +1,18 @@
-import { Building, Users, ArrowRight, Layers } from "lucide-react";
+import { Building, Users, ArrowRight, Layers, UserCog } from "lucide-react";
 import Link from "next/link";
 
 interface CardLinkProps {
   title: string;
   description: string;
   href: string;
-  icon: "city" | "reviewers" | "templates";
+  icon: "city" | "reviewers" | "templates" | "users";
 }
 
 const iconMap = {
   city: Building,
   reviewers: Users,
   templates: Layers,
+  users: UserCog,
 };
 
 export const CardLink = ({ title, description, href, icon }: CardLinkProps) => {

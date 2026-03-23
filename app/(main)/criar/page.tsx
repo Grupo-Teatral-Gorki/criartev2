@@ -14,6 +14,7 @@ import { TextInput } from "@/app/components/TextInput";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import Toast from "@/app/components/Toast";
+import { useCity } from "@/app/context/CityConfigContext";
 
 const CriarContent = () => {
   const searchParams = useSearchParams();
@@ -27,6 +28,8 @@ const CriarContent = () => {
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const [projectData, setProjectData] = useState<any>(null);
   const loggingService = useLogging();
+  const { city } = useCity();
+  const isInscriptionOpen = city?.processStage === "open";
   const validTypes = ["fomento", "premiacao", "culturaViva", "areasPerifericas", "subsidio"] as const;
   const hasValidType = type ? validTypes.includes(type as (typeof validTypes)[number]) : false;
 
@@ -36,6 +39,14 @@ const CriarContent = () => {
   ) => {
     if (!projectId) {
       console.warn("No projectId provided.");
+      return;
+    }
+
+    // Block submission if inscriptions are closed
+    if (updateStatus === "enviado" && !isInscriptionOpen) {
+      setToastMessage("Não é possível enviar projetos. As inscrições estão fechadas.");
+      setToastType("error");
+      setShowToast(true);
       return;
     }
 
@@ -205,6 +216,7 @@ const CriarContent = () => {
           onClick={() => handleSendProject(undefined, "enviado")}
           size="medium"
           variant="save"
+          disabled={!isInscriptionOpen}
         />
       </div>
       <div className="w-full flex flex-col justify-center bg-slate-100 rounded-lg dark:bg-navy p-1 sm:p-4 mt-4 gap-8">
