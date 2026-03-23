@@ -35,7 +35,7 @@ export default function Home() {
         <ThemeToggle />
       </div>
 
-      <div className="relative z-10 p-8 rounded-3xl shadow-soft-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 w-96 animate-fade-in-up">
+      <div className="relative z-10 p-6 sm:p-8 rounded-3xl shadow-soft-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 w-full max-w-sm mx-4 sm:mx-0 animate-fade-in-up">
         <div className="flex-grow flex justify-center mb-8">
           <div className="p-4 rounded-2xl bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20">
             <Image

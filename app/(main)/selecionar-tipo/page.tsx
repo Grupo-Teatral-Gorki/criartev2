@@ -126,15 +126,16 @@ const SelecionarTipoProjeto = () => {
 
   return (
     <div className="w-full overflow-y-auto flex flex-col items-center px-4 sm:px-8 lg:px-16 gap-8">
-      <div className="w-full flex items-center justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
+      <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}
           onClick={() => router.push("/meusprojetos")}
           size="medium"
         />
-        <h2 className="text-2xl font-bold flex-grow text-center">
+        <h2 className="text-xl sm:text-2xl font-bold text-center order-first sm:order-none">
           Selecione o tipo de projeto
         </h2>
+        <div className="hidden sm:block w-[100px]"></div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
         {loading && <p className="text-2xl">Carregando tipos de projeto...</p>}

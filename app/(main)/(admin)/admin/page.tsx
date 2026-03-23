@@ -21,14 +21,14 @@ const AdminHome = () => {
   }
 
   return (
-    <div className="w-full overflow-y-auto flex flex-col sm:px-36">
-      <div className="w-full flex gap-12 rounded-2xl bg-white/85 dark:bg-slate-800/80 backdrop-blur-xl border border-white/40 dark:border-slate-700/60 shadow-soft p-4 mt-4 mb-4">
+    <div className="w-full overflow-y-auto flex flex-col px-4 sm:px-8 lg:px-36">
+      <div className="w-full flex flex-col sm:flex-row items-center gap-4 sm:gap-12 rounded-2xl bg-white/85 dark:bg-slate-800/80 backdrop-blur-xl border border-white/40 dark:border-slate-700/60 shadow-soft p-4 mt-4 mb-4">
         <Button
           label={"VOLTAR"}
           onClick={() => router.push("/home")}
           size="medium"
         />
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Configurações</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Configurações</h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full gap-6">
         <CardLink

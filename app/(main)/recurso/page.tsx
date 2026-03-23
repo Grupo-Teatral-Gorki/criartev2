@@ -72,13 +72,14 @@ const Recurso = () => {
 
   return (
     <div className="w-full overflow-y-auto flex flex-col px-4 sm:px-8 lg:px-16">
-      <div className="w-full flex items-center justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
+      <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}
           onClick={() => router.push("/meusprojetos")}
           size="medium"
         />
-        <h2 className="text-2xl font-bold">Recurso</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-center order-first sm:order-none">Recurso</h2>
+        <div className="hidden sm:block w-[100px]"></div>
       </div>
       <div className="flex flex-col w-full">
         <div className="mt-4 w-full flex justify-end">

@@ -306,18 +306,18 @@ export default function Header() {
 
       {/* Secondary Info Bar */}
       <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-b border-slate-200/50 dark:border-slate-700/50">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between py-2 text-sm">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 px-3 py-1 bg-primary-100 dark:bg-primary-900/30 rounded-full text-primary-700 dark:text-primary-300">
+            <div className="flex items-center gap-2 sm:gap-6">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-100 dark:bg-primary-900/30 rounded-full text-primary-700 dark:text-primary-300">
                 <span className="w-1.5 h-1.5 bg-success-500 rounded-full animate-pulse-soft"></span>
                 <span className="font-medium">v2.0</span>
               </div>
-              <div className="text-slate-600 dark:text-slate-400">
+              <div className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
                 <span className="font-medium">Cidade:</span>{" "}
                 {findCityLabel(dbUser?.cityId ?? "")}
               </div>
-              <div className="text-slate-500 dark:text-slate-500 text-xs font-mono">
+              <div className="hidden md:block text-slate-500 dark:text-slate-500 text-xs font-mono">
                 ID: {dbUser?.cityId}
               </div>
             </div>

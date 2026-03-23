@@ -45,7 +45,7 @@ const MeusProjetos = () => {
   return (
     <div className="w-full overflow-y-auto flex flex-col items-center px-4 sm:px-8 lg:px-16">
       {/* Header */}
-      <div className="w-full flex justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
+      <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}
           onClick={async () => {
@@ -57,9 +57,9 @@ const MeusProjetos = () => {
           }}
           size="medium"
         />
-        <h2 className="text-2xl font-bold">Meus Projetos</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-center">Meus Projetos</h2>
         <Button
-          label="CRIAR NOVO PROJETO"
+          label="CRIAR NOVO"
           onClick={async () => {
             await loggingService.logNavigation("/meusprojetos", "/selecionar-tipo", {
               buttonType: "criar_novo_projeto",

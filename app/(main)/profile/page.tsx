@@ -236,9 +236,9 @@ const Profile: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-primary px-6 py-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
+          <div className="bg-primary px-4 sm:px-6 py-6 sm:py-8">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-center sm:space-x-6 text-center sm:text-left">
                 <div className="relative">
                   {uploading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full z-10">
@@ -265,14 +265,14 @@ const Profile: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <div className="text-white">
-                  <h1 className="text-3xl text-gray-900 font-bold">
+                <div className="text-white mt-4 sm:mt-0">
+                  <h1 className="text-2xl sm:text-3xl text-gray-900 font-bold">
                     {dbUser?.firstName} {dbUser?.lastName}
                   </h1>
                   <p className="text-blue-600 font-bold mt-1">
                     {findCityLabel(dbUser?.cityId ?? "")}
                   </p>
-                  <div className="flex items-center flex-wrap gap-2 mt-2">
+                  <div className="flex items-center justify-center sm:justify-start flex-wrap gap-2 mt-2">
                     {(() => {
                       const roleMapping: { [key: string]: string } = {
                         'user': 'Proponente',

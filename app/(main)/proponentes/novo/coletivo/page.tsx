@@ -364,7 +364,7 @@ export default function ColetivoPage() {
     const isFirstStep = currentStep === 0;
 
     return (
-        <div className="container mx-auto p-6 max-w-4xl">
+        <div className="container mx-auto p-4 sm:p-6 max-w-4xl">
             <button
                 onClick={() => router.push('/proponentes')}
                 className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 mb-6 transition-colors"
@@ -373,31 +373,31 @@ export default function ColetivoPage() {
                 Voltar
             </button>
 
-            <h1 className="text-3xl font-bold mb-6">Cadastro de Coletivo</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-6">Cadastro de Coletivo</h1>
 
-            <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
+            <div className="mb-8 overflow-x-auto">
+                <div className="flex items-center justify-between mb-4 min-w-[500px] sm:min-w-0">
                     {STEPS.map((step, index) => (
                         <div key={step.id} className="flex items-center flex-1">
                             <div className="flex flex-col items-center flex-1">
                                 <div
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all duration-300 ${index < currentStep
+                                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-semibold transition-all duration-300 text-sm sm:text-base ${index < currentStep
                                         ? 'bg-green-500 text-white'
                                         : index === currentStep
                                             ? 'bg-primary-500 text-white'
                                             : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
                                         }`}
                                 >
-                                    {index < currentStep ? <Check size={20} /> : index + 1}
+                                    {index < currentStep ? <Check size={16} className="sm:w-5 sm:h-5" /> : index + 1}
                                 </div>
-                                <span className={`text-xs mt-2 text-center ${index === currentStep ? 'font-semibold text-primary-600 dark:text-primary-400' : 'text-slate-500'
+                                <span className={`text-[10px] sm:text-xs mt-1 sm:mt-2 text-center max-w-[60px] sm:max-w-none ${index === currentStep ? 'font-semibold text-primary-600 dark:text-primary-400' : 'text-slate-500'
                                     }`}>
                                     {step.title}
                                 </span>
                             </div>
                             {index < STEPS.length - 1 && (
                                 <div
-                                    className={`h-1 flex-1 mx-2 transition-all duration-300 ${index < currentStep ? 'bg-green-500' : 'bg-slate-200 dark:bg-slate-700'
+                                    className={`h-1 flex-1 mx-1 sm:mx-2 transition-all duration-300 ${index < currentStep ? 'bg-green-500' : 'bg-slate-200 dark:bg-slate-700'
                                         }`}
                                 />
                             )}
@@ -406,7 +406,7 @@ export default function ColetivoPage() {
                 </div>
             </div>
 
-            <div className="theme-card p-8">
+            <div className="theme-card p-4 sm:p-8">
                 <h2 className="text-2xl font-semibold mb-6">{STEPS[currentStep].title}</h2>
 
                 <div className="grid grid-cols-1 gap-6">

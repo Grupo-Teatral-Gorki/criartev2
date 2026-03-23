@@ -1,6 +1,6 @@
 // lib/firebaseClient.ts
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, browserLocalPersistence, setPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -15,6 +15,11 @@ const firebaseConfig = {
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+
+// Set persistence to LOCAL to maintain auth state across browser sessions
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error("Auth persistence error:", error);
+});
 const db = getFirestore(app);
 const storage = getStorage(app);
 

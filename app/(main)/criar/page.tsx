@@ -177,7 +177,7 @@ const CriarContent = () => {
 
   return (
     <div className="w-full overflow-y-auto flex flex-col items-center px-4 sm:px-8 lg:px-16">
-      <div className="w-full flex items-center justify-between bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
+      <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}
           onClick={async () => {
@@ -191,24 +191,24 @@ const CriarContent = () => {
           size="medium"
         />
         {isEdit ? (
-          <h2 className="text-2xl font-bold flex-grow text-center">
+          <h2 className="text-xl sm:text-2xl font-bold text-center order-first sm:order-none">
             Edite seu projeto
           </h2>
         ) : (
-          <h2 className="text-2xl font-bold flex-grow text-center">
+          <h2 className="text-xl sm:text-2xl font-bold text-center order-first sm:order-none">
             Crie seu projeto
           </h2>
         )}
 
         <Button
-          label={"ENVIAR PROJETO"}
+          label={"ENVIAR"}
           onClick={() => handleSendProject(undefined, "enviado")}
           size="medium"
           variant="save"
         />
       </div>
       <div className="w-full flex flex-col justify-center bg-slate-100 rounded-lg dark:bg-navy p-1 sm:p-4 mt-4 gap-8">
-        <div className="flex w-full items-center justify-between mt-2 px-4 gap-8">
+        <div className="flex flex-col sm:flex-row w-full items-stretch sm:items-center justify-between mt-2 px-4 gap-4">
           <TextInput
             placeholder="Nome do Projeto"
             className="flex-1 min-h-[50px] max-h-[50px]"
@@ -217,7 +217,7 @@ const CriarContent = () => {
             }
             onChange={(e) => setProjectTitle(e.target.value)}
           />
-          <div className="min-w-[180px]">
+          <div className="sm:min-w-[180px]">
             <Button
               label={"Atualizar Nome"}
               onClick={() => handleSendProject(projectTitle)}

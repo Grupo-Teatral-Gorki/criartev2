@@ -10,9 +10,13 @@ export default function HelpPage() {
         <p className="text-lg text-slate-700 dark:text-slate-300 mb-6">
           Estamos trabalhando para trazer essa funcionalidade em breve.
         </p>
-        <div className="animate-fade-in-left">
+        <div className="animate-fade-in-left flex items-center justify-center mb-4">
           <Clock className="w-24 h-24 text-primary-600 dark:text-primary-400" />
         </div>
+        <p className="text-lg text-slate-700 dark:text-slate-300 mb-6">Enquanto isso, entre em contato conosco:</p>
+        <p className="text-lg text-slate-700 dark:text-slate-300 mb-6">WhatsApp: (16) 98142-3000</p>
+        <p className="text-lg text-slate-700 dark:text-slate-300 mb-6">Tel: (16) 3421-9152</p>
+        <p className="text-lg text-slate-700 dark:text-slate-300 mb-6">Email: producaocultural@grupoteatralgorki.com</p>
       </div>
     </div>
   );
