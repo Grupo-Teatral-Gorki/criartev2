@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 const Footer = () => (
-  <footer className="flex justify-end p-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-700/50 absolute bottom-0 left-0 w-full z-10 shadow-soft">
+  <footer className="hidden md:flex justify-end p-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-700/50 absolute bottom-0 left-0 w-full z-10 shadow-soft">
     <div className="flex items-center mx-2">
       <Image
         alt="Logo Gorki"
