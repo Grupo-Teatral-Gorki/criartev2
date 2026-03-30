@@ -17,7 +17,10 @@ const EvaluationTable: React.FC<EvaluationTableProps> = ({
 
   const handleChange = (value: string, rowIndex: number, cellIndex: number) => {
     const updatedRows = [...tableData];
-    updatedRows[rowIndex][cellIndex] = value ? parseFloat(value) : 0;
+    let numValue = value ? parseFloat(value) : 0;
+    // Clamp value between 0 and 10
+    numValue = Math.max(0, Math.min(10, numValue));
+    updatedRows[rowIndex][cellIndex] = numValue;
 
     setTableData(updatedRows);
     const criteriaArray: Criteria[] = updatedRows.map((row) => ({
@@ -51,6 +54,10 @@ const EvaluationTable: React.FC<EvaluationTableProps> = ({
                   {cellIndex === row.length - 1 ? (
                     <input
                       type="number"
+                      min="0"
+                      max="10"
+                      step="0.1"
+                      placeholder="0-10"
                       className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#1d4f5d]"
                       value={typeof cell === "number" ? cell : ""}
                       onChange={(e) =>

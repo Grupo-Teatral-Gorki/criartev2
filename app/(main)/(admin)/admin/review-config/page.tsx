@@ -18,6 +18,8 @@ interface Project {
   projectId: string;
   projectTitle: string;
   registrationNumber?: string;
+  reviewer?: string;
+  evaluated?: boolean;
 }
 
 const ProjectList: React.FC = () => {
@@ -67,7 +69,18 @@ const ProjectList: React.FC = () => {
           projectId: doc.id,
           projectTitle: doc.data().projectTitle,
           registrationNumber: doc.data().registrationNumber,
+          reviewer: doc.data().reviewer,
+          evaluated: doc.data().evaluated || false,
         }));
+
+        // Initialize selectedReviewers with existing assignments
+        const existingReviewers: Record<string, string> = {};
+        projectData.forEach((project) => {
+          if (project.reviewer) {
+            existingReviewers[project.projectId] = project.reviewer;
+          }
+        });
+        setSelectedReviewers(existingReviewers);
 
         setProjects(projectData);
         console.log("Projects fetched:", projectData);
@@ -133,6 +146,9 @@ const ProjectList: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Definir Parecerista
+                  {project.evaluated && (
+                    <span className="ml-2 text-xs text-green-600 dark:text-green-400">(Avaliado)</span>
+                  )}
                 </label>
                 <SelectInput
                   value={selectedReviewers[project.projectId] || ""}
@@ -141,6 +157,7 @@ const ProjectList: React.FC = () => {
                   }
                   options={users}
                   label="Selecione um parecerista"
+                  disabled={project.evaluated}
                 />
               </div>
             </div>

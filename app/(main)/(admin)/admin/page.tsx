@@ -55,6 +55,12 @@ const AdminHome = () => {
           href={"/admin/users"}
           icon={"users"}
         />
+        <CardLink
+          title={"Gerenciar Pareceres"}
+          description={""}
+          href={"/admin/feedback"}
+          icon={"feedback"}
+        />
       </div>
     </div>
   );

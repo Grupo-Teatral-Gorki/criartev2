@@ -54,6 +54,7 @@ const EvaluateProjectClient = () => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data) {
+            console.log("Project data from DB:", JSON.stringify(data, null, 2));
             // Explicitly type data as Project, spreading id and data
             setProject({ id: docSnap.id, ...data } as Project);
           } else {

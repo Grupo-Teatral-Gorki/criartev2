@@ -42,12 +42,31 @@ const CriarContent = () => {
       return;
     }
 
+    // Validate title when updating it
+    if (updateTitle !== undefined && !updateTitle.trim()) {
+      setToastMessage("O título do projeto é obrigatório.");
+      setToastType("error");
+      setShowToast(true);
+      return;
+    }
+
     // Block submission if inscriptions are closed
     if (updateStatus === "enviado" && !isInscriptionOpen) {
       setToastMessage("Não é possível enviar projetos. As inscrições estão fechadas.");
       setToastType("error");
       setShowToast(true);
       return;
+    }
+
+    // Check if project has a title before sending
+    if (updateStatus === "enviado") {
+      const currentTitle = projectTitle || projectData?.projectTitle;
+      if (!currentTitle?.trim()) {
+        setToastMessage("Não é possível enviar o projeto sem um título. Por favor, adicione um título primeiro.");
+        setToastType("error");
+        setShowToast(true);
+        return;
+      }
     }
 
     // Check if trying to send project without proponent

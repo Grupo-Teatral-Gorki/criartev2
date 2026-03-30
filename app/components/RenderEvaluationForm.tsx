@@ -94,11 +94,13 @@ const RenderEvaluationForm: React.FC<RenderEvaluationFormProps> = ({
   }, [techText, scores, average, setEvaluationToSend]);
 
   return (
-    <div>
-      <div className="w-full flex items-center justify-end p-4">
-        <h2 className="text-2xl mr-4 text-white">
-          Avaliação Final: {average ? average.toFixed(2) : ""}
-        </h2>
+    <div className="p-4">
+      {/* Legend */}
+      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <p className="text-sm text-blue-800 dark:text-blue-300">
+          <strong>Legenda:</strong> Cada critério deve receber uma nota de <strong>0 a 10</strong>. 
+          A média final será calculada automaticamente.
+        </p>
       </div>
 
       <EvaluationTable
@@ -107,8 +109,24 @@ const RenderEvaluationForm: React.FC<RenderEvaluationFormProps> = ({
         onScoresUpdate={handleScoresUpdate}
       />
 
-      <div className="p-4">
-        <h2 className="text-xl mb-4 text-white">Parecer Técnico</h2>
+      {/* Average Display */}
+      <div className="mt-6 p-6 bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-xl shadow-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-white/80 text-sm font-medium uppercase tracking-wide">Média Final</p>
+            <p className="text-white text-xs mt-1">Calculada automaticamente</p>
+          </div>
+          <div className="text-right">
+            <p className="text-5xl font-bold text-white">
+              {average ? average.toFixed(2) : "0.00"}
+            </p>
+            <p className="text-white/70 text-sm">de 10.00</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-xl mb-4 font-semibold text-slate-900 dark:text-slate-100">Parecer Técnico</h2>
         <TextAreaInput
           value={techText}
           onChange={(e) => setTechText(e.target.value)}

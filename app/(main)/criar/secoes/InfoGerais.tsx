@@ -107,12 +107,31 @@ const InfoGerais = () => {
 
   const handleUpdateProject = async (projectId: string) => {
     if (!projectId) return console.error("Projeto não encontrado");
-    const projectRef = doc(db, "projects", projectId);
+    console.log("Saving generalInfo with projectId:", projectId);
+    console.log("formValues to save:", JSON.stringify(formValues, null, 2));
+    
+    // Query by projectId field to get the actual document
+    const projectQuery = query(
+      collection(db, "projects"),
+      where("projectId", "==", projectId)
+    );
+    const projectSnapshot = await getDocs(projectQuery);
+    
+    if (projectSnapshot.empty) {
+      console.error("No project found with projectId:", projectId);
+      return;
+    }
+    
+    const projectDoc = projectSnapshot.docs[0];
+    const projectRef = doc(db, "projects", projectDoc.id);
+    
     await updateDoc(projectRef, {
       generalInfo: formValues,
       updatedAt: new Date(),
       updatedBy: dbUser?.id,
     });
+    
+    console.log("generalInfo saved successfully to doc:", projectDoc.id);
 
     // Get project title for email
     const projectSnap = await getDoc(projectRef);
