@@ -13,7 +13,7 @@ import {
 import { SelectInput } from "@/app/components/SelectInput";
 import Button from "@/app/components/Button";
 import Toast from "@/app/components/Toast";
-import { Trash2, Plus, ChevronDown, ChevronUp, Edit2, X } from "lucide-react";
+import { Trash2, Plus, ChevronDown, ChevronUp, Edit2, X, GripVertical } from "lucide-react";
 
 interface FieldOption {
   value: string;
@@ -205,6 +205,13 @@ const EditCityProjects = () => {
   const [editOptionLabel, setEditOptionLabel] = useState("");
   const [editingProjectDescriptionIdx, setEditingProjectDescriptionIdx] = useState<number | null>(null);
   const [descriptionDraft, setDescriptionDraft] = useState("");
+
+  // Drag and drop state for field reordering
+  const [draggedField, setDraggedField] = useState<{
+    projectIdx: number;
+    sectionKey: string;
+    fieldIdx: number;
+  } | null>(null);
 
   const db = getFirestore();
 
@@ -574,6 +581,54 @@ const EditCityProjects = () => {
     setEditFieldValue({ name: "", label: "", type: "text", options: [] });
     setEditOptionValue("");
     setEditOptionLabel("");
+  };
+
+  const handleDragStart = (projectIdx: number, sectionKey: string, fieldIdx: number) => {
+    setDraggedField({ projectIdx, sectionKey, fieldIdx });
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (projectIdx: number, sectionKey: string, targetFieldIdx: number) => {
+    if (!draggedField) return;
+    
+    // Only allow reordering within the same section
+    if (draggedField.projectIdx !== projectIdx || draggedField.sectionKey !== sectionKey) {
+      setDraggedField(null);
+      return;
+    }
+
+    const sourceIdx = draggedField.fieldIdx;
+    if (sourceIdx === targetFieldIdx) {
+      setDraggedField(null);
+      return;
+    }
+
+    setProjects((prev) =>
+      prev.map((p, idx) => {
+        if (idx !== projectIdx) return p;
+        
+        const fields = [...p.fields[sectionKey]];
+        const [removed] = fields.splice(sourceIdx, 1);
+        fields.splice(targetFieldIdx, 0, removed);
+        
+        return {
+          ...p,
+          fields: {
+            ...p.fields,
+            [sectionKey]: fields,
+          },
+        };
+      })
+    );
+
+    setDraggedField(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedField(null);
   };
 
   return (
@@ -1093,7 +1148,18 @@ const EditCityProjects = () => {
                                     {fields.map((field, fieldIdx) => (
                                       <li
                                         key={fieldIdx}
-                                        className="text-sm py-2 px-2 bg-white dark:bg-slate-700 rounded"
+                                        draggable={!editingField}
+                                        onDragStart={() => handleDragStart(projectIdx, sectionKey, fieldIdx)}
+                                        onDragOver={handleDragOver}
+                                        onDrop={() => handleDrop(projectIdx, sectionKey, fieldIdx)}
+                                        onDragEnd={handleDragEnd}
+                                        className={`text-sm py-2 px-2 bg-white dark:bg-slate-700 rounded flex items-start gap-2 ${
+                                          draggedField?.projectIdx === projectIdx &&
+                                          draggedField?.sectionKey === sectionKey &&
+                                          draggedField?.fieldIdx === fieldIdx
+                                            ? "opacity-50"
+                                            : ""
+                                        }`}
                                       >
                                         {editingField?.projectIdx === projectIdx &&
                                         editingField?.sectionKey === sectionKey &&
@@ -1259,9 +1325,14 @@ const EditCityProjects = () => {
                                             </div>
                                           </div>
                                         ) : (
-                                          <div className="flex items-center justify-between">
-                                            <div>
-                                              <span className="font-medium">{field.label}</span>
+                                          <div className="flex items-center justify-between flex-1">
+                                            <div className="flex items-center gap-2">
+                                              <GripVertical 
+                                                size={16} 
+                                                className="text-slate-400 cursor-grab active:cursor-grabbing flex-shrink-0" 
+                                              />
+                                              <div>
+                                                <span className="font-medium">{field.label}</span>
                                               <span className="text-xs text-slate-400 ml-1">({field.name})</span>
                                               <span className="ml-2 text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded">
                                                 {FIELD_TYPES.find(ft => ft.value === field.type)?.label || field.type || "texto"}
@@ -1274,6 +1345,7 @@ const EditCityProjects = () => {
                                                   ({field.options.length} opções)
                                                 </span>
                                               )}
+                                              </div>
                                             </div>
                                             <div className="flex gap-1">
                                               <button
