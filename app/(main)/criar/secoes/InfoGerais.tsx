@@ -396,7 +396,7 @@ const InfoGerais = () => {
         {detalhesProjeto.map((field: FieldConfig) => renderField(field))}
         {detalhesProjeto.length === 0 && (
           <p className="text-sm text-slate-500 dark:text-slate-400 col-span-full">
-            Configuração de informações gerais indisponível para este tipo de projeto no momento.
+            Configuração de informações gerais indisponível para este tipo de projeto no momento. Continue para as outras abas.
           </p>
         )}
       </div>
