@@ -13,11 +13,11 @@ import {
 import { SelectInput } from "@/app/components/SelectInput";
 import Button from "@/app/components/Button";
 import Toast from "@/app/components/Toast";
-import { Trash2, Plus, ChevronDown, ChevronUp, Edit2, X, GripVertical } from "lucide-react";
+import { Trash2, Plus, ChevronDown, ChevronUp, Edit2, X, GripVertical, FileDown } from "lucide-react";
 import {
-  ITAPEVI_EXTRA_FIELDS_DEFAULT,
-  type ItapeviExtraFieldsConfig,
-  type ItapeviFieldGroup,
+  EXTRA_FIELDS_DEFAULT,
+  type ExtraFieldsConfig,
+  type ExtraFieldGroup,
 } from "@/app/(main)/criar/secoes/InfoGerais";
 
 interface FieldOption {
@@ -57,8 +57,8 @@ interface Project {
   available: boolean;
   acceptedProponentTypes?: ProponenteTipo[];
   fields: Fields;
-  itapeviExtraGeneralInfo?: boolean;
-  itapeviExtraFields?: ItapeviExtraFieldsConfig;
+  extraGeneralInfo?: boolean;
+  extraFields?: ExtraFieldsConfig;
 }
 
 interface ProjectTypeTemplate {
@@ -549,43 +549,44 @@ const EditCityProjects = () => {
     setShowAddProject(false);
   };
 
-  const cloneItapeviExtraConfig = (
-    config: ItapeviExtraFieldsConfig = ITAPEVI_EXTRA_FIELDS_DEFAULT
-  ): ItapeviExtraFieldsConfig => ({
+  const cloneExtraFieldsConfig = (
+    config: ExtraFieldsConfig = EXTRA_FIELDS_DEFAULT
+  ): ExtraFieldsConfig => ({
     eixo: { label: config.eixo.label, options: config.eixo.options.map((o) => ({ ...o })) },
     moduloEixo1: { label: config.moduloEixo1.label, options: config.moduloEixo1.options.map((o) => ({ ...o })) },
     moduloEixo2: { label: config.moduloEixo2.label, options: config.moduloEixo2.options.map((o) => ({ ...o })) },
+    categoria: { label: config.categoria.label, options: config.categoria.options.map((o) => ({ ...o })) },
   });
 
-  const handleToggleItapeviExtraGeneralInfo = (projectIdx: number) => {
+  const handleToggleExtraGeneralInfo = (projectIdx: number) => {
     setProjects((prev) =>
       prev.map((project, idx) => {
         if (idx !== projectIdx) return project;
-        const enabling = !project.itapeviExtraGeneralInfo;
+        const enabling = !project.extraGeneralInfo;
         return {
           ...project,
-          itapeviExtraGeneralInfo: enabling,
-          itapeviExtraFields:
-            enabling && !project.itapeviExtraFields
-              ? cloneItapeviExtraConfig()
-              : project.itapeviExtraFields,
+          extraGeneralInfo: enabling,
+          extraFields:
+            enabling && !project.extraFields
+              ? cloneExtraFieldsConfig()
+              : project.extraFields,
         };
       })
     );
   };
 
-  const updateItapeviGroup = (
+  const updateExtraFieldsGroup = (
     projectIdx: number,
-    groupKey: keyof ItapeviExtraFieldsConfig,
-    updater: (group: ItapeviFieldGroup) => ItapeviFieldGroup
+    groupKey: keyof ExtraFieldsConfig,
+    updater: (group: ExtraFieldGroup) => ExtraFieldGroup
   ) => {
     setProjects((prev) =>
       prev.map((project, idx) => {
         if (idx !== projectIdx) return project;
-        const currentConfig = cloneItapeviExtraConfig(project.itapeviExtraFields);
+        const currentConfig = cloneExtraFieldsConfig(project.extraFields);
         return {
           ...project,
-          itapeviExtraFields: {
+          extraFields: {
             ...currentConfig,
             [groupKey]: updater(currentConfig[groupKey]),
           },
@@ -594,31 +595,31 @@ const EditCityProjects = () => {
     );
   };
 
-  const handleItapeviGroupLabelChange = (
+  const handleExtraFieldsGroupLabelChange = (
     projectIdx: number,
-    groupKey: keyof ItapeviExtraFieldsConfig,
+    groupKey: keyof ExtraFieldsConfig,
     label: string
   ) => {
-    updateItapeviGroup(projectIdx, groupKey, (group) => ({ ...group, label }));
+    updateExtraFieldsGroup(projectIdx, groupKey, (group) => ({ ...group, label }));
   };
 
-  const handleItapeviOptionLabelChange = (
+  const handleExtraFieldsOptionLabelChange = (
     projectIdx: number,
-    groupKey: keyof ItapeviExtraFieldsConfig,
+    groupKey: keyof ExtraFieldsConfig,
     optionIdx: number,
     label: string
   ) => {
-    updateItapeviGroup(projectIdx, groupKey, (group) => ({
+    updateExtraFieldsGroup(projectIdx, groupKey, (group) => ({
       ...group,
       options: group.options.map((opt, i) => (i === optionIdx ? { ...opt, label } : opt)),
     }));
   };
 
-  const handleItapeviAddOption = (
+  const handleExtraFieldsAddOption = (
     projectIdx: number,
-    groupKey: keyof ItapeviExtraFieldsConfig
+    groupKey: keyof ExtraFieldsConfig
   ) => {
-    updateItapeviGroup(projectIdx, groupKey, (group) => {
+    updateExtraFieldsGroup(projectIdx, groupKey, (group) => {
       const newValue = `opcao_${group.options.length + 1}_${Date.now()}`;
       return {
         ...group,
@@ -627,15 +628,88 @@ const EditCityProjects = () => {
     });
   };
 
-  const handleItapeviRemoveOption = (
+  const handleExtraFieldsRemoveOption = (
     projectIdx: number,
-    groupKey: keyof ItapeviExtraFieldsConfig,
+    groupKey: keyof ExtraFieldsConfig,
     optionIdx: number
   ) => {
-    updateItapeviGroup(projectIdx, groupKey, (group) => ({
+    updateExtraFieldsGroup(projectIdx, groupKey, (group) => ({
       ...group,
       options: group.options.filter((_, i) => i !== optionIdx),
     }));
+  };
+
+  const handleGenerateProjectPDF = (project: Project) => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      alert("Por favor, permita pop-ups para gerar o PDF.");
+      return;
+    }
+
+    const fieldsHtml = Object.entries(project.fields || {})
+      .map(([section, fields]) => {
+        const sectionLabel = SECTION_OPTIONS.find((s) => s.value === section)?.label || section;
+        const fieldsListHtml = (fields as FieldItem[])
+          .map(
+            (f) =>
+              `<li><strong>${f.label}</strong> (${f.name}) - Tipo: ${f.type}${f.required ? " - Obrigatório" : ""}</li>`
+          )
+          .join("");
+        return `<h3>${sectionLabel}</h3><ul>${fieldsListHtml || "<li>Nenhum campo</li>"}</ul>`;
+      })
+      .join("");
+
+    const proponentTypes = (project.acceptedProponentTypes || DEFAULT_PROPONENT_TYPES)
+      .map((t) => PROPONENT_TYPE_OPTIONS.find((o) => o.value === t)?.label || t)
+      .join(", ");
+
+    const extraFieldsHtml = project.extraGeneralInfo && project.extraFields
+      ? `<h3>Campos Extras</h3>
+         <ul>
+           ${Object.entries(project.extraFields)
+             .map(([key, group]) => `<li><strong>${(group as ExtraFieldGroup).label}</strong>: ${(group as ExtraFieldGroup).options.map((o) => o.label).join(", ") || "Sem opções"}</li>`)
+             .join("")}
+         </ul>`
+      : "";
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Resumo - ${project.label}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+          h1 { color: #1d4f5d; border-bottom: 2px solid #1d4f5d; padding-bottom: 10px; }
+          h2 { color: #333; margin-top: 20px; }
+          h3 { color: #555; margin-top: 15px; font-size: 14px; }
+          ul { margin: 5px 0; padding-left: 20px; }
+          li { margin: 5px 0; font-size: 13px; }
+          .info { background: #f5f5f5; padding: 10px; border-radius: 5px; margin: 10px 0; }
+          .status { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 12px; }
+          .active { background: #d4edda; color: #155724; }
+          .inactive { background: #f8d7da; color: #721c24; }
+          @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+        </style>
+      </head>
+      <body>
+        <h1>${project.label}</h1>
+        <div class="info">
+          <p><strong>Nome interno:</strong> ${project.name}</p>
+          <p><strong>Status:</strong> <span class="status ${project.available ? "active" : "inactive"}">${project.available ? "Ativo" : "Inativo"}</span></p>
+          <p><strong>Tipos de proponente:</strong> ${proponentTypes}</p>
+        </div>
+        <h2>Descrição</h2>
+        <p>${project.description || "Sem descrição"}</p>
+        ${extraFieldsHtml}
+        <h2>Campos do Projeto</h2>
+        ${fieldsHtml || "<p>Nenhum campo configurado</p>"}
+        <hr style="margin-top: 30px;">
+        <p style="font-size: 11px; color: #888;">Gerado em ${new Date().toLocaleString("pt-BR")}</p>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   const handleToggleProjectProponentType = (projectIdx: number, tipo: ProponenteTipo) => {
@@ -1101,6 +1175,13 @@ const EditCityProjects = () => {
                         Clonar
                       </button>
                       <button
+                        onClick={() => handleGenerateProjectPDF(project)}
+                        className="px-3 py-1 text-sm rounded bg-purple-100 text-purple-700 hover:bg-purple-200 inline-flex items-center gap-1"
+                        title="Gerar PDF"
+                      >
+                        <FileDown size={14} /> PDF
+                      </button>
+                      <button
                         onClick={() => handleRemoveProject(projectIdx)}
                         className="p-1 text-red-600 hover:bg-red-100 rounded"
                       >
@@ -1147,25 +1228,26 @@ const EditCityProjects = () => {
                         </div>
                       </div>
 
-                      {selectedCity?.cityId === "3594" && (
+                      {selectedCity && (
                         <div className="mb-4 p-3 border border-slate-200 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-900/40">
                           <label className="inline-flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
                             <input
                               type="checkbox"
-                              checked={Boolean(project.itapeviExtraGeneralInfo)}
-                              onChange={() => handleToggleItapeviExtraGeneralInfo(projectIdx)}
+                              checked={Boolean(project.extraGeneralInfo)}
+                              onChange={() => handleToggleExtraGeneralInfo(projectIdx)}
                             />
                             <span>
-                              Adicionar campos extras antes das Informações Gerais (específico de Itapevi)
+                              Adicionar campos extras antes das Informações Gerais
                             </span>
                           </label>
 
-                          {project.itapeviExtraGeneralInfo && (() => {
-                            const config = project.itapeviExtraFields || ITAPEVI_EXTRA_FIELDS_DEFAULT;
-                            const groups: { key: keyof ItapeviExtraFieldsConfig; title: string }[] = [
+                          {project.extraGeneralInfo && (() => {
+                            const config = project.extraFields || EXTRA_FIELDS_DEFAULT;
+                            const groups: { key: keyof ExtraFieldsConfig; title: string }[] = [
                               { key: "eixo", title: "Select: Eixo" },
                               { key: "moduloEixo1", title: "Select: Módulo (quando Eixo 1)" },
                               { key: "moduloEixo2", title: "Select: Módulo (quando Eixo 2)" },
+                              { key: "categoria", title: "Select: Categoria" },
                             ];
                             return (
                               <div className="mt-3 space-y-3">
@@ -1186,7 +1268,7 @@ const EditCityProjects = () => {
                                         type="text"
                                         value={group.label}
                                         onChange={(e) =>
-                                          handleItapeviGroupLabelChange(projectIdx, key, e.target.value)
+                                          handleExtraFieldsGroupLabelChange(projectIdx, key, e.target.value)
                                         }
                                         className="mb-2 w-full border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                       />
@@ -1205,12 +1287,12 @@ const EditCityProjects = () => {
                                                 type="text"
                                                 value={opt.label}
                                                 onChange={(e) =>
-                                                  handleItapeviOptionLabelChange(projectIdx, key, optIdx, e.target.value)
+                                                  handleExtraFieldsOptionLabelChange(projectIdx, key, optIdx, e.target.value)
                                                 }
                                                 className="flex-1 border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                               />
                                               <button
-                                                onClick={() => handleItapeviRemoveOption(projectIdx, key, optIdx)}
+                                                onClick={() => handleExtraFieldsRemoveOption(projectIdx, key, optIdx)}
                                                 className="text-red-500 hover:text-red-700"
                                               >
                                                 <X size={14} />
@@ -1220,7 +1302,7 @@ const EditCityProjects = () => {
                                         ))}
                                       </div>
                                       <button
-                                        onClick={() => handleItapeviAddOption(projectIdx, key)}
+                                        onClick={() => handleExtraFieldsAddOption(projectIdx, key)}
                                         className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
                                       >
                                         <Plus size={12} /> Adicionar opção

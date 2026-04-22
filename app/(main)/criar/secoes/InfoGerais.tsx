@@ -46,25 +46,26 @@ const getOtherFieldKey = (fieldName: string) => `${fieldName}__outro`;
 type FormValues = Record<string, string | string[]>;
 type ProjectDetails = {
   name?: string | null;
-  itapeviExtraGeneralInfo?: boolean;
-  itapeviExtraFields?: Partial<ItapeviExtraFieldsConfig>;
+  extraGeneralInfo?: boolean;
+  extraFields?: Partial<ExtraFieldsConfig>;
   fields?: {
     generalInfo?: FieldConfig[];
   };
 };
 
-export type ItapeviFieldGroup = {
+export type ExtraFieldGroup = {
   label: string;
   options: FieldOption[];
 };
 
-export type ItapeviExtraFieldsConfig = {
-  eixo: ItapeviFieldGroup;
-  moduloEixo1: ItapeviFieldGroup;
-  moduloEixo2: ItapeviFieldGroup;
+export type ExtraFieldsConfig = {
+  eixo: ExtraFieldGroup;
+  moduloEixo1: ExtraFieldGroup;
+  moduloEixo2: ExtraFieldGroup;
+  categoria: ExtraFieldGroup;
 };
 
-export const ITAPEVI_EXTRA_FIELDS_DEFAULT: ItapeviExtraFieldsConfig = {
+export const EXTRA_FIELDS_DEFAULT: ExtraFieldsConfig = {
   eixo: {
     label: "Escolha o Eixo",
     options: [
@@ -84,39 +85,63 @@ export const ITAPEVI_EXTRA_FIELDS_DEFAULT: ItapeviExtraFieldsConfig = {
     label: "Escolha o módulo",
     options: [{ value: "modulo_unico", label: "Módulo Único" }],
   },
+  categoria: {
+    label: "Escolha a Categoria",
+    options: [
+      { value: "musica", label: "Música" },
+      { value: "cultura_urbana_hip_hop", label: "Cultura urbana e hip-hop" },
+      { value: "teatro", label: "Teatro" },
+      { value: "danca", label: "Dança" },
+      { value: "audiovisual", label: "Audiovisual" },
+      { value: "literatura", label: "Literatura" },
+      { value: "artes_plasticas_visuais", label: "Artes plásticas e visuais" },
+      { value: "artesanato", label: "Artesanato" },
+      { value: "circo", label: "Circo" },
+      { value: "cultura_afro_indigena", label: "Cultura afro-brasileira e/ou indígena" },
+      { value: "cultura_popular", label: "Cultura popular" },
+      { value: "cultura_lgbtqia", label: "Cultura LGBTQIA+" },
+      { value: "artistas_iniciantes", label: "Artistas Iniciantes" },
+    ],
+  },
 };
 
-const mergeItapeviExtraConfig = (
-  config: Partial<ItapeviExtraFieldsConfig> | undefined
-): ItapeviExtraFieldsConfig => ({
+const mergeExtraFieldsConfig = (
+  config: Partial<ExtraFieldsConfig> | undefined
+): ExtraFieldsConfig => ({
   eixo: {
-    label: config?.eixo?.label || ITAPEVI_EXTRA_FIELDS_DEFAULT.eixo.label,
+    label: config?.eixo?.label || EXTRA_FIELDS_DEFAULT.eixo.label,
     options: config?.eixo?.options && config.eixo.options.length > 0
       ? config.eixo.options
-      : ITAPEVI_EXTRA_FIELDS_DEFAULT.eixo.options,
+      : EXTRA_FIELDS_DEFAULT.eixo.options,
   },
   moduloEixo1: {
-    label: config?.moduloEixo1?.label || ITAPEVI_EXTRA_FIELDS_DEFAULT.moduloEixo1.label,
+    label: config?.moduloEixo1?.label || EXTRA_FIELDS_DEFAULT.moduloEixo1.label,
     options: config?.moduloEixo1?.options && config.moduloEixo1.options.length > 0
       ? config.moduloEixo1.options
-      : ITAPEVI_EXTRA_FIELDS_DEFAULT.moduloEixo1.options,
+      : EXTRA_FIELDS_DEFAULT.moduloEixo1.options,
   },
   moduloEixo2: {
-    label: config?.moduloEixo2?.label || ITAPEVI_EXTRA_FIELDS_DEFAULT.moduloEixo2.label,
+    label: config?.moduloEixo2?.label || EXTRA_FIELDS_DEFAULT.moduloEixo2.label,
     options: config?.moduloEixo2?.options && config.moduloEixo2.options.length > 0
       ? config.moduloEixo2.options
-      : ITAPEVI_EXTRA_FIELDS_DEFAULT.moduloEixo2.options,
+      : EXTRA_FIELDS_DEFAULT.moduloEixo2.options,
+  },
+  categoria: {
+    label: config?.categoria?.label || EXTRA_FIELDS_DEFAULT.categoria.label,
+    options: config?.categoria?.options && config.categoria.options.length > 0
+      ? config.categoria.options
+      : EXTRA_FIELDS_DEFAULT.categoria.options,
   },
 });
 
-const getItapeviExtraFields = (
+const getExtraFields = (
   eixo: string | string[] | undefined,
-  config: ItapeviExtraFieldsConfig
+  config: ExtraFieldsConfig
 ): FieldConfig[] => {
   const eixoValue = typeof eixo === "string" ? eixo : "";
   const base: FieldConfig[] = [
     {
-      name: "itapevi_eixo",
+      name: "extra_eixo",
       label: config.eixo.label,
       type: "select",
       options: config.eixo.options,
@@ -127,7 +152,7 @@ const getItapeviExtraFields = (
     return [
       ...base,
       {
-        name: "itapevi_modulo",
+        name: "extra_modulo",
         label: config.moduloEixo1.label,
         type: "select",
         options: config.moduloEixo1.options,
@@ -139,7 +164,7 @@ const getItapeviExtraFields = (
     return [
       ...base,
       {
-        name: "itapevi_modulo",
+        name: "extra_modulo",
         label: config.moduloEixo2.label,
         type: "select",
         options: config.moduloEixo2.options,
@@ -150,12 +175,25 @@ const getItapeviExtraFields = (
   return base;
 };
 
-const ITAPEVI_EXTRA_FIELD_NAMES = ["itapevi_eixo", "itapevi_modulo"];
+const getCategoriaExtraField = (config: ExtraFieldsConfig): FieldConfig[] => {
+  if (!config.categoria.options.length) return [];
+  return [
+    {
+      name: "extra_categoria",
+      label: config.categoria.label,
+      type: "select",
+      options: config.categoria.options,
+      disableOther: true,
+    },
+  ];
+};
+
+const EXTRA_FIELD_NAMES = ["extra_eixo", "extra_modulo", "extra_categoria"];
 
 const InfoGerais = () => {
   const [detalhesProjeto, setDetalhesProjetos] = useState<FieldConfig[]>([]);
-  const [showItapeviExtras, setShowItapeviExtras] = useState(false);
-  const [itapeviExtraConfig, setItapeviExtraConfig] = useState<ItapeviExtraFieldsConfig>(ITAPEVI_EXTRA_FIELDS_DEFAULT);
+  const [showExtraFields, setShowExtraFields] = useState(false);
+  const [extraFieldsConfig, setExtraFieldsConfig] = useState<ExtraFieldsConfig>(EXTRA_FIELDS_DEFAULT);
   const [formValues, setFormValues] = useState<FormValues>({
     categoria: "",
     modalidade: "",
@@ -182,12 +220,11 @@ const InfoGerais = () => {
 
     setDetalhesProjetos(generalInfoFields);
 
-    const enableItapeviExtras =
-      Boolean(projectDetails?.itapeviExtraGeneralInfo) && city?.city?.cityId === "3594";
-    setShowItapeviExtras(enableItapeviExtras);
-    setItapeviExtraConfig(mergeItapeviExtraConfig(projectDetails?.itapeviExtraFields));
+    const enableExtraFields = Boolean(projectDetails?.extraGeneralInfo);
+    setShowExtraFields(enableExtraFields);
+    setExtraFieldsConfig(mergeExtraFieldsConfig(projectDetails?.extraFields));
 
-    const extraFieldNames = enableItapeviExtras ? ITAPEVI_EXTRA_FIELD_NAMES : [];
+    const extraFieldNames = enableExtraFields ? EXTRA_FIELD_NAMES : [];
 
     const newFields = Object.fromEntries(
       [
@@ -255,10 +292,10 @@ const InfoGerais = () => {
     const value = typeof event === "string" ? event : event.target.value;
     setFormValues((prev) => {
       const next = { ...prev, [key]: value };
-      if (key === "itapevi_eixo" && prev.itapevi_eixo !== value) {
-        next.itapevi_modulo = "";
+      if (key === "extra_eixo" && prev.extra_eixo !== value) {
+        next.extra_modulo = "";
       }
-      if ((key === "itapevi_eixo" || key === "itapevi_modulo") && projectId) {
+      if ((key === "extra_eixo" || key === "extra_modulo") && projectId) {
         void persistGeneralInfo(projectId, next, { log: false });
       }
       return next;
@@ -385,10 +422,10 @@ const InfoGerais = () => {
                           : ""
                         : "";
                   }
-                  if (field.name === "itapevi_eixo" && prev.itapevi_eixo !== nextValue) {
-                    next.itapevi_modulo = "";
+                  if (field.name === "extra_eixo" && prev.extra_eixo !== nextValue) {
+                    next.extra_modulo = "";
                   }
-                  if ((field.name === "itapevi_eixo" || field.name === "itapevi_modulo") && projectId) {
+                  if ((field.name === "extra_eixo" || field.name === "extra_modulo") && projectId) {
                     void persistGeneralInfo(projectId, next, { log: false });
                   }
                   return next;
@@ -561,9 +598,10 @@ const InfoGerais = () => {
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 mt-4 gap-5">
-        {showItapeviExtras && getItapeviExtraFields(formValues["itapevi_eixo"], itapeviExtraConfig).map((field) => renderField(field))}
+        {showExtraFields && getExtraFields(formValues["extra_eixo"], extraFieldsConfig).map((field) => renderField(field))}
+        {showExtraFields && getCategoriaExtraField(extraFieldsConfig).map((field) => renderField(field))}
         {detalhesProjeto.map((field: FieldConfig) => renderField(field))}
-        {detalhesProjeto.length === 0 && !showItapeviExtras && (
+        {detalhesProjeto.length === 0 && !showExtraFields && (
           <p className="text-sm text-slate-500 dark:text-slate-400 col-span-full">
             Configuração de informações gerais indisponível para este tipo de projeto no momento. Continue para as outras abas.
           </p>
