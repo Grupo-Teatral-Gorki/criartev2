@@ -14,6 +14,11 @@ import { SelectInput } from "@/app/components/SelectInput";
 import Button from "@/app/components/Button";
 import Toast from "@/app/components/Toast";
 import { Trash2, Plus, ChevronDown, ChevronUp, Edit2, X, GripVertical } from "lucide-react";
+import {
+  ITAPEVI_EXTRA_FIELDS_DEFAULT,
+  type ItapeviExtraFieldsConfig,
+  type ItapeviFieldGroup,
+} from "@/app/(main)/criar/secoes/InfoGerais";
 
 interface FieldOption {
   value: string;
@@ -52,6 +57,8 @@ interface Project {
   available: boolean;
   acceptedProponentTypes?: ProponenteTipo[];
   fields: Fields;
+  itapeviExtraGeneralInfo?: boolean;
+  itapeviExtraFields?: ItapeviExtraFieldsConfig;
 }
 
 interface ProjectTypeTemplate {
@@ -205,6 +212,9 @@ const EditCityProjects = () => {
   const [editOptionLabel, setEditOptionLabel] = useState("");
   const [editingProjectDescriptionIdx, setEditingProjectDescriptionIdx] = useState<number | null>(null);
   const [descriptionDraft, setDescriptionDraft] = useState("");
+  const [editingProjectLabelIdx, setEditingProjectLabelIdx] = useState<number | null>(null);
+  const [labelDraft, setLabelDraft] = useState("");
+  const [nameDraft, setNameDraft] = useState("");
 
   // Drag and drop state for field reordering
   const [draggedField, setDraggedField] = useState<{
@@ -412,6 +422,119 @@ const EditCityProjects = () => {
     setDescriptionDraft("");
   };
 
+  const handleCloneProject = (projectIdx: number) => {
+    const source = projects[projectIdx];
+    if (!source) return;
+
+    const existingNames = new Set(projects.map((p) => p.name));
+    const baseName = `${source.name}_copia`;
+    let newName = baseName;
+    let suffix = 2;
+    while (existingNames.has(newName)) {
+      newName = `${baseName}_${suffix}`;
+      suffix += 1;
+    }
+
+    const clone: Project = JSON.parse(JSON.stringify(source));
+    clone.name = newName;
+    clone.label = `${source.label} (cópia)`;
+
+    setProjects((prev) => {
+      const next = [...prev];
+      next.splice(projectIdx + 1, 0, clone);
+      return next;
+    });
+    setExpandedProject(projectIdx + 1);
+  };
+
+  const handleStartEditLabel = (projectIdx: number) => {
+    setEditingProjectLabelIdx(projectIdx);
+    setLabelDraft(projects[projectIdx]?.label || "");
+    setNameDraft(projects[projectIdx]?.name || "");
+  };
+
+  const migrateProjectTypeName = async (oldName: string, newName: string) => {
+    if (!selectedCity?.cityId || oldName === newName) return 0;
+    const q = query(
+      collection(db, "projects"),
+      where("cityId", "==", selectedCity.cityId),
+      where("projectType", "==", oldName)
+    );
+    const snapshot = await getDocs(q);
+    await Promise.all(
+      snapshot.docs.map((projectDoc) =>
+        updateDoc(doc(db, "projects", projectDoc.id), {
+          projectType: newName,
+          updatedAt: new Date(),
+        })
+      )
+    );
+    return snapshot.size;
+  };
+
+  const handleSaveLabel = async () => {
+    if (editingProjectLabelIdx === null) return;
+    const trimmedLabel = labelDraft.trim();
+    const trimmedName = nameDraft.trim();
+    if (!trimmedLabel || !trimmedName) return;
+
+    const nameTaken = projects.some(
+      (p, idx) => idx !== editingProjectLabelIdx && p.name === trimmedName
+    );
+    if (nameTaken) {
+      setToastType("error");
+      setToastMessage(`Já existe um tipo de projeto com o nome interno "${trimmedName}".`);
+      setShowToast(true);
+      return;
+    }
+
+    const previousName = projects[editingProjectLabelIdx]?.name || "";
+    const nameChanged = previousName && previousName !== trimmedName;
+
+    if (nameChanged) {
+      const confirmed = confirm(
+        `Renomear de "${previousName}" para "${trimmedName}" também atualizará os projetos existentes com esse tipo neste município. Continuar?`
+      );
+      if (!confirmed) return;
+    }
+
+    setProjects((prev) =>
+      prev.map((project, idx) =>
+        idx === editingProjectLabelIdx
+          ? { ...project, label: trimmedLabel, name: trimmedName }
+          : project
+      )
+    );
+
+    setEditingProjectLabelIdx(null);
+    setLabelDraft("");
+    setNameDraft("");
+
+    if (nameChanged) {
+      try {
+        const migrated = await migrateProjectTypeName(previousName, trimmedName);
+        setToastType("success");
+        setToastMessage(
+          migrated > 0
+            ? `Tipo renomeado. ${migrated} projeto(s) migrado(s) para "${trimmedName}".`
+            : `Tipo renomeado. Nenhum projeto existente foi afetado.`
+        );
+        setShowToast(true);
+      } catch (error) {
+        console.error("Error migrating project type name:", error);
+        setToastType("error");
+        setToastMessage("Erro ao migrar projetos existentes para o novo nome.");
+        setShowToast(true);
+      }
+    }
+  };
+
+  const handleCancelLabelEdit = () => {
+    setEditingProjectLabelIdx(null);
+    setLabelDraft("");
+    setNameDraft("");
+  };
+
   const handleAddProject = () => {
     if (!newProject.name || !newProject.label) return;
     setProjects((prev) => [...prev, newProject]);
@@ -424,6 +547,95 @@ const EditCityProjects = () => {
       fields: {},
     });
     setShowAddProject(false);
+  };
+
+  const cloneItapeviExtraConfig = (
+    config: ItapeviExtraFieldsConfig = ITAPEVI_EXTRA_FIELDS_DEFAULT
+  ): ItapeviExtraFieldsConfig => ({
+    eixo: { label: config.eixo.label, options: config.eixo.options.map((o) => ({ ...o })) },
+    moduloEixo1: { label: config.moduloEixo1.label, options: config.moduloEixo1.options.map((o) => ({ ...o })) },
+    moduloEixo2: { label: config.moduloEixo2.label, options: config.moduloEixo2.options.map((o) => ({ ...o })) },
+  });
+
+  const handleToggleItapeviExtraGeneralInfo = (projectIdx: number) => {
+    setProjects((prev) =>
+      prev.map((project, idx) => {
+        if (idx !== projectIdx) return project;
+        const enabling = !project.itapeviExtraGeneralInfo;
+        return {
+          ...project,
+          itapeviExtraGeneralInfo: enabling,
+          itapeviExtraFields:
+            enabling && !project.itapeviExtraFields
+              ? cloneItapeviExtraConfig()
+              : project.itapeviExtraFields,
+        };
+      })
+    );
+  };
+
+  const updateItapeviGroup = (
+    projectIdx: number,
+    groupKey: keyof ItapeviExtraFieldsConfig,
+    updater: (group: ItapeviFieldGroup) => ItapeviFieldGroup
+  ) => {
+    setProjects((prev) =>
+      prev.map((project, idx) => {
+        if (idx !== projectIdx) return project;
+        const currentConfig = cloneItapeviExtraConfig(project.itapeviExtraFields);
+        return {
+          ...project,
+          itapeviExtraFields: {
+            ...currentConfig,
+            [groupKey]: updater(currentConfig[groupKey]),
+          },
+        };
+      })
+    );
+  };
+
+  const handleItapeviGroupLabelChange = (
+    projectIdx: number,
+    groupKey: keyof ItapeviExtraFieldsConfig,
+    label: string
+  ) => {
+    updateItapeviGroup(projectIdx, groupKey, (group) => ({ ...group, label }));
+  };
+
+  const handleItapeviOptionLabelChange = (
+    projectIdx: number,
+    groupKey: keyof ItapeviExtraFieldsConfig,
+    optionIdx: number,
+    label: string
+  ) => {
+    updateItapeviGroup(projectIdx, groupKey, (group) => ({
+      ...group,
+      options: group.options.map((opt, i) => (i === optionIdx ? { ...opt, label } : opt)),
+    }));
+  };
+
+  const handleItapeviAddOption = (
+    projectIdx: number,
+    groupKey: keyof ItapeviExtraFieldsConfig
+  ) => {
+    updateItapeviGroup(projectIdx, groupKey, (group) => {
+      const newValue = `opcao_${group.options.length + 1}_${Date.now()}`;
+      return {
+        ...group,
+        options: [...group.options, { value: newValue, label: "Nova opção" }],
+      };
+    });
+  };
+
+  const handleItapeviRemoveOption = (
+    projectIdx: number,
+    groupKey: keyof ItapeviExtraFieldsConfig,
+    optionIdx: number
+  ) => {
+    updateItapeviGroup(projectIdx, groupKey, (group) => ({
+      ...group,
+      options: group.options.filter((_, i) => i !== optionIdx),
+    }));
   };
 
   const handleToggleProjectProponentType = (projectIdx: number, tipo: ProponenteTipo) => {
@@ -807,11 +1019,59 @@ const EditCityProjects = () => {
                       ) : (
                         <ChevronDown size={20} />
                       )}
-                      <div>
-                        <span className="font-semibold">{project.label}</span>
-                        <span className="ml-2 text-sm text-slate-500">
-                          ({project.name})
-                        </span>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        {editingProjectLabelIdx === projectIdx ? (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <input
+                              type="text"
+                              value={labelDraft}
+                              onChange={(e) => setLabelDraft(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveLabel();
+                                if (e.key === "Escape") handleCancelLabelEdit();
+                              }}
+                              autoFocus
+                              placeholder="Rótulo visível"
+                              className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                            />
+                            <input
+                              type="text"
+                              value={nameDraft}
+                              onChange={(e) => setNameDraft(e.target.value.replace(/\s+/g, ""))}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveLabel();
+                                if (e.key === "Escape") handleCancelLabelEdit();
+                              }}
+                              placeholder="Nome interno (sem espaços)"
+                              className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                            />
+                            <button
+                              onClick={handleSaveLabel}
+                              className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                            >
+                              Salvar
+                            </button>
+                            <button
+                              onClick={handleCancelLabelEdit}
+                              className="text-xs px-2 py-1 bg-slate-300 text-slate-700 rounded hover:bg-slate-400"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="font-semibold">{project.label}</span>
+                            <span className="ml-2 text-sm text-slate-500">
+                              ({project.name})
+                            </span>
+                            <button
+                              onClick={() => handleStartEditLabel(projectIdx)}
+                              className="ml-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+                            >
+                              <Edit2 size={12} /> Editar
+                            </button>
+                          </>
+                        )}
                       </div>
                       <span
                         className={`text-xs px-2 py-1 rounded ${
@@ -833,6 +1093,12 @@ const EditCityProjects = () => {
                         }`}
                       >
                         {project.available ? "Desativar" : "Ativar"}
+                      </button>
+                      <button
+                        onClick={() => handleCloneProject(projectIdx)}
+                        className="px-3 py-1 text-sm rounded bg-blue-100 text-blue-700 hover:bg-blue-200"
+                      >
+                        Clonar
                       </button>
                       <button
                         onClick={() => handleRemoveProject(projectIdx)}
@@ -880,6 +1146,96 @@ const EditCityProjects = () => {
                           })}
                         </div>
                       </div>
+
+                      {selectedCity?.cityId === "3594" && (
+                        <div className="mb-4 p-3 border border-slate-200 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-900/40">
+                          <label className="inline-flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(project.itapeviExtraGeneralInfo)}
+                              onChange={() => handleToggleItapeviExtraGeneralInfo(projectIdx)}
+                            />
+                            <span>
+                              Adicionar campos extras antes das Informações Gerais (específico de Itapevi)
+                            </span>
+                          </label>
+
+                          {project.itapeviExtraGeneralInfo && (() => {
+                            const config = project.itapeviExtraFields || ITAPEVI_EXTRA_FIELDS_DEFAULT;
+                            const groups: { key: keyof ItapeviExtraFieldsConfig; title: string }[] = [
+                              { key: "eixo", title: "Select: Eixo" },
+                              { key: "moduloEixo1", title: "Select: Módulo (quando Eixo 1)" },
+                              { key: "moduloEixo2", title: "Select: Módulo (quando Eixo 2)" },
+                            ];
+                            return (
+                              <div className="mt-3 space-y-3">
+                                {groups.map(({ key, title }) => {
+                                  const group = config[key];
+                                  return (
+                                    <div
+                                      key={key}
+                                      className="p-3 border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-900"
+                                    >
+                                      <p className="text-xs font-semibold mb-2 text-slate-700 dark:text-slate-300">
+                                        {title}
+                                      </p>
+                                      <label className="block text-xs mb-1 text-slate-600 dark:text-slate-400">
+                                        Rótulo
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={group.label}
+                                        onChange={(e) =>
+                                          handleItapeviGroupLabelChange(projectIdx, key, e.target.value)
+                                        }
+                                        className="mb-2 w-full border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                                      />
+                                      <p className="text-xs font-medium mb-1 text-slate-600 dark:text-slate-400">Opções</p>
+                                      <div className="space-y-1">
+                                        {group.options.map((opt, optIdx) => (
+                                          <div key={opt.value + optIdx} className="grid grid-cols-2 gap-1">
+                                            <input
+                                              type="text"
+                                              value={opt.value}
+                                              readOnly
+                                              className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800"
+                                            />
+                                            <div className="flex gap-1">
+                                              <input
+                                                type="text"
+                                                value={opt.label}
+                                                onChange={(e) =>
+                                                  handleItapeviOptionLabelChange(projectIdx, key, optIdx, e.target.value)
+                                                }
+                                                className="flex-1 border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                                              />
+                                              <button
+                                                onClick={() => handleItapeviRemoveOption(projectIdx, key, optIdx)}
+                                                className="text-red-500 hover:text-red-700"
+                                              >
+                                                <X size={14} />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <button
+                                        onClick={() => handleItapeviAddOption(projectIdx, key)}
+                                        className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+                                      >
+                                        <Plus size={12} /> Adicionar opção
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                                  O valor (coluna esquerda) é fixo e usado para identificar cada opção internamente.
+                                </p>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
 
                       {/* Sections */}
                       <div className="space-y-4">

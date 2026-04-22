@@ -29,6 +29,7 @@ interface FieldConfig {
   type?: "text" | "textarea" | "select" | "multiselect" | "radio" | "checkbox" | "file";
   required?: boolean;
   options?: FieldOption[];
+  disableOther?: boolean;
 }
 
 const OTHER_OPTION: FieldOption = { value: "outro", label: "Outro" };
@@ -45,13 +46,116 @@ const getOtherFieldKey = (fieldName: string) => `${fieldName}__outro`;
 type FormValues = Record<string, string | string[]>;
 type ProjectDetails = {
   name?: string | null;
+  itapeviExtraGeneralInfo?: boolean;
+  itapeviExtraFields?: Partial<ItapeviExtraFieldsConfig>;
   fields?: {
     generalInfo?: FieldConfig[];
   };
 };
 
+export type ItapeviFieldGroup = {
+  label: string;
+  options: FieldOption[];
+};
+
+export type ItapeviExtraFieldsConfig = {
+  eixo: ItapeviFieldGroup;
+  moduloEixo1: ItapeviFieldGroup;
+  moduloEixo2: ItapeviFieldGroup;
+};
+
+export const ITAPEVI_EXTRA_FIELDS_DEFAULT: ItapeviExtraFieldsConfig = {
+  eixo: {
+    label: "Escolha o Eixo",
+    options: [
+      { value: "eixo_1", label: "Eixo 1 – Demais Áreas" },
+      { value: "eixo_2", label: "Eixo 2 - Áreas Periféricas" },
+    ],
+  },
+  moduloEixo1: {
+    label: "Escolha o módulo",
+    options: [
+      { value: "modulo_i", label: "Módulo I" },
+      { value: "modulo_ii", label: "Módulo II" },
+      { value: "modulo_iii", label: "Módulo III" },
+    ],
+  },
+  moduloEixo2: {
+    label: "Escolha o módulo",
+    options: [{ value: "modulo_unico", label: "Módulo Único" }],
+  },
+};
+
+const mergeItapeviExtraConfig = (
+  config: Partial<ItapeviExtraFieldsConfig> | undefined
+): ItapeviExtraFieldsConfig => ({
+  eixo: {
+    label: config?.eixo?.label || ITAPEVI_EXTRA_FIELDS_DEFAULT.eixo.label,
+    options: config?.eixo?.options && config.eixo.options.length > 0
+      ? config.eixo.options
+      : ITAPEVI_EXTRA_FIELDS_DEFAULT.eixo.options,
+  },
+  moduloEixo1: {
+    label: config?.moduloEixo1?.label || ITAPEVI_EXTRA_FIELDS_DEFAULT.moduloEixo1.label,
+    options: config?.moduloEixo1?.options && config.moduloEixo1.options.length > 0
+      ? config.moduloEixo1.options
+      : ITAPEVI_EXTRA_FIELDS_DEFAULT.moduloEixo1.options,
+  },
+  moduloEixo2: {
+    label: config?.moduloEixo2?.label || ITAPEVI_EXTRA_FIELDS_DEFAULT.moduloEixo2.label,
+    options: config?.moduloEixo2?.options && config.moduloEixo2.options.length > 0
+      ? config.moduloEixo2.options
+      : ITAPEVI_EXTRA_FIELDS_DEFAULT.moduloEixo2.options,
+  },
+});
+
+const getItapeviExtraFields = (
+  eixo: string | string[] | undefined,
+  config: ItapeviExtraFieldsConfig
+): FieldConfig[] => {
+  const eixoValue = typeof eixo === "string" ? eixo : "";
+  const base: FieldConfig[] = [
+    {
+      name: "itapevi_eixo",
+      label: config.eixo.label,
+      type: "select",
+      options: config.eixo.options,
+      disableOther: true,
+    },
+  ];
+  if (eixoValue === "eixo_1") {
+    return [
+      ...base,
+      {
+        name: "itapevi_modulo",
+        label: config.moduloEixo1.label,
+        type: "select",
+        options: config.moduloEixo1.options,
+        disableOther: true,
+      },
+    ];
+  }
+  if (eixoValue === "eixo_2") {
+    return [
+      ...base,
+      {
+        name: "itapevi_modulo",
+        label: config.moduloEixo2.label,
+        type: "select",
+        options: config.moduloEixo2.options,
+        disableOther: true,
+      },
+    ];
+  }
+  return base;
+};
+
+const ITAPEVI_EXTRA_FIELD_NAMES = ["itapevi_eixo", "itapevi_modulo"];
+
 const InfoGerais = () => {
   const [detalhesProjeto, setDetalhesProjetos] = useState<FieldConfig[]>([]);
+  const [showItapeviExtras, setShowItapeviExtras] = useState(false);
+  const [itapeviExtraConfig, setItapeviExtraConfig] = useState<ItapeviExtraFieldsConfig>(ITAPEVI_EXTRA_FIELDS_DEFAULT);
   const [formValues, setFormValues] = useState<FormValues>({
     categoria: "",
     modalidade: "",
@@ -78,10 +182,20 @@ const InfoGerais = () => {
 
     setDetalhesProjetos(generalInfoFields);
 
+    const enableItapeviExtras =
+      Boolean(projectDetails?.itapeviExtraGeneralInfo) && city?.city?.cityId === "3594";
+    setShowItapeviExtras(enableItapeviExtras);
+    setItapeviExtraConfig(mergeItapeviExtraConfig(projectDetails?.itapeviExtraFields));
+
+    const extraFieldNames = enableItapeviExtras ? ITAPEVI_EXTRA_FIELD_NAMES : [];
+
     const newFields = Object.fromEntries(
-      generalInfoFields
-        .filter((field) => field?.name)
-        .map((field) => [field.name, ""])
+      [
+        ...extraFieldNames.map((name) => [name, ""] as const),
+        ...generalInfoFields
+          .filter((field) => field?.name)
+          .map((field) => [field.name, ""] as const),
+      ]
     );
 
     setFormValues((prev) => ({
@@ -97,34 +211,79 @@ const InfoGerais = () => {
     getProjectFromDb(projectId);
   }, [projectId]);
 
+  const persistGeneralInfo = async (projectId: string, values: FormValues, { log = true }: { log?: boolean } = {}) => {
+    if (!projectId) return console.error("Projeto não encontrado");
+
+    const projectQuery = query(
+      collection(db, "projects"),
+      where("projectId", "==", projectId)
+    );
+    const projectSnapshot = await getDocs(projectQuery);
+
+    if (projectSnapshot.empty) {
+      console.error("No project found with projectId:", projectId);
+      return;
+    }
+
+    const projectDoc = projectSnapshot.docs[0];
+    const projectRef = doc(db, "projects", projectDoc.id);
+
+    await updateDoc(projectRef, {
+      generalInfo: values,
+      updatedAt: new Date(),
+      updatedBy: dbUser?.id,
+    });
+
+    if (log) {
+      const projectSnap = await getDoc(projectRef);
+      const projectTitle = projectSnap.data()?.projectTitle || projectId;
+      await loggingService.logProjectUpdate(
+        projectId,
+        "infoGerais",
+        { projectType },
+        dbUser?.email,
+        `${dbUser?.firstName} ${dbUser?.lastName}`,
+        projectTitle
+      );
+    }
+  };
+
   const handleChange = (
     key: keyof FormValues,
     event: string | React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const value = typeof event === "string" ? event : event.target.value;
-    setFormValues((prev) => ({ ...prev, [key]: value }));
+    setFormValues((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "itapevi_eixo" && prev.itapevi_eixo !== value) {
+        next.itapevi_modulo = "";
+      }
+      if ((key === "itapevi_eixo" || key === "itapevi_modulo") && projectId) {
+        void persistGeneralInfo(projectId, next, { log: false });
+      }
+      return next;
+    });
   };
 
   const handleUpdateProject = async (projectId: string) => {
     if (!projectId) return console.error("Projeto não encontrado");
     console.log("Saving generalInfo with projectId:", projectId);
     console.log("formValues to save:", JSON.stringify(formValues, null, 2));
-    
-    // Query by projectId field to get the actual document
+
     const projectQuery = query(
       collection(db, "projects"),
       where("projectId", "==", projectId)
     );
     const projectSnapshot = await getDocs(projectQuery);
-    
+
     if (projectSnapshot.empty) {
       console.error("No project found with projectId:", projectId);
       return;
     }
-    
+
     const projectDoc = projectSnapshot.docs[0];
     const projectRef = doc(db, "projects", projectDoc.id);
-    
+
     await updateDoc(projectRef, {
       generalInfo: formValues,
       updatedAt: new Date(),
@@ -203,28 +362,37 @@ const InfoGerais = () => {
         );
       
       case "select": {
-        const optionsWithOther = getOptionsWithOther(field.options);
+        const allowOther = !field.disableOther;
+        const optionsToShow = allowOther ? getOptionsWithOther(field.options) : (field.options || []);
         const otherFieldKey = getOtherFieldKey(field.name);
         const selectedValue = fieldValue as string;
-        const showOtherInput = selectedValue === OTHER_OPTION.value;
+        const showOtherInput = allowOther && selectedValue === OTHER_OPTION.value;
         return (
           <div key={field.name} className="flex flex-col gap-2">
             <SelectInput
               label={field.label}
-              options={optionsWithOther}
+              options={optionsToShow}
               value={selectedValue}
               onChange={(e: any) => {
                 const nextValue = e?.target?.value || "";
-                setFormValues((prev) => ({
-                  ...prev,
-                  [field.name]: nextValue,
-                  [otherFieldKey]:
-                    nextValue === OTHER_OPTION.value
-                      ? typeof prev[otherFieldKey] === "string"
-                        ? prev[otherFieldKey]
-                        : ""
-                      : "",
-                }));
+                setFormValues((prev) => {
+                  const next: FormValues = { ...prev, [field.name]: nextValue };
+                  if (allowOther) {
+                    next[otherFieldKey] =
+                      nextValue === OTHER_OPTION.value
+                        ? typeof prev[otherFieldKey] === "string"
+                          ? (prev[otherFieldKey] as string)
+                          : ""
+                        : "";
+                  }
+                  if (field.name === "itapevi_eixo" && prev.itapevi_eixo !== nextValue) {
+                    next.itapevi_modulo = "";
+                  }
+                  if ((field.name === "itapevi_eixo" || field.name === "itapevi_modulo") && projectId) {
+                    void persistGeneralInfo(projectId, next, { log: false });
+                  }
+                  return next;
+                });
               }}
             />
             {showOtherInput && (
@@ -393,8 +561,9 @@ const InfoGerais = () => {
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 mt-4 gap-5">
+        {showItapeviExtras && getItapeviExtraFields(formValues["itapevi_eixo"], itapeviExtraConfig).map((field) => renderField(field))}
         {detalhesProjeto.map((field: FieldConfig) => renderField(field))}
-        {detalhesProjeto.length === 0 && (
+        {detalhesProjeto.length === 0 && !showItapeviExtras && (
           <p className="text-sm text-slate-500 dark:text-slate-400 col-span-full">
             Configuração de informações gerais indisponível para este tipo de projeto no momento. Continue para as outras abas.
           </p>

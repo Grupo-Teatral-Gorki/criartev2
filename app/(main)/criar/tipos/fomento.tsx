@@ -20,7 +20,8 @@ const Fomento = () => {
   const generalInfoFields = Array.isArray(projectDetails?.fields?.generalInfo)
     ? projectDetails.fields.generalInfo
     : [];
-  const hasGeneralInfo = generalInfoFields.length > 0;
+  const itapeviExtraGeneralInfo = Boolean(projectDetails?.itapeviExtraGeneralInfo) && city?.city?.cityId === "3594";
+  const hasGeneralInfo = generalInfoFields.length > 0 || itapeviExtraGeneralInfo;
 
   const tabs = [
     {
