@@ -31,7 +31,23 @@ const CriarContent = () => {
   const { city } = useCity();
   const isInscriptionOpen = city?.processStage === "open";
   const validTypes = ["fomento", "premiacao", "culturaViva", "areasPerifericas", "subsidio"] as const;
-  const hasValidType = type ? validTypes.includes(type as (typeof validTypes)[number]) : false;
+  const availableProjectTypes: any[] = Array.isArray(city?.typesOfProjects)
+    ? city.typesOfProjects
+    : [];
+  const currentProjectTypeConfig = availableProjectTypes.find((p) => p?.name === type);
+  const inferBaseType = (value: string | null | undefined): string | null => {
+    if (!value) return null;
+    if (validTypes.includes(value as (typeof validTypes)[number])) return value;
+    const match = validTypes.find((v) => value === v || value.startsWith(`${v}_`));
+    return match || null;
+  };
+  const renderType =
+    (currentProjectTypeConfig?.baseType as string | undefined) ||
+    inferBaseType(type) ||
+    type;
+  const hasValidType = renderType
+    ? validTypes.includes(renderType as (typeof validTypes)[number])
+    : false;
 
   const handleSendProject = async (
     updateTitle?: string,
@@ -69,24 +85,52 @@ const CriarContent = () => {
       }
     }
 
-    // Check if trying to send project without proponent
+    // Check if trying to send project without proponent and validate required extra fields
     if (updateStatus === "enviado") {
       try {
         const projectRef = doc(db, "projects", projectId);
         const projectSnap = await getDoc(projectRef);
-        
+
         if (projectSnap.exists()) {
           const projectData = projectSnap.data();
-          
+
           if (!projectData.proponentId) {
             setToastMessage("Não é possível enviar o projeto sem um proponente. Por favor, adicione um proponente primeiro.");
             setToastType("error");
             setShowToast(true);
             return;
           }
+
+          const availableTypes: any[] = Array.isArray(city?.typesOfProjects)
+            ? city.typesOfProjects
+            : [];
+          const projectTypeConfig = availableTypes.find(
+            (p) => p?.name === projectData.projectType
+          );
+
+          if (projectTypeConfig?.extraGeneralInfo) {
+            const generalInfo = projectData.generalInfo || {};
+            const extraFields = projectTypeConfig.extraFields || {};
+            const eixoValue = generalInfo.extra_eixo;
+            const moduloGroup =
+              eixoValue === "eixo_2" ? extraFields.moduloEixo2 : extraFields.moduloEixo1;
+            const missing: string[] = [];
+            if (!eixoValue) missing.push(extraFields.eixo?.label || "Escolha o Eixo");
+            if (!generalInfo.extra_modulo) missing.push(moduloGroup?.label || "Escolha o módulo");
+            if (!generalInfo.extra_categoria) missing.push(extraFields.categoria?.label || "Escolha a Categoria");
+
+            if (missing.length > 0) {
+              setToastMessage(
+                `Preencha o(s) campo(s) obrigatório(s) antes de enviar: ${missing.join(", ")}.`
+              );
+              setToastType("error");
+              setShowToast(true);
+              return;
+            }
+          }
         }
       } catch (error) {
-        console.error("Erro ao verificar proponente:", error);
+        console.error("Erro ao verificar dados do projeto:", error);
         setToastMessage("Erro ao verificar dados do projeto.");
         setToastType("error");
         setShowToast(true);
@@ -257,25 +301,30 @@ const CriarContent = () => {
             />
           </div>
         </div>
-        <div className="w-full flex justify-center items-center cursor-pointer ">
-          <p
-            className="bg-primary-600 cursor-pointer p-4 rounded-lg text-white"
-            onClick={() =>
-              window.open(
-                "https://criarte.s3.us-east-2.amazonaws.com/public/Edital%2Bde%2BFomento-%2BSanta%2BRita-6-37.pdf",
-                "_blank"
-              )
-            }
-          >
-            LER OBJETO DO EDITAL
-          </p>
-        </div>
+        {(() => {
+          const availableTypes: any[] = Array.isArray(city?.typesOfProjects)
+            ? city.typesOfProjects
+            : [];
+          const currentTypeConfig = availableTypes.find((p) => p?.name === type);
+          const editalLink = currentTypeConfig?.editalLink;
+          if (!editalLink) return null;
+          return (
+            <div className="w-full flex justify-center items-center cursor-pointer ">
+              <p
+                className="bg-primary-600 cursor-pointer p-4 rounded-lg text-white"
+                onClick={() => window.open(editalLink, "_blank")}
+              >
+                LER OBJETO DO EDITAL
+              </p>
+            </div>
+          );
+        })()}
         <div className="w-full">
-          {type === "fomento" && <Fomento />}
-          {type === "premiacao" && <Premiacao />}
-          {type === "culturaViva" && <CulturaViva />}
-          {type === "areasPerifericas" && <AreasPerifericas />}
-          {type === "subsidio" && <Subsidio />}
+          {renderType === "fomento" && <Fomento />}
+          {renderType === "premiacao" && <Premiacao />}
+          {renderType === "culturaViva" && <CulturaViva />}
+          {renderType === "areasPerifericas" && <AreasPerifericas />}
+          {renderType === "subsidio" && <Subsidio />}
           {!hasValidType && (
             <div className="rounded-lg border border-yellow-300 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 p-4 text-sm text-yellow-800 dark:text-yellow-200">
               Tipo de projeto inválido ou ausente. Volte para seleção de tipo e tente novamente.

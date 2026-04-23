@@ -445,10 +445,13 @@ const InfoGerais = () => {
       }
       
       case "multiselect": {
-        const multiselectOptionsWithOther = getOptionsWithOther(field.options);
+        const allowOtherMulti = !field.disableOther;
+        const multiselectOptionsWithOther = allowOtherMulti
+          ? getOptionsWithOther(field.options)
+          : (field.options || []);
         const multiselectValues = Array.isArray(fieldValue) ? fieldValue : [];
         const multiselectOtherFieldKey = getOtherFieldKey(field.name);
-        const isOtherSelected = multiselectValues.includes(OTHER_OPTION.value);
+        const isOtherSelected = allowOtherMulti && multiselectValues.includes(OTHER_OPTION.value);
         return (
           <div key={field.name} className="flex flex-col gap-2">
             <label className="text-sm font-medium text-navy dark:text-slate-200">{field.label}</label>

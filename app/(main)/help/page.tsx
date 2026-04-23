@@ -16,7 +16,7 @@ export default function HelpPage() {
         <p className="text-lg text-slate-700 dark:text-slate-300 mb-6">Enquanto isso, entre em contato conosco:</p>
         <p className="text-lg text-slate-700 dark:text-slate-300 mb-6">WhatsApp: (16) 98142-3000</p>
         <p className="text-lg text-slate-700 dark:text-slate-300 mb-6">Tel: (16) 3421-9152</p>
-        <p className="text-lg text-slate-700 dark:text-slate-300 mb-6">Email: producaocultural@grupoteatralgorki.com</p>
+        <p className="text-lg text-slate-700 dark:text-slate-300 mb-6">Email: criarte@grupoteatralgorki.com</p>
       </div>
     </div>
   );

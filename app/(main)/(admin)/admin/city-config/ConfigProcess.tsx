@@ -17,6 +17,7 @@ type City = {
   name: string;
   uf: string;
   processStage?: string;
+  homeLink?: string;
 };
 
 const stages = [
@@ -31,6 +32,9 @@ const ConfigProcess = () => {
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedStage, setSelectedStage] = useState<string>("");
   const [savedStage, setSavedStage] = useState<string>("");
+  const [homeLink, setHomeLink] = useState<string>("");
+  const [savedHomeLink, setSavedHomeLink] = useState<string>("");
+  const [isSavingHomeLink, setIsSavingHomeLink] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [emailStatus, setEmailStatus] = useState<{ success: number; failed: number } | null>(null);
 
@@ -74,7 +78,26 @@ const ConfigProcess = () => {
       setSelectedStage("");
       setSavedStage("");
     }
+    const link = city?.homeLink || "";
+    setHomeLink(link);
+    setSavedHomeLink(link);
   }, [selectedCity, cities]);
+
+  const handleSaveHomeLink = async () => {
+    if (!selectedCity || homeLink === savedHomeLink) return;
+    setIsSavingHomeLink(true);
+    try {
+      const cityRef = doc(db, "cities", selectedCity);
+      await updateDoc(cityRef, { homeLink: homeLink.trim() });
+      setSavedHomeLink(homeLink.trim());
+      await fetchCities();
+      window.dispatchEvent(new Event("city-config-updated"));
+    } catch (error) {
+      console.error("Error saving home link:", error);
+    } finally {
+      setIsSavingHomeLink(false);
+    }
+  };
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCity(e.target.value);
@@ -153,6 +176,26 @@ const ConfigProcess = () => {
 
       {selectedCity && (
         <div className="mt-4 text-slate-900 dark:text-slate-100">
+          <div className="mb-4">
+            <label className="block mb-2 font-medium">Link da home (Ver Editais)</label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="url"
+                value={homeLink}
+                onChange={(e) => setHomeLink(e.target.value)}
+                placeholder="https://..."
+                className="flex-1 border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+              />
+              <Button
+                label={isSavingHomeLink ? "Salvando..." : "Salvar link"}
+                onClick={handleSaveHomeLink}
+                disabled={homeLink === savedHomeLink || isSavingHomeLink}
+              />
+            </div>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              URL aberta ao clicar em &quot;Ver Editais&quot; na home.
+            </p>
+          </div>
           <div className="mb-2 font-medium">Selecione a etapa:</div>
           <div className="flex flex-col gap-2 mb-4">
             {stages.map((stage) => (

@@ -38,21 +38,23 @@ const Home = () => {
                 Ações Rápidas
               </h2>
               <div className="space-y-4">
-                <a
-                  href="https://www.example.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block lg:hidden"
-                  onClick={async () => {
-                    await loggingService.logNavigation("/home", "https://www.example.com", {
-                      buttonType: "ver_editais",
-                      device: "mobile",
-                      cityId: city?.id
-                    });
-                  }}
-                >
-                  <Button label="Ver Editais" size="full" variant="default" />
-                </a>
+                {city?.homeLink && (
+                  <a
+                    href={city.homeLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block lg:hidden"
+                    onClick={async () => {
+                      await loggingService.logNavigation("/home", city.homeLink, {
+                        buttonType: "ver_editais",
+                        device: "mobile",
+                        cityId: city?.id
+                      });
+                    }}
+                  >
+                    <Button label="Ver Editais" size="full" variant="default" />
+                  </a>
+                )}
                 {dbUser?.userRole.includes("secretary") ? (
                   <HomeCard
                     title={"Visualizar Projetos"}
@@ -105,21 +107,23 @@ const Home = () => {
                     </p>
                   </div>
                 )}
-                <a
-                  href="https://www.example.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hidden lg:block"
-                  onClick={async () => {
-                    await loggingService.logNavigation("/home", "https://www.example.com", {
-                      buttonType: "ver_editais",
-                      device: "desktop",
-                      cityId: city?.id
-                    });
-                  }}
-                >
-                  <Button label="Ver Editais" size="full" variant="inverted" />
-                </a>
+                {city?.homeLink && (
+                  <a
+                    href={city.homeLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hidden lg:block"
+                    onClick={async () => {
+                      await loggingService.logNavigation("/home", city.homeLink, {
+                        buttonType: "ver_editais",
+                        device: "desktop",
+                        cityId: city?.id
+                      });
+                    }}
+                  >
+                    <Button label="Ver Editais" size="full" variant="inverted" />
+                  </a>
+                )}
               </div>
             </div>
           </div>

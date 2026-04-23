@@ -34,6 +34,7 @@ interface FieldItem {
   required?: boolean;
   placeholder?: string;
   options?: FieldOption[];
+  disableOther?: boolean;
 }
 
 type Fields = {
@@ -59,6 +60,8 @@ interface Project {
   fields: Fields;
   extraGeneralInfo?: boolean;
   extraFields?: ExtraFieldsConfig;
+  editalLink?: string;
+  baseType?: string;
 }
 
 interface ProjectTypeTemplate {
@@ -377,7 +380,9 @@ const EditCityProjects = () => {
       return;
     }
 
-    setProjects((prev) => [...prev, cloneProject(template.project)]);
+    const appliedProject = cloneProject(template.project);
+    appliedProject.baseType = template.project.baseType || template.project.name;
+    setProjects((prev) => [...prev, appliedProject]);
     setToastType("success");
     setToastMessage(`Modelo \"${template.name}\" aplicado. Agora você pode editar e salvar no município.`);
     setShowToast(true);
@@ -438,6 +443,7 @@ const EditCityProjects = () => {
     const clone: Project = JSON.parse(JSON.stringify(source));
     clone.name = newName;
     clone.label = `${source.label} (cópia)`;
+    clone.baseType = source.baseType || source.name;
 
     setProjects((prev) => {
       const next = [...prev];
@@ -501,7 +507,12 @@ const EditCityProjects = () => {
     setProjects((prev) =>
       prev.map((project, idx) =>
         idx === editingProjectLabelIdx
-          ? { ...project, label: trimmedLabel, name: trimmedName }
+          ? {
+              ...project,
+              label: trimmedLabel,
+              name: trimmedName,
+              baseType: project.baseType || previousName,
+            }
           : project
       )
     );
@@ -537,7 +548,11 @@ const EditCityProjects = () => {
 
   const handleAddProject = () => {
     if (!newProject.name || !newProject.label) return;
-    setProjects((prev) => [...prev, newProject]);
+    const projectToAdd: Project = {
+      ...newProject,
+      baseType: newProject.baseType || newProject.name,
+    };
+    setProjects((prev) => [...prev, projectToAdd]);
     setNewProject({
       name: "",
       label: "",
@@ -825,6 +840,7 @@ const EditCityProjects = () => {
       type: field.type || "text",
       required: field.required || false,
       options: field.options ? [...field.options] : [],
+      disableOther: field.disableOther || false,
     });
   };
 
@@ -839,6 +855,7 @@ const EditCityProjects = () => {
       type: editFieldValue.type,
       required: editFieldValue.required || false,
       options: editFieldValue.options || [],
+      disableOther: editFieldValue.disableOther || false,
     };
     
     setProjects((prev) =>
@@ -1008,7 +1025,11 @@ const EditCityProjects = () => {
                   label="Nome Interno"
                   value={newProject.name}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    setNewProject((prev) => ({ ...prev, name: e.target.value }))
+                    setNewProject((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                      baseType: e.target.value,
+                    }))
                   }
                 />
                 <div>
@@ -1203,6 +1224,28 @@ const EditCityProjects = () => {
                         >
                           <Edit2 size={14} /> Editar descrição
                         </button>
+                      </div>
+
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">
+                          Link do edital
+                        </label>
+                        <input
+                          type="url"
+                          value={project.editalLink || ""}
+                          onChange={(e) =>
+                            setProjects((prev) =>
+                              prev.map((p, idx) =>
+                                idx === projectIdx ? { ...p, editalLink: e.target.value } : p
+                              )
+                            )
+                          }
+                          placeholder="https://..."
+                          className="w-full border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                        />
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          URL aberta ao clicar em &quot;LER OBJETO DO EDITAL&quot; durante a criação do projeto.
+                        </p>
                       </div>
 
                       <div className="mb-4">
@@ -1472,6 +1515,21 @@ const EditCityProjects = () => {
                                       {/* Options for select/multiselect/radio - only show if not file-only section */}
                                       {!FILE_ONLY_SECTIONS.includes(sectionKey) && ["select", "multiselect", "radio"].includes(newField.type) && (
                                         <div className="mb-2 p-2 bg-slate-100 dark:bg-slate-600 rounded">
+                                          {["select", "multiselect"].includes(newField.type) && (
+                                            <label className="flex items-center gap-2 text-xs mb-2">
+                                              <input
+                                                type="checkbox"
+                                                checked={!newField.disableOther}
+                                                onChange={(e) =>
+                                                  setNewField((prev) => ({
+                                                    ...prev,
+                                                    disableOther: !e.target.checked,
+                                                  }))
+                                                }
+                                              />
+                                              Incluir opção &quot;Outro&quot;
+                                            </label>
+                                          )}
                                           <div className="text-xs font-medium mb-1">Opções:</div>
                                           {(newField.options || []).map((opt, optIdx) => (
                                             <div key={optIdx} className="grid grid-cols-2 gap-1 mb-1 text-xs">
@@ -1667,6 +1725,21 @@ const EditCityProjects = () => {
                                             </div>
                                             {!FILE_ONLY_SECTIONS.includes(sectionKey) && ["select", "multiselect", "radio"].includes(editFieldValue.type) && (
                                               <div className="p-2 bg-slate-100 dark:bg-slate-600 rounded text-xs">
+                                                {["select", "multiselect"].includes(editFieldValue.type) && (
+                                                  <label className="flex items-center gap-2 text-xs mb-2">
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={!editFieldValue.disableOther}
+                                                      onChange={(e) =>
+                                                        setEditFieldValue((prev) => ({
+                                                          ...prev,
+                                                          disableOther: !e.target.checked,
+                                                        }))
+                                                      }
+                                                    />
+                                                    Incluir opção &quot;Outro&quot;
+                                                  </label>
+                                                )}
                                                 <div className="font-medium mb-1">Opções:</div>
                                                 {(editFieldValue.options || []).map((opt, optIdx) => (
                                                   <div key={optIdx} className="grid grid-cols-2 gap-1 mb-1">
