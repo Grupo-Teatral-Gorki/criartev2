@@ -1836,29 +1836,31 @@ const EditCityProjects = () => {
                                             </div>
                                           </div>
                                         ) : (
-                                          <div className="flex items-center justify-between flex-1">
-                                            <div className="flex items-center gap-2">
+                                          <div className="flex items-start justify-between flex-1 min-w-0 gap-2">
+                                            <div className="flex items-start gap-2 min-w-0 flex-1">
                                               <GripVertical 
                                                 size={16} 
-                                                className="text-slate-400 cursor-grab active:cursor-grabbing flex-shrink-0" 
+                                                className="text-slate-400 cursor-grab active:cursor-grabbing flex-shrink-0 mt-0.5" 
                                               />
-                                              <div>
-                                                <span className="font-medium">{field.label}</span>
-                                              <span className="text-xs text-slate-400 ml-1">({field.name})</span>
-                                              <span className="ml-2 text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded">
-                                                {FIELD_TYPES.find(ft => ft.value === field.type)?.label || field.type || "texto"}
-                                              </span>
-                                              {field.required && (
-                                                <span className="ml-1 text-xs text-red-500">*</span>
-                                              )}
-                                              {field.options && field.options.length > 0 && (
-                                                <span className="ml-1 text-xs text-slate-400">
-                                                  ({field.options.length} opções)
-                                                </span>
-                                              )}
+                                              <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-1">
+                                                  <span className="font-medium break-words">{field.label}</span>
+                                                  <span className="ml-2 text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded whitespace-nowrap">
+                                                    {FIELD_TYPES.find(ft => ft.value === field.type)?.label || field.type || "texto"}
+                                                  </span>
+                                                  {field.required && (
+                                                    <span className="text-xs text-red-500">*</span>
+                                                  )}
+                                                  {field.options && field.options.length > 0 && (
+                                                    <span className="text-xs text-slate-400 whitespace-nowrap">
+                                                      ({field.options.length} opções)
+                                                    </span>
+                                                  )}
+                                                </div>
+                                                <span className="text-xs text-slate-400 break-all">({field.name})</span>
                                               </div>
                                             </div>
-                                            <div className="flex gap-1">
+                                            <div className="flex gap-1 flex-shrink-0">
                                               <button
                                                 onClick={() =>
                                                   handleStartEditField(
