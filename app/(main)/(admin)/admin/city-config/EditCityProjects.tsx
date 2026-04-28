@@ -30,6 +30,7 @@ type ProponenteTipo = "fisica" | "juridica" | "coletivo";
 interface FieldItem {
   name: string;
   label: string;
+  description?: string;
   type: "text" | "textarea" | "select" | "multiselect" | "radio" | "checkbox" | "file";
   required?: boolean;
   placeholder?: string;
@@ -197,11 +198,11 @@ const EditCityProjects = () => {
     sectionKey: string;
     fieldIdx: number;
   } | null>(null);
-  const [editFieldValue, setEditFieldValue] = useState<FieldItem>({ name: "", label: "", type: "text", options: [] });
+  const [editFieldValue, setEditFieldValue] = useState<FieldItem>({ name: "", label: "", description: "", type: "text", options: [] });
 
   // New field state
   const [newFieldSection, setNewFieldSection] = useState<string>("");
-  const [newField, setNewField] = useState<FieldItem>({ name: "", label: "", type: "text", required: false, options: [] });
+  const [newField, setNewField] = useState<FieldItem>({ name: "", label: "", description: "", type: "text", required: false, options: [] });
   const [addingFieldToProject, setAddingFieldToProject] = useState<number | null>(null);
 
   // New section state
@@ -667,7 +668,7 @@ const EditCityProjects = () => {
         const fieldsListHtml = (fields as FieldItem[])
           .map(
             (f) =>
-              `<li><strong>${f.label}</strong> (${f.name}) - Tipo: ${f.type}${f.required ? " - Obrigatório" : ""}</li>`
+              `<li><strong>${f.label}</strong> (${f.name}) - Tipo: ${f.type}${f.required ? " - Obrigatório" : ""}${f.description ? `<br/><span style="color:#666;font-size:12px">${f.description}</span>` : ""}</li>`
           )
           .join("");
         return `<h3>${sectionLabel}</h3><ul>${fieldsListHtml || "<li>Nenhum campo</li>"}</ul>`;
@@ -791,9 +792,10 @@ const EditCityProjects = () => {
     if (!newField.name || !newField.label) return;
     
     // Auto-set type to "file" for file-only sections
-    const fieldToAdd = FILE_ONLY_SECTIONS.includes(sectionKey)
-      ? { ...newField, type: "file" as const, options: [] }
-      : newField;
+    const trimmedDescription = newField.description?.trim() || "";
+    const fieldToAdd: FieldItem = FILE_ONLY_SECTIONS.includes(sectionKey)
+      ? { ...newField, description: trimmedDescription, type: "file" as const, options: [] }
+      : { ...newField, description: trimmedDescription };
     
     setProjects((prev) =>
       prev.map((p, idx) =>
@@ -808,7 +810,7 @@ const EditCityProjects = () => {
           : p
       )
     );
-    setNewField({ name: "", label: "", type: "text", required: false, options: [] });
+    setNewField({ name: "", label: "", description: "", type: "text", required: false, options: [] });
     setAddingFieldToProject(null);
     setNewFieldSection("");
     setNewOptionValue("");
@@ -837,6 +839,7 @@ const EditCityProjects = () => {
     setEditFieldValue({
       name: field.name || "",
       label: field.label || "",
+      description: field.description || "",
       type: field.type || "text",
       required: field.required || false,
       options: field.options ? [...field.options] : [],
@@ -852,6 +855,7 @@ const EditCityProjects = () => {
     const fieldToSave: FieldItem = {
       name: editFieldValue.name,
       label: editFieldValue.label,
+      description: editFieldValue.description?.trim() || "",
       type: editFieldValue.type,
       required: editFieldValue.required || false,
       options: editFieldValue.options || [],
@@ -874,14 +878,14 @@ const EditCityProjects = () => {
       )
     );
     setEditingField(null);
-    setEditFieldValue({ name: "", label: "", type: "text", options: [] });
+    setEditFieldValue({ name: "", label: "", description: "", type: "text", options: [] });
     setEditOptionValue("");
     setEditOptionLabel("");
   };
 
   const handleCancelEditField = () => {
     setEditingField(null);
-    setEditFieldValue({ name: "", label: "", type: "text", options: [] });
+    setEditFieldValue({ name: "", label: "", description: "", type: "text", options: [] });
     setEditOptionValue("");
     setEditOptionLabel("");
   };
@@ -1474,6 +1478,18 @@ const EditCityProjects = () => {
                                           className="border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                         />
                                       </div>
+                                      <textarea
+                                        placeholder="Descrição do campo (opcional) - explique ao proponente o que ele deve preencher"
+                                        value={newField.description || ""}
+                                        onChange={(e) =>
+                                          setNewField((prev) => ({
+                                            ...prev,
+                                            description: e.target.value,
+                                          }))
+                                        }
+                                        rows={2}
+                                        className="w-full border border-slate-200 dark:border-slate-600 p-1 rounded text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 mb-2"
+                                      />
                                       <div className="grid grid-cols-2 gap-2 mb-2">
                                         {FILE_ONLY_SECTIONS.includes(sectionKey) ? (
                                           <div className="flex items-center text-sm text-slate-500">
@@ -1686,6 +1702,18 @@ const EditCityProjects = () => {
                                                 className="border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
                                               />
                                             </div>
+                                            <textarea
+                                              placeholder="Descrição do campo (opcional) - explique ao proponente o que ele deve preencher"
+                                              value={editFieldValue.description || ""}
+                                              onChange={(e) =>
+                                                setEditFieldValue((prev) => ({
+                                                  ...prev,
+                                                  description: e.target.value,
+                                                }))
+                                              }
+                                              rows={2}
+                                              className="w-full border border-slate-200 dark:border-slate-600 p-1 rounded text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800"
+                                            />
                                             <div className="grid grid-cols-2 gap-2">
                                               {FILE_ONLY_SECTIONS.includes(sectionKey) ? (
                                                 <div className="flex items-center text-xs text-slate-500">
@@ -1858,6 +1886,11 @@ const EditCityProjects = () => {
                                                   )}
                                                 </div>
                                                 <span className="text-xs text-slate-400 break-all">({field.name})</span>
+                                                {field.description && (
+                                                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 break-words whitespace-pre-line">
+                                                    {field.description}
+                                                  </p>
+                                                )}
                                               </div>
                                             </div>
                                             <div className="flex gap-1 flex-shrink-0">

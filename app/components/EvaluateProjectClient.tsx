@@ -10,6 +10,7 @@ import RenderProject from "./RenderProject";
 import RenderDocuments from "./RenderDocument";
 import RenderBudget from "./RenderBudget";
 import RenderEvaluationForm, { Evaluation } from "./RenderEvaluationForm";
+import RenderProponent from "./RenderProponent";
 import { useAuth } from "../context/AuthContext";
 
 interface Document {
@@ -149,6 +150,10 @@ const EvaluateProjectClient = () => {
         <Tabs
           tabs={[
             { label: "Projeto", content: <RenderProject project={project} /> },
+            {
+              label: "Proponente",
+              content: <RenderProponent proponentId={project.proponentId} />,
+            },
             {
               label: "Documentos",
               content: <RenderDocuments project={project} />,

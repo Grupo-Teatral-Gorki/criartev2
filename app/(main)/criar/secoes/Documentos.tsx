@@ -27,6 +27,7 @@ import { useLogging } from "@/app/hooks/useLogging";
 interface ProjectDoc {
   name: string;
   label: string;
+  description?: string;
 }
 
 type ProjectDetails = {
@@ -281,7 +282,14 @@ const Documentos = () => {
               : 'bg-gray-50 dark:bg-slate-700/50 border-gray-100 dark:border-slate-700'
         }`}>
           <div className="flex items-center justify-between">
-            <h4 className="font-semibold text-gray-800 dark:text-gray-100">{doc.label}</h4>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100">{doc.label}</h4>
+              {doc.description && (
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-300 whitespace-pre-line">
+                  {doc.description}
+                </p>
+              )}
+            </div>
             {isUploaded && (
               <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">

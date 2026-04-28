@@ -101,6 +101,18 @@ const CriarContent = () => {
             return;
           }
 
+          // Verify the proponent actually exists in the 'proponentes' collection
+          const proponentRef = doc(db, "proponentes", projectData.proponentId);
+          const proponentSnap = await getDoc(proponentRef);
+          if (!proponentSnap.exists()) {
+            setToastMessage(
+              "O proponente vinculado a este projeto não foi encontrado. Selecione um proponente válido antes de enviar."
+            );
+            setToastType("error");
+            setShowToast(true);
+            return;
+          }
+
           const availableTypes: any[] = Array.isArray(city?.typesOfProjects)
             ? city.typesOfProjects
             : [];

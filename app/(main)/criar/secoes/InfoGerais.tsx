@@ -26,6 +26,7 @@ interface FieldOption {
 interface FieldConfig {
   name: string;
   label?: string;
+  description?: string;
   type?: "text" | "textarea" | "select" | "multiselect" | "radio" | "checkbox" | "file";
   required?: boolean;
   options?: FieldOption[];
@@ -376,26 +377,34 @@ const InfoGerais = () => {
   const renderField = (field: FieldConfig) => {
     const fieldType = field.type || "textarea";
     const fieldValue = formValues[field.name] || "";
+    const description = field.description?.trim();
+    const descriptionNode = description ? (
+      <p className="text-xs text-slate-500 dark:text-slate-400 whitespace-pre-line">{description}</p>
+    ) : null;
 
     switch (fieldType) {
       case "text":
         return (
-          <TextInput
-            key={field.name}
-            label={field.label}
-            value={fieldValue as string}
-            onChange={(e: any) => handleChange(field.name, e.target.value)}
-          />
+          <div key={field.name} className="flex flex-col gap-1">
+            <TextInput
+              label={field.label}
+              value={fieldValue as string}
+              onChange={(e: any) => handleChange(field.name, e.target.value)}
+            />
+            {descriptionNode}
+          </div>
         );
       
       case "textarea":
         return (
-          <TextAreaInput
-            key={field.name}
-            label={field.label}
-            value={fieldValue as string}
-            onChange={(e) => handleChange(field.name, e.target.value)}
-          />
+          <div key={field.name} className="flex flex-col gap-1">
+            <TextAreaInput
+              label={field.label}
+              value={fieldValue as string}
+              onChange={(e) => handleChange(field.name, e.target.value)}
+            />
+            {descriptionNode}
+          </div>
         );
       
       case "select": {
@@ -432,6 +441,7 @@ const InfoGerais = () => {
                 });
               }}
             />
+            {descriptionNode}
             {showOtherInput && (
               <TextInput
                 label="Outro"
@@ -455,6 +465,7 @@ const InfoGerais = () => {
         return (
           <div key={field.name} className="flex flex-col gap-2">
             <label className="text-sm font-medium text-navy dark:text-slate-200">{field.label}</label>
+            {descriptionNode}
             <div className="border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 p-3 max-h-56 overflow-y-auto">
               <div className="space-y-2">
                 {multiselectOptionsWithOther.map((opt) => {
@@ -513,6 +524,7 @@ const InfoGerais = () => {
         return (
           <div key={field.name} className="flex flex-col gap-2">
             <label className="text-sm font-medium text-navy dark:text-slate-200">{field.label}</label>
+            {descriptionNode}
             <div className="border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 p-3 max-h-40 overflow-y-auto">
               <div className="flex flex-wrap items-start gap-2">
                 {(field.options || []).map((opt) => {
@@ -551,6 +563,7 @@ const InfoGerais = () => {
         return (
           <div key={field.name} className="flex flex-col gap-2">
             <label className="text-sm font-medium text-navy dark:text-slate-200">{field.label}</label>
+            {descriptionNode}
             <div className="flex items-center px-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 h-[52px]">
             <label className="inline-flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors w-full rounded px-1">
               <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
@@ -576,12 +589,14 @@ const InfoGerais = () => {
       
       default:
         return (
-          <TextAreaInput
-            key={field.name}
-            label={field.label}
-            value={fieldValue as string}
-            onChange={(e) => handleChange(field.name, e.target.value)}
-          />
+          <div key={field.name} className="flex flex-col gap-1">
+            <TextAreaInput
+              label={field.label}
+              value={fieldValue as string}
+              onChange={(e) => handleChange(field.name, e.target.value)}
+            />
+            {descriptionNode}
+          </div>
         );
     }
   };

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext";
 import { useCity } from "@/app/context/CityConfigContext";
@@ -47,22 +47,45 @@ const Management = () => {
 
   const getProponentName = async (id: string): Promise<string | null> => {
     if (!id || id === "undefined" || id === undefined || id === null) {
-      console.warn(
-        "Management: Invalid proponentId provided to getProponentName:",
-        id
-      );
-      return "ID não encontrado";
+      return null;
     }
 
     try {
-      const q = query(
-        collection(db, "proponents"),
+      // Primary: lookup by Firestore doc ID in 'proponentes' collection
+      const proponenteRef = doc(db, "proponentes", id);
+      const proponenteSnap = await getDoc(proponenteRef);
+
+      if (proponenteSnap.exists()) {
+        const data = proponenteSnap.data() as Record<string, any>;
+        const name =
+          data?.dadosPessoais?.nomeCompleto ||
+          data?.dadosPessoaJuridica?.razaoSocial ||
+          data?.dadosColetivo?.nomeColetivo ||
+          data?.fullName ||
+          data?.corporateName ||
+          null;
+        return name;
+      }
+
+      // Fallback: some legacy records may have stored a custom proponentId field
+      const legacyQuery = query(
+        collection(db, "proponentes"),
         where("proponentId", "==", id)
       );
-      const snapshot = await getDocs(q);
-      if (snapshot.empty) return null;
-      const data = snapshot.docs[0].data();
-      return data.fullName || data.corporateName || null;
+      const legacySnapshot = await getDocs(legacyQuery);
+      if (!legacySnapshot.empty) {
+        const data = legacySnapshot.docs[0].data() as Record<string, any>;
+        return (
+          data?.dadosPessoais?.nomeCompleto ||
+          data?.dadosPessoaJuridica?.razaoSocial ||
+          data?.dadosColetivo?.nomeColetivo ||
+          data?.fullName ||
+          data?.corporateName ||
+          null
+        );
+      }
+
+      return null;
     } catch (error) {
       console.error("Error fetching proponent name for ID:", id, error);
       return "Erro ao buscar nome";
@@ -104,7 +127,22 @@ const Management = () => {
       const fetchedProjects = await Promise.all(
         snapshot.docs.map(async (doc) => {
           const data = doc.data();
-          const proponentName = await getProponentName(data.proponentId);
+          const hasProponentId = !!(
+            data.proponentId &&
+            data.proponentId !== "undefined"
+          );
+          const proponentName = hasProponentId
+            ? await getProponentName(data.proponentId)
+            : null;
+
+          let displayName: string;
+          if (!hasProponentId) {
+            displayName = "Proponente não cadastrado ainda";
+          } else if (!proponentName) {
+            displayName = "ID não encontrado";
+          } else {
+            displayName = proponentName;
+          }
 
           return {
             projectId: doc.id,
@@ -113,7 +151,7 @@ const Management = () => {
             projectType: data.projectType,
             registrationNumber: data.registrationNumber,
             proponentId: data.proponentId,
-            proponentName: proponentName || "Não encontrado",
+            proponentName: displayName,
           };
         })
       );

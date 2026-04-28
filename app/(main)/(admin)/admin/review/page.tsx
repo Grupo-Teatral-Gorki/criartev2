@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import { useAuth } from "@/app/context/AuthContext"; // adjust to your actual auth context
 import { useRouter } from "next/navigation";
@@ -22,18 +22,48 @@ const Avaliar = () => {
   async function getFullNameByProponentId(
     proponentId: string
   ): Promise<string | null> {
-    const proponentsRef = collection(db, "proponents");
-    const q = query(proponentsRef, where("proponentId", "==", proponentId));
-    const querySnapshot = await getDocs(q);
+    if (!proponentId) return null;
 
-    if (!querySnapshot.empty) {
-      // Assuming proponentId is unique, get first match
-      const proponentDoc = querySnapshot.docs[0];
-      const data = proponentDoc.data();
-      return data.fullName || data.corporateName || null;
+    try {
+      // Primary: lookup by Firestore doc ID in 'proponentes' collection
+      const proponenteRef = doc(db, "proponentes", proponentId);
+      const proponenteSnap = await getDoc(proponenteRef);
+
+      if (proponenteSnap.exists()) {
+        const data = proponenteSnap.data() as Record<string, any>;
+        return (
+          data?.dadosPessoais?.nomeCompleto ||
+          data?.dadosPessoaJuridica?.razaoSocial ||
+          data?.dadosColetivo?.nomeColetivo ||
+          data?.fullName ||
+          data?.corporateName ||
+          null
+        );
+      }
+
+      // Fallback: legacy records that stored a custom proponentId field
+      const legacyQuery = query(
+        collection(db, "proponentes"),
+        where("proponentId", "==", proponentId)
+      );
+      const legacySnapshot = await getDocs(legacyQuery);
+      if (!legacySnapshot.empty) {
+        const data = legacySnapshot.docs[0].data() as Record<string, any>;
+        return (
+          data?.dadosPessoais?.nomeCompleto ||
+          data?.dadosPessoaJuridica?.razaoSocial ||
+          data?.dadosColetivo?.nomeColetivo ||
+          data?.fullName ||
+          data?.corporateName ||
+          null
+        );
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error fetching proponent name for ID:", proponentId, error);
+      return null;
     }
-
-    return null; // No matching proponent found
   }
 
   useEffect(() => {
