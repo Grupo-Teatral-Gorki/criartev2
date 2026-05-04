@@ -16,7 +16,7 @@ export default function FileUploader({
 }: FileUploaderProps) {
   const [files, setFiles] = useState<File[]>([]);
   const loggingService = useLogging();
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const ALLOWED_TYPES = [
     "image/png",
     "image/jpeg",
@@ -72,7 +72,7 @@ export default function FileUploader({
                   "Image remains too large after compression",
                   { originalSize: file.size, compressedSize: compressedFile.size, maxSize: MAX_FILE_SIZE }
                 );
-                alert(`"${file.name}" excede 5MB mesmo após compressão.`);
+                alert(`"${file.name}" excede 10MB mesmo após compressão.`);
                 return null;
               }
               await loggingService.logFileUploadSuccess(file.name, {
@@ -98,7 +98,7 @@ export default function FileUploader({
                   "PDF remains too large after compression",
                   { originalSize: file.size, compressedSize: compressedFile.size, maxSize: MAX_FILE_SIZE }
                 );
-                alert(`"${file.name}" excede 5MB mesmo após compressão.`);
+                alert(`"${file.name}" excede 10MB mesmo após compressão.`);
                 return null;
               }
               await loggingService.logFileUploadSuccess(file.name, {
@@ -122,7 +122,7 @@ export default function FileUploader({
               { fileSize: file.size, maxSize: MAX_FILE_SIZE }
             );
             alert(
-              `"${file.name}" é muito grande (máx. 5MB) e não pode ser enviado.`
+              `"${file.name}" é muito grande (máx. 10MB) e não pode ser enviado.`
             );
             return null;
           }

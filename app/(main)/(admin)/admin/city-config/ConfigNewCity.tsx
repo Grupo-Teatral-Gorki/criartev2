@@ -20,7 +20,7 @@ interface FormState {
 }
 
 const ConfigNewCity = () => {
-  const MAX_LOGO_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+  const MAX_LOGO_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
   const [selectedUF, setSelectedUF] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [cityLogoFile, setCityLogoFile] = useState<File | null>(null);
@@ -135,7 +135,7 @@ const ConfigNewCity = () => {
       if (fileToUpload.size > MAX_LOGO_SIZE_BYTES) {
         setShowToast(true);
         setToastType("error");
-        setToastMessage("O brasão deve ter no máximo 5MB após compressão.");
+        setToastMessage("O brasão deve ter no máximo 10MB após compressão.");
         setSaving(false);
         return;
       }
@@ -198,7 +198,7 @@ const ConfigNewCity = () => {
     if (file.size > maxSizeBytes) {
       setShowToast(true);
       setToastType("error");
-      setToastMessage("Arquivo muito grande. Tamanho máximo: 5MB.");
+      setToastMessage("Arquivo muito grande. Tamanho máximo: 10MB.");
       return;
     }
 
