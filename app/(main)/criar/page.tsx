@@ -16,6 +16,8 @@ import { db } from "@/app/config/firebaseconfig";
 import Toast from "@/app/components/Toast";
 import { useCity } from "@/app/context/CityConfigContext";
 
+const DISMISS_KEY_PREFIX = "criarte_dismiss_submit_reminder_";
+
 const CriarContent = () => {
   const searchParams = useSearchParams();
   const type = searchParams.get("state");
@@ -27,6 +29,7 @@ const CriarContent = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const [projectData, setProjectData] = useState<any>(null);
+  const [showSubmitReminder, setShowSubmitReminder] = useState(false);
   const loggingService = useLogging();
   const { city } = useCity();
   const isInscriptionOpen = city?.processStage === "open";
@@ -337,8 +340,64 @@ const CriarContent = () => {
     fetchProject();
   }, [projectId]);
 
+  // Show submission reminder modal
+  useEffect(() => {
+    if (!projectId) return;
+    if (!projectData) return;
+    if (projectData.projectStatus === "enviado") return;
+
+    const dismissed = localStorage.getItem(`${DISMISS_KEY_PREFIX}${projectId}`);
+    if (!dismissed) {
+      setShowSubmitReminder(true);
+    }
+  }, [projectId, projectData]);
+
+  const handleDismissReminder = (dontShowAgain: boolean) => {
+    if (dontShowAgain && projectId) {
+      localStorage.setItem(`${DISMISS_KEY_PREFIX}${projectId}`, "true");
+    }
+    setShowSubmitReminder(false);
+  };
+
   return (
     <div className="w-full overflow-y-auto flex flex-col items-center px-4 sm:px-8 lg:px-16">
+      {/* Submission Reminder Modal */}
+      {showSubmitReminder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                Lembrete Importante
+              </h3>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              Preencher os dados do projeto <strong>não significa que ele foi enviado</strong>. 
+              Para que seu projeto seja considerado, você deve clicar no botão <strong>&quot;ENVIAR&quot;</strong> e 
+              verificar na página <strong>&quot;Meus Projetos&quot;</strong> se o status está com a tag <strong>&quot;enviado&quot;</strong>.
+            </p>
+            <div className="flex flex-col gap-3 pt-2">
+              <button
+                onClick={() => handleDismissReminder(false)}
+                className="w-full py-2.5 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+              >
+                Entendi
+              </button>
+              <button
+                onClick={() => handleDismissReminder(true)}
+                className="w-full py-2 px-4 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+              >
+                Entendi, não me avise novamente neste projeto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-100 rounded-lg dark:bg-navy p-4 mt-4">
         <Button
           label={"VOLTAR"}

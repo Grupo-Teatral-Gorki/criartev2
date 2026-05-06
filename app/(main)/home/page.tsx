@@ -5,13 +5,37 @@ import HomeCard from "@/app/components/HomeCard";
 import { useAuth } from "@/app/context/AuthContext";
 import { useCity } from "@/app/context/CityConfigContext";
 import { useLogging } from "@/app/hooks/useLogging";
+import { db } from "@/app/config/firebaseconfig";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import Image from "next/image";
-import React from "react";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
 
 const Home = () => {
   const { city } = useCity();
   const { dbUser } = useAuth();
   const loggingService = useLogging();
+  const [draftCount, setDraftCount] = useState(0);
+  const [draftWarningDismissed, setDraftWarningDismissed] = useState(false);
+
+  useEffect(() => {
+    const fetchDraftProjects = async () => {
+      if (!dbUser?.id) return;
+      try {
+        const q = query(
+          collection(db, "projects"),
+          where("userId", "==", dbUser.id),
+          where("projectStatus", "==", "rascunho")
+        );
+        const snapshot = await getDocs(q);
+        setDraftCount(snapshot.size);
+      } catch (error) {
+        console.error("Error fetching draft projects:", error);
+      }
+    };
+
+    fetchDraftProjects();
+  }, [dbUser]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50/20 to-accent-50/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
@@ -29,6 +53,38 @@ const Home = () => {
             públicos
           </p>
         </div>
+
+        {/* Draft Projects Warning */}
+        {draftCount > 0 && !draftWarningDismissed && (
+          <div className="mb-8 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3 relative">
+            <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                Você tem {draftCount} {draftCount === 1 ? "projeto em rascunho" : "projetos em rascunho"}.
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                Projetos em rascunho <strong>não são considerados como enviados</strong>. Acesse seus projetos e clique em &quot;ENVIAR&quot; para concluir a inscrição.
+              </p>
+              <Link
+                href="/meusprojetos"
+                className="inline-block mt-2 text-xs font-medium text-amber-800 dark:text-amber-200 underline hover:text-amber-900 dark:hover:text-amber-100"
+              >
+                Ir para Meus Projetos →
+              </Link>
+            </div>
+            <button
+              onClick={() => setDraftWarningDismissed(true)}
+              className="absolute top-3 right-3 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 transition-colors"
+              aria-label="Fechar aviso"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
           {/* Left Section - Actions */}
