@@ -175,7 +175,9 @@ const CriarContent = () => {
 
           // Validate all required documents are uploaded
           const requiredDocs: { name: string; label: string }[] = Array.isArray(projectTypeConfig?.fields?.projectDocs)
-            ? projectTypeConfig.fields.projectDocs.map((d: any) => ({ name: d.name, label: d.label || d.name }))
+            ? projectTypeConfig.fields.projectDocs
+                .filter((d: any) => d.required)
+                .map((d: any) => ({ name: d.name, label: d.label || d.name }))
             : [];
 
           if (requiredDocs.length > 0) {

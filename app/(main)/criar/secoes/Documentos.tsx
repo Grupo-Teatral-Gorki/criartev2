@@ -28,6 +28,7 @@ interface ProjectDoc {
   name: string;
   label: string;
   description?: string;
+  required?: boolean;
 }
 
 type ProjectDetails = {
@@ -56,6 +57,8 @@ const Documentos = () => {
   );
   const [projectDocs, setProjectDocs] = useState<ProjectDoc[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadTotal, setUploadTotal] = useState(0);
   const [projectDocsMessage, setProjectDocsMessage] = useState("");
   const [uploadedDocs, setUploadedDocs] = useState<UploadedDocWithPath[]>([]);
 
@@ -112,7 +115,7 @@ const Documentos = () => {
 
       const currentDocs: UploadedDocWithPath[] = projectData.projectDocs || [];
 
-      const uploadPromises: Promise<UploadedDocWithPath>[] = [];
+      const uploadEntries: { docName: string; file: File; storagePath: string }[] = [];
 
       for (const [docName, files] of Object.entries(selectedFiles)) {
         const docDefinition = projectDocs.find((doc) => doc.name === docName);
@@ -134,21 +137,21 @@ const Documentos = () => {
 
         for (const file of files) {
           const storagePath = `project-docs/${registrationNumber}/${docName}/${uuidv4()}`;
-          const fileRef = ref(storage, storagePath);
-
-          const uploadPromise = uploadBytes(fileRef, file)
-            .then(() => getDownloadURL(fileRef))
-            .then((url) => ({
-              name: docName,
-              url,
-              storagePath,
-            }));
-
-          uploadPromises.push(uploadPromise);
+          uploadEntries.push({ docName, file, storagePath });
         }
       }
 
-      const newUploads = await Promise.all(uploadPromises);
+      setUploadTotal(uploadEntries.length);
+      setUploadProgress(0);
+
+      const newUploads: UploadedDocWithPath[] = [];
+      for (const entry of uploadEntries) {
+        const fileRef = ref(storage, entry.storagePath);
+        await uploadBytes(fileRef, entry.file);
+        const url = await getDownloadURL(fileRef);
+        newUploads.push({ name: entry.docName, url, storagePath: entry.storagePath });
+        setUploadProgress((prev) => prev + 1);
+      }
       const combined = [...currentDocs, ...newUploads];
 
       // ✅ Deduplicate: Keep only the latest per docName
@@ -166,7 +169,8 @@ const Documentos = () => {
       setUploadedDocs(deduplicatedDocs);
       setSelectedFiles({});
 
-      const allRequiredUploaded = projectDocs.every((doc) =>
+      const requiredDocs = projectDocs.filter((doc) => doc.required);
+      const allRequiredUploaded = requiredDocs.length === 0 || requiredDocs.every((doc) =>
         deduplicatedDocs.some((uploaded) => uploaded.name === doc.name)
       );
 
@@ -217,7 +221,8 @@ const Documentos = () => {
         const savedDocs: UploadedDocWithPath[] = data.projectDocs || [];
         setUploadedDocs(savedDocs);
 
-        const allDocsHaveFiles = projectDocs.every((doc) =>
+        const requiredDocs = projectDocs.filter((doc) => doc.required);
+        const allDocsHaveFiles = requiredDocs.length === 0 || requiredDocs.every((doc) =>
           savedDocs.some((uploaded) => uploaded.name === doc.name)
         );
 
@@ -378,6 +383,22 @@ const Documentos = () => {
           disabled={Object.keys(selectedFiles).length === 0 || uploading}
         />
       </div>
+      {uploading && (
+        <div className="my-8 flex flex-col items-center gap-3">
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            Enviando documentos... {uploadTotal > 0 ? `${uploadProgress}/${uploadTotal}` : ""}
+          </p>
+          <div className="w-full max-w-md h-3 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-teal-500 dark:bg-teal-400 rounded-full transition-all duration-300 ease-out"
+              style={{ width: uploadTotal > 0 ? `${(uploadProgress / uploadTotal) * 100}%` : '0%' }}
+            />
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Por favor, aguarde enquanto os arquivos são enviados.
+          </p>
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {!uploading && projectDocs.map(renderDocumentCard)}
         {!uploading && projectDocs.length === 0 && (
