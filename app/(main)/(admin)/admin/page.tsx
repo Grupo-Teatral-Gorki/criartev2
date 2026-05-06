@@ -61,6 +61,12 @@ const AdminHome = () => {
           href={"/admin/feedback"}
           icon={"feedback"}
         />
+        <CardLink
+          title={"Vídeos de Ajuda"}
+          description={""}
+          href={"/admin/help-videos"}
+          icon={"help"}
+        />
       </div>
     </div>
   );
