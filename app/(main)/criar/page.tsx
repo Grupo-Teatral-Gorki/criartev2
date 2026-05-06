@@ -195,6 +195,27 @@ const CriarContent = () => {
               return;
             }
           }
+
+          // Validate planilha orçamentária
+          const planilha = projectData.planilhaOrcamentaria;
+          if (!Array.isArray(planilha) || planilha.length === 0) {
+            setToastMessage("Envie a Planilha Orçamentária antes de enviar o projeto.");
+            setToastType("error");
+            setShowToast(true);
+            return;
+          }
+
+          // Validate ficha técnica
+          const fichaTecnica = Array.isArray(projectData.fichaTecnica) ? projectData.fichaTecnica : [];
+          const validFichaRows = fichaTecnica.filter(
+            (row: any) => row.nome?.trim() && row.cargo?.trim()
+          );
+          if (validFichaRows.length === 0) {
+            setToastMessage("Preencha a Ficha Técnica (ao menos uma entrada com nome e cargo) antes de enviar o projeto.");
+            setToastType("error");
+            setShowToast(true);
+            return;
+          }
         }
       } catch (error) {
         console.error("Erro ao verificar dados do projeto:", error);
