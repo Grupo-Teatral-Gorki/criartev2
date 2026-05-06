@@ -35,7 +35,11 @@ export default function Tabs({ tabs }: TabsProps) {
 
       {/* Tabs Content */}
       <div className="dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-b-md">
-        {tabs.find((tab) => tab.label === activeTab)?.content}
+        {tabs.map((tab) => (
+          <div key={tab.label} className={tab.label === activeTab ? "" : "hidden"}>
+            {tab.content}
+          </div>
+        ))}
       </div>
     </div>
   );

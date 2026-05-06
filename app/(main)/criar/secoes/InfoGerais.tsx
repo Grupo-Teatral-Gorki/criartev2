@@ -16,7 +16,7 @@ import {
   where,
 } from "firebase/firestore";
 import { useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface FieldOption {
   value: string;
@@ -244,10 +244,34 @@ const InfoGerais = () => {
     }));
   }, [city?.city?.typesOfProjects, projectType]);
 
+  const initialLoadDone = useRef(false);
+  const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     if (!projectId) return;
-    getProjectFromDb(projectId);
+    initialLoadDone.current = false;
+    getProjectFromDb(projectId).then(() => {
+      initialLoadDone.current = true;
+    });
   }, [projectId]);
+
+  useEffect(() => {
+    if (!projectId || !initialLoadDone.current) return;
+
+    if (autoSaveTimer.current) {
+      clearTimeout(autoSaveTimer.current);
+    }
+
+    autoSaveTimer.current = setTimeout(() => {
+      persistGeneralInfo(projectId, formValues, { log: false });
+    }, 1500);
+
+    return () => {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+      }
+    };
+  }, [formValues]);
 
   const persistGeneralInfo = async (projectId: string, values: FormValues, { log = true }: { log?: boolean } = {}) => {
     if (!projectId) return console.error("Projeto não encontrado");
