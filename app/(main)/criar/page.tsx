@@ -120,6 +120,13 @@ const CriarContent = () => {
             (p) => p?.name === projectData.projectType
           );
 
+          if (!projectTypeConfig) {
+            setToastMessage("Não foi possível validar o projeto. Configuração do tipo de projeto não encontrada. Tente novamente em instantes.");
+            setToastType("error");
+            setShowToast(true);
+            return;
+          }
+
           if (projectTypeConfig?.extraGeneralInfo) {
             const generalInfo = projectData.generalInfo || {};
             const extraFields = projectTypeConfig.extraFields || {};
@@ -134,6 +141,52 @@ const CriarContent = () => {
             if (missing.length > 0) {
               setToastMessage(
                 `Preencha o(s) campo(s) obrigatório(s) antes de enviar: ${missing.join(", ")}.`
+              );
+              setToastType("error");
+              setShowToast(true);
+              return;
+            }
+          }
+
+          // Validate required generalInfo fields
+          const requiredFields: { name: string; label: string }[] = Array.isArray(projectTypeConfig?.fields?.generalInfo)
+            ? projectTypeConfig.fields.generalInfo
+                .filter((f: any) => f.required)
+                .map((f: any) => ({ name: f.name, label: f.label || f.name }))
+            : [];
+
+          if (requiredFields.length > 0) {
+            const generalInfo = projectData.generalInfo || {};
+            const missingFields = requiredFields.filter((f) => {
+              const val = generalInfo[f.name];
+              if (Array.isArray(val)) return val.length === 0;
+              return !val || (typeof val === "string" && !val.trim());
+            });
+
+            if (missingFields.length > 0) {
+              setToastMessage(
+                `Preencha o(s) campo(s) obrigatório(s) em Informações Gerais antes de enviar: ${missingFields.map((f) => f.label).join(", ")}.`
+              );
+              setToastType("error");
+              setShowToast(true);
+              return;
+            }
+          }
+
+          // Validate all required documents are uploaded
+          const requiredDocs: { name: string; label: string }[] = Array.isArray(projectTypeConfig?.fields?.projectDocs)
+            ? projectTypeConfig.fields.projectDocs.map((d: any) => ({ name: d.name, label: d.label || d.name }))
+            : [];
+
+          if (requiredDocs.length > 0) {
+            const uploadedDocs: { name: string }[] = projectData.projectDocs || [];
+            const missingDocs = requiredDocs.filter(
+              (d) => !uploadedDocs.some((uploaded) => uploaded.name === d.name)
+            );
+
+            if (missingDocs.length > 0) {
+              setToastMessage(
+                `Envie o(s) documento(s) obrigatório(s) antes de enviar o projeto: ${missingDocs.map((d) => d.label).join(", ")}.`
               );
               setToastType("error");
               setShowToast(true);
