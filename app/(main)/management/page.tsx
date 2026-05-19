@@ -41,6 +41,8 @@ const Management = () => {
 
   // Single search state
   const [searchTerm, setSearchTerm] = useState("");
+  // Status filter state
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -337,8 +339,14 @@ const Management = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Filtered projects (single search bar)
+  // Filtered projects (search + status filter)
   const filteredProjects = projects.filter((project) => {
+    // Status filter
+    if (statusFilter) {
+      const projectStatus = project.projectStatus?.toLowerCase() || "";
+      if (projectStatus !== statusFilter) return false;
+    }
+    // Search filter
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase();
     return (
@@ -348,10 +356,10 @@ const Management = () => {
     );
   });
 
-  // Reset to first page when search or city changes
+  // Reset to first page when search, city or status filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedCityId]);
+  }, [searchTerm, selectedCityId, statusFilter]);
 
   // Pagination calculations
   const totalItems = filteredProjects.length;
@@ -386,48 +394,78 @@ const Management = () => {
               label: "Rascunhos",
               value: statusCounts.rascunho,
               color: "text-yellow-400",
+              filterKey: "rascunho",
+              activeRing: "ring-yellow-400",
+              activeBg: "bg-yellow-50 dark:bg-yellow-900/20",
             },
             {
               label: "Enviados",
               value: statusCounts.enviado,
               color: "text-green-500",
+              filterKey: "enviado",
+              activeRing: "ring-green-500",
+              activeBg: "bg-green-50 dark:bg-green-900/20",
             },
             {
               label: "Habilitação",
               value: statusCounts.habilitacao,
               color: "text-blue-500",
+              filterKey: "habilitacao",
+              activeRing: "ring-blue-500",
+              activeBg: "bg-blue-50 dark:bg-blue-900/20",
             },
             {
               label: "Recurso",
               value: statusCounts.recurso,
               color: "text-red-400",
+              filterKey: "recurso",
+              activeRing: "ring-red-400",
+              activeBg: "bg-red-50 dark:bg-red-900/20",
             },
-          ].map((item) => (
-            <div key={item.label} className="flex flex-col items-center bg-white dark:bg-slate-800 rounded-lg p-2 md:p-0 md:bg-transparent">
-              <div className="flex items-center gap-1 md:gap-2">
-                <Newspaper className={`h-3 w-3 md:h-4 md:w-4 ${item.color}`} />
-                <p className="text-xs md:text-sm font-bold">{item.label}</p>
-              </div>
-              <p className="text-sm md:text-base font-extrabold">{item.value}</p>
-            </div>
-          ))}
+          ].map((item) => {
+            const isActive = statusFilter === item.filterKey;
+            return (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => setStatusFilter(isActive ? null : item.filterKey)}
+                className={`flex flex-col items-center rounded-lg p-2 md:px-3 md:py-2 transition-all cursor-pointer ${
+                  isActive
+                    ? `ring-2 ${item.activeRing} ${item.activeBg} scale-105`
+                    : "bg-white dark:bg-slate-800 md:bg-transparent hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                }`}
+              >
+                <div className="flex items-center gap-1 md:gap-2">
+                  <Newspaper className={`h-3 w-3 md:h-4 md:w-4 ${item.color}`} />
+                  <p className="text-xs md:text-sm font-bold">{item.label}</p>
+                </div>
+                <p className="text-sm md:text-base font-extrabold">{item.value}</p>
+              </button>
+            );
+          })}
         </div>
 
         {dbUser?.userRole.includes("admin") && (
           <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
-            <Button
-              label="Baixar Dados"
-              size="medium"
-              variant="inverted"
-              onClick={() =>
-                handleDownload(selectedCityId || userCity.idCidade)
-              }
-            />
-            <Button label="Gerar Lista" size="medium" variant="inverted" />
             <Button label="Reportar Problema" size="medium" variant="red" />
           </div>
         )}
       </div>
+
+      {statusFilter && (
+        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 text-sm">
+          <span className="font-medium text-primary-700 dark:text-primary-300">
+            Filtrando por: <strong>{statusFilter === "rascunho" ? "Rascunhos" : statusFilter === "enviado" ? "Enviados" : statusFilter === "habilitacao" ? "Habilitação" : "Recurso"}</strong>
+          </span>
+          <button
+            type="button"
+            onClick={() => setStatusFilter(null)}
+            className="ml-2 text-primary-500 hover:text-primary-700 dark:hover:text-primary-300 font-bold"
+          >
+            ✕ Limpar filtro
+          </button>
+        </div>
+      )}
 
       <ProjectsTab
         searchTerm={searchTerm}

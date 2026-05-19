@@ -86,7 +86,15 @@ export default function ProjectsTab({
                     router.push(`/admin/review/${project.projectId}`)
                   }
                 >
-                  <td className="px-4 py-2 border-b">{project.projectTitle}</td>
+                  <td className="px-4 py-2 border-b">
+                    {project.projectTitle?.trim() ? (
+                      project.projectTitle
+                    ) : (
+                      <span className="italic text-red-500" title="Projeto enviado antes da validação de título obrigatório ser implementada">
+                        Sem título <span className="text-xs text-red-400">(legado — anterior à validação)</span>
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-2 border-b">
                     {project.projectStatus}
                   </td>

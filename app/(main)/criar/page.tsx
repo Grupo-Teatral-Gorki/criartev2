@@ -426,7 +426,7 @@ const CriarContent = () => {
           onClick={() => handleSendProject(undefined, "enviado")}
           size="medium"
           variant="save"
-          disabled={!isInscriptionOpen}
+          disabled={!isInscriptionOpen || !(projectTitle?.trim() || projectData?.projectTitle?.trim())}
         />
       </div>
       <div className="w-full flex flex-col justify-center bg-slate-100 rounded-lg dark:bg-navy p-1 sm:p-4 mt-4 gap-8">
