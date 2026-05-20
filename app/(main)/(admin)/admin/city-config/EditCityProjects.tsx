@@ -61,6 +61,7 @@ interface Project {
   fields: Fields;
   extraGeneralInfo?: boolean;
   extraFields?: ExtraFieldsConfig;
+  hasBudget?: boolean;
   editalLink?: string;
   baseType?: string;
 }
@@ -1277,7 +1278,7 @@ const EditCityProjects = () => {
 
                       {selectedCity && (
                         <div className="mb-4 p-3 border border-slate-200 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-900/40">
-                          <label className="inline-flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                          <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
                             <input
                               type="checkbox"
                               checked={Boolean(project.extraGeneralInfo)}
@@ -1285,6 +1286,23 @@ const EditCityProjects = () => {
                             />
                             <span>
                               Adicionar campos extras antes das Informações Gerais
+                            </span>
+                          </label>
+
+                          <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 mt-2">
+                            <input
+                              type="checkbox"
+                              checked={project.hasBudget !== false}
+                              onChange={() =>
+                                setProjects((prev) =>
+                                  prev.map((p, idx) =>
+                                    idx === projectIdx ? { ...p, hasBudget: !(p.hasBudget !== false) } : p
+                                  )
+                                )
+                              }
+                            />
+                            <span>
+                              Habilitar Planilha Orçamentária
                             </span>
                           </label>
 

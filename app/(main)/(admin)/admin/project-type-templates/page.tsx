@@ -40,6 +40,7 @@ interface Project {
   description: string;
   available: boolean;
   acceptedProponentTypes?: ProponenteTipo[];
+  hasBudget?: boolean;
   fields: Fields;
 }
 
@@ -519,6 +520,19 @@ const ProjectTypeTemplatesPage = () => {
                 );
               })}
             </div>
+          </div>
+
+          <div className="mb-4 p-3 border border-slate-200 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-900/40">
+            <label className="inline-flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <input
+                type="checkbox"
+                checked={newProject.hasBudget !== false}
+                onChange={() =>
+                  setNewProject((prev) => ({ ...prev, hasBudget: !(prev.hasBudget !== false) }))
+                }
+              />
+              <span>Habilitar Planilha Orçamentária</span>
+            </label>
           </div>
 
           <div className="mb-4 border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 p-3">

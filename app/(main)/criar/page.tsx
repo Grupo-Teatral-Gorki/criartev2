@@ -199,13 +199,15 @@ const CriarContent = () => {
             }
           }
 
-          // Validate planilha orçamentária
-          const planilha = projectData.planilhaOrcamentaria;
-          if (!Array.isArray(planilha) || planilha.length === 0) {
-            setToastMessage("Envie a Planilha Orçamentária antes de enviar o projeto.");
-            setToastType("error");
-            setShowToast(true);
-            return;
+          // Validate planilha orçamentária (enabled by default, unless explicitly disabled)
+          if (projectTypeConfig?.hasBudget !== false) {
+            const planilha = projectData.planilhaOrcamentaria;
+            if (!Array.isArray(planilha) || planilha.length === 0) {
+              setToastMessage("Envie a Planilha Orçamentária antes de enviar o projeto.");
+              setToastType("error");
+              setShowToast(true);
+              return;
+            }
           }
 
           // Validate ficha técnica

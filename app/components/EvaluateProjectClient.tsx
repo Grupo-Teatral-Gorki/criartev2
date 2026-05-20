@@ -158,10 +158,14 @@ const EvaluateProjectClient = () => {
               label: "Documentos",
               content: <RenderDocuments project={project} />,
             },
-            {
-              label: "Planilha Orçamentária",
-              content: <RenderBudget project={project} />,
-            },
+            ...(Array.isArray(project.planilhaOrcamentaria) && project.planilhaOrcamentaria.length > 0
+              ? [
+                  {
+                    label: "Planilha Orçamentária",
+                    content: <RenderBudget project={project} />,
+                  },
+                ]
+              : []),
             ...(dbUser?.userRole.includes("reviewer") ||
             dbUser?.userRole.includes("admin")
               ? [

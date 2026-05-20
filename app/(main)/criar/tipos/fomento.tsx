@@ -22,6 +22,7 @@ const Fomento = () => {
     : [];
   const itapeviExtraGeneralInfo = Boolean(projectDetails?.itapeviExtraGeneralInfo) && city?.city?.cityId === "3594";
   const hasGeneralInfo = generalInfoFields.length > 0 || itapeviExtraGeneralInfo;
+  const hasBudget = projectDetails?.hasBudget !== false;
 
   const tabs = [
     {
@@ -40,10 +41,14 @@ const Fomento = () => {
       label: "Documentos",
       content: <Documentos />,
     },
-    {
-      label: "Planilha Orçamentária",
-      content: <PlanilhaOrcamentaria />,
-    },
+    ...(hasBudget
+      ? [
+          {
+            label: "Planilha Orçamentária",
+            content: <PlanilhaOrcamentaria />,
+          },
+        ]
+      : []),
     {
       label: "Ficha Técnica",
       content: <FichaTecnica />,
