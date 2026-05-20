@@ -13,6 +13,13 @@ import ProponenteService from '@/app/services/proponenteService';
 
 type FormData = Record<string, any>;
 
+const ESCOLARIDADE_COM_AREA = [
+    'graduacao_incompleta',
+    'graduacao_completa',
+    'pos_lato_sensu',
+    'pos_stricto_sensu',
+];
+
 const STEPS = [
     { id: 'dadosBasicos', title: 'Dados Básicos', sections: ['dadosPJ', 'contato'] },
     { id: 'responsavel', title: 'Responsável Legal', sections: ['responsavel', 'enderecoResponsavel'] },
@@ -63,7 +70,13 @@ export default function PessoaJuridicaPage() {
     const [changingStep, setChangingStep] = useState(false);
 
     const handleInputChange = (name: string, value: any) => {
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => {
+            const next = { ...prev, [name]: value };
+            if (name === 'nivelEscolaridade' && !ESCOLARIDADE_COM_AREA.includes(value)) {
+                next.areaConhecimentoEscolaridade = '';
+            }
+            return next;
+        });
     };
 
     const getCurrentFields = () => {
@@ -452,7 +465,14 @@ export default function PessoaJuridicaPage() {
                 <h2 className="text-2xl font-semibold mb-6">{STEPS[currentStep].title}</h2>
 
                 <div className="grid grid-cols-1 gap-6">
-                    {fields.map((field: any) => (
+                    {fields
+                        .filter((field: any) => {
+                            if (field.name === 'areaConhecimentoEscolaridade') {
+                                return ESCOLARIDADE_COM_AREA.includes(formData.nivelEscolaridade);
+                            }
+                            return true;
+                        })
+                        .map((field: any) => (
                         <div key={field.name}>
                             {renderField(field)}
                         </div>

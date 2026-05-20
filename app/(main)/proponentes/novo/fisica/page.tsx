@@ -14,6 +14,13 @@ import { useCEP } from '@/app/hooks/useCEP';
 
 type FormData = Record<string, any>;
 
+const ESCOLARIDADE_COM_AREA = [
+    'graduacao_incompleta',
+    'graduacao_completa',
+    'pos_lato_sensu',
+    'pos_stricto_sensu',
+];
+
 const STEPS = [
     { id: 'dadosPessoais', title: 'Dados Pessoais', section: 'dadosPessoais' },
     { id: 'contato', title: 'Contato', section: 'contato' },
@@ -59,7 +66,13 @@ export default function PessoaFisicaPage() {
     const { loading: cepLoading, error: cepError, fetchAddress, clearError } = useCEP();
 
     const handleInputChange = (name: string, value: any) => {
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => {
+            const next = { ...prev, [name]: value };
+            if (name === 'nivelEscolaridade' && !ESCOLARIDADE_COM_AREA.includes(value)) {
+                next.areaConhecimentoEscolaridade = '';
+            }
+            return next;
+        });
     };
 
     // Handle CEP lookup when CEP field changes
@@ -435,7 +448,14 @@ export default function PessoaFisicaPage() {
                 <h2 className="text-2xl font-semibold mb-6">{STEPS[currentStep].title}</h2>
 
                 <div className="grid grid-cols-1 gap-6">
-                    {fields.map((field: any) => (
+                    {fields
+                        .filter((field: any) => {
+                            if (field.name === 'areaConhecimentoEscolaridade') {
+                                return ESCOLARIDADE_COM_AREA.includes(formData.nivelEscolaridade);
+                            }
+                            return true;
+                        })
+                        .map((field: any) => (
                         <div key={field.name}>
                             {renderField(field)}
                         </div>
