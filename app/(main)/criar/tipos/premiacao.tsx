@@ -1,5 +1,6 @@
 "use client";
 import Tabs from "@/app/components/Tabs";
+import InfoGerais from "../secoes/InfoGerais";
 import Documentos from "../secoes/Documentos";
 import PlanilhaOrcamentaria from "../secoes/PlanilhaOrcamentaria";
 import Proponente from "../secoes/Proponente";
@@ -16,6 +17,10 @@ const Premiacao = () => {
     ? city.city.typesOfProjects
     : [];
   const projectDetails = availableTypes.find((project) => project?.name === projectType);
+  const generalInfoFields = Array.isArray(projectDetails?.fields?.generalInfo)
+    ? projectDetails.fields.generalInfo
+    : [];
+  const hasGeneralInfo = generalInfoFields.length > 0 || Boolean(projectDetails?.extraGeneralInfo);
   const hasBudget = projectDetails?.hasBudget !== false;
 
   const tabs = [
@@ -23,6 +28,14 @@ const Premiacao = () => {
       label: "Proponente",
       content: <Proponente />,
     },
+    ...(hasGeneralInfo
+      ? [
+          {
+            label: "Informações Gerais",
+            content: <InfoGerais />,
+          },
+        ]
+      : []),
     {
       label: "Documentos",
       content: <Documentos />,
