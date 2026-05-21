@@ -115,6 +115,14 @@ export default function ColetivoPage() {
     const validateCurrentStep = () => {
         const fields = getCurrentFields();
         for (const field of fields) {
+            // areaConhecimentoEscolaridade is only required for higher education levels
+            if (field.name === 'areaConhecimentoEscolaridade') {
+                const requiresArea = ESCOLARIDADE_COM_AREA.includes(formData.nivelEscolaridade);
+                if (requiresArea && !formData[field.name]) {
+                    return false;
+                }
+                continue;
+            }
             if (field.required && !formData[field.name]) {
                 return false;
             }
@@ -425,7 +433,7 @@ export default function ColetivoPage() {
                 <div className="grid grid-cols-1 gap-6">
                     {fields
                         .filter((field: any) => {
-                            if (field.name === 'areaConhecimentoEscolaridade') {
+                            if (field.name === 'areaConhecimentoEscolaridade' || field.name === 'especialidade') {
                                 return ESCOLARIDADE_COM_AREA.includes(formData.nivelEscolaridade);
                             }
                             return true;
