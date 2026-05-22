@@ -1,11 +1,11 @@
-import { Building, Users, ArrowRight, Layers, UserCog, FileText, CirclePlay } from "lucide-react";
+import { Building, Users, ArrowRight, Layers, UserCog, FileText, CirclePlay, Mail } from "lucide-react";
 import Link from "next/link";
 
 interface CardLinkProps {
   title: string;
   description: string;
   href: string;
-  icon: "city" | "reviewers" | "templates" | "users" | "feedback" | "help";
+  icon: "city" | "reviewers" | "templates" | "users" | "feedback" | "help" | "mail";
 }
 
 const iconMap = {
@@ -15,6 +15,7 @@ const iconMap = {
   users: UserCog,
   feedback: FileText,
   help: CirclePlay,
+  mail: Mail,
 };
 
 export const CardLink = ({ title, description, href, icon }: CardLinkProps) => {

@@ -152,7 +152,7 @@ class EmailService {
             <p>Se precisar de ajuda, nossa equipe está à disposição!</p>
           </div>
           <div class="footer">
-            <p>© ${new Date().getFullYear()} Criarte - Plataforma de Fomento Cultural</p>
+            <p>© ${new Date().getFullYear()} Criarte </p>
           </div>
         </div>
       </body>
@@ -225,7 +225,7 @@ class EmailService {
             <p>Obrigado por usar a plataforma Criarte! Desejamos sucesso em seu projeto cultural.</p>
           </div>
           <div class="footer">
-            <p>© ${new Date().getFullYear()} Criarte - Plataforma de Fomento Cultural</p>
+            <p>© ${new Date().getFullYear()} Criarte </p>
           </div>
         </div>
       </body>
@@ -359,7 +359,7 @@ class EmailService {
             <p>Em caso de dúvidas, entre em contato com a secretaria de cultura do seu município.</p>
           </div>
           <div class="footer">
-            <p>© ${new Date().getFullYear()} Criarte - Plataforma de Fomento Cultural</p>
+            <p>© ${new Date().getFullYear()} Criarte </p>
           </div>
         </div>
       </body>
@@ -449,7 +449,7 @@ class EmailService {
             <p>Lembre-se de enviar seu projeto antes do prazo final!</p>
           </div>
           <div class="footer">
-            <p>© ${new Date().getFullYear()} Criarte - Plataforma de Fomento Cultural</p>
+            <p>© ${new Date().getFullYear()} Criarte </p>
           </div>
         </div>
       </body>
