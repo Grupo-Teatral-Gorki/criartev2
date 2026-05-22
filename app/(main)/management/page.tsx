@@ -21,6 +21,7 @@ type Project = {
   proponentName?: string;
   projectStatus?: string;
   projectType?: string;
+  updatedAt?: any;
 };
 
 const Management = () => {
@@ -154,6 +155,7 @@ const Management = () => {
             registrationNumber: data.registrationNumber,
             proponentId: data.proponentId,
             proponentName: displayName,
+            updatedAt: data.updatedAt ?? null,
           };
         })
       );

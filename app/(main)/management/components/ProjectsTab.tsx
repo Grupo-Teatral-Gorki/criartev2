@@ -11,6 +11,31 @@ export type ProjectsTabProject = {
   proponentName?: string;
   projectStatus?: string;
   projectType?: string;
+  updatedAt?: any;
+};
+
+const formatTimestamp = (value: any): string => {
+  if (!value) return "—";
+  let date: Date;
+  if (typeof value?.toDate === "function") {
+    date = value.toDate();
+  } else if (value?.seconds) {
+    date = new Date(value.seconds * 1000);
+  } else if (value instanceof Date) {
+    date = value;
+  } else if (typeof value === "string" || typeof value === "number") {
+    date = new Date(value);
+  } else {
+    return "—";
+  }
+  if (isNaN(date.getTime())) return "—";
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 type ProjectsTabProps = {
@@ -66,12 +91,13 @@ export default function ProjectsTab({
               </th>
               <th className="px-4 py-2 text-left border-b">Proponente</th>
               <th className="px-4 py-2 text-left border-b">Tipo</th>
+              <th className="px-4 py-2 text-left border-b">Última Atualização</th>
             </tr>
           </thead>
           <tbody>
             {filteredProjects.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                   {selectedCityId
                     ? `Nenhum projeto encontrado para a cidade (ID: ${selectedCityId})`
                     : "Carregando projetos..."}
@@ -105,6 +131,7 @@ export default function ProjectsTab({
                     {project.proponentName}
                   </td>
                   <td className="px-4 py-2 border-b">{project.projectType}</td>
+                  <td className="px-4 py-2 border-b text-sm whitespace-nowrap">{formatTimestamp(project.updatedAt)}</td>
                 </tr>
               ))
             )}
