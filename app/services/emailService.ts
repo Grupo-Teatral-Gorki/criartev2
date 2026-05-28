@@ -137,7 +137,7 @@ class EmailService {
             
             <p>Agora você pode continuar editando seu projeto e adicionar todas as informações necessárias.</p>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/meusprojetos" class="button">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/meusprojetos" class="button">
               Ver Meus Projetos
             </a>
             
@@ -218,7 +218,7 @@ class EmailService {
               <li>Você pode acompanhar o status na plataforma</li>
             </ol>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/meusprojetos" class="button">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://criarte.grupogorki.com.br'}/meusprojetos" class="button">
               Acompanhar Status
             </a>
             
@@ -352,7 +352,7 @@ class EmailService {
             
             <p>Acesse a plataforma para mais informações sobre o processo.</p>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/home" class="button">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://criarte.grupogorki.com.br'}/home" class="button">
               Acessar Plataforma
             </a>
             
@@ -442,7 +442,7 @@ class EmailService {
             
             <p>Você pode acompanhar e continuar editando seu projeto a qualquer momento.</p>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/meusprojetos" class="button">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://criarte.grupogorki.com.br'}/meusprojetos" class="button">
               Ver Meus Projetos
             </a>
             

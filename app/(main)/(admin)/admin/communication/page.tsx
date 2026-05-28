@@ -41,7 +41,7 @@ const getBrandedEmailHtml = (bodyContent: string): string => {
     </div>
     <div class="content">
       ${bodyContent}
-      <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/home" class="button">
+      <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://criarte.grupogorki.com.br"}/home" class="button">
         Acessar Plataforma
       </a>
     </div>
