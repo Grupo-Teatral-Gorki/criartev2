@@ -9,6 +9,8 @@ import { Newspaper } from "lucide-react";
 import Button from "@/app/components/Button";
 import { SelectInput } from "@/app/components/SelectInput";
 import JSZip from "jszip";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { saveAs } from "file-saver";
 import { useRouter } from "next/navigation";
 import ProjectsTab from "./components/ProjectsTab";
@@ -19,9 +21,17 @@ type Project = {
   registrationNumber: string;
   proponentId: string;
   proponentName?: string;
+  proponentType?: string;
   projectStatus?: string;
   projectType?: string;
+  generalInfo?: Record<string, any>;
   updatedAt?: any;
+};
+
+const PROPONENT_TYPE_LABELS: Record<string, string> = {
+  fisica: "Pessoa Física",
+  juridica: "Pessoa Jurídica",
+  coletivo: "Coletivo",
 };
 
 const Management = () => {
@@ -30,7 +40,12 @@ const Management = () => {
   const router = useRouter();
 
   const [projects, setProjects] = useState<Project[]>([]);
-  const [cities, setCities] = useState<{ label: string; value: string }[]>([]);
+  const [cities, setCities] = useState<{
+    label: string;
+    value: string;
+    logoUrl?: string;
+    typesOfProjects?: { name: string; label: string; fields?: Record<string, { name: string; label: string; options?: { value: string; label: string }[] }[]> }[]
+  }[]>([]);
   const [selectedCityId, setSelectedCityId] = useState<string | null>(null);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [statusCounts, setStatusCounts] = useState({
@@ -48,9 +63,9 @@ const Management = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const getProponentName = async (id: string): Promise<string | null> => {
+  const getProponentInfo = async (id: string): Promise<{ name: string | null; tipo: string | null }> => {
     if (!id || id === "undefined" || id === undefined || id === null) {
-      return null;
+      return { name: null, tipo: null };
     }
 
     try {
@@ -67,7 +82,7 @@ const Management = () => {
           data?.fullName ||
           data?.corporateName ||
           null;
-        return name;
+        return { name, tipo: data?.tipo || null };
       }
 
       // Fallback: some legacy records may have stored a custom proponentId field
@@ -78,20 +93,21 @@ const Management = () => {
       const legacySnapshot = await getDocs(legacyQuery);
       if (!legacySnapshot.empty) {
         const data = legacySnapshot.docs[0].data() as Record<string, any>;
-        return (
-          data?.dadosPessoais?.nomeCompleto ||
-          data?.dadosPessoaJuridica?.razaoSocial ||
-          data?.dadosColetivo?.nomeColetivo ||
-          data?.fullName ||
-          data?.corporateName ||
-          null
-        );
+        return {
+          name: data?.dadosPessoais?.nomeCompleto ||
+            data?.dadosPessoaJuridica?.razaoSocial ||
+            data?.dadosColetivo?.nomeColetivo ||
+            data?.fullName ||
+            data?.corporateName ||
+            null,
+          tipo: data?.tipo || null,
+        };
       }
 
-      return null;
+      return { name: null, tipo: null };
     } catch (error) {
-      console.error("Error fetching proponent name for ID:", id, error);
-      return "Erro ao buscar nome";
+      console.error("Error fetching proponent info for ID:", id, error);
+      return { name: "Erro ao buscar nome", tipo: null };
     }
   };
 
@@ -134,17 +150,17 @@ const Management = () => {
             data.proponentId &&
             data.proponentId !== "undefined"
           );
-          const proponentName = hasProponentId
-            ? await getProponentName(data.proponentId)
-            : null;
+          const proponentInfo = hasProponentId
+            ? await getProponentInfo(data.proponentId)
+            : { name: null, tipo: null };
 
           let displayName: string;
           if (!hasProponentId) {
             displayName = "Proponente não cadastrado ainda";
-          } else if (!proponentName) {
+          } else if (!proponentInfo.name) {
             displayName = "ID não encontrado";
           } else {
-            displayName = proponentName;
+            displayName = proponentInfo.name;
           }
 
           return {
@@ -155,6 +171,8 @@ const Management = () => {
             registrationNumber: data.registrationNumber,
             proponentId: data.proponentId,
             proponentName: displayName,
+            proponentType: proponentInfo.tipo || undefined,
+            generalInfo: data.generalInfo || undefined,
             updatedAt: data.updatedAt ?? null,
           };
         })
@@ -183,6 +201,9 @@ const Management = () => {
       const citiesList = snapshot.docs.map((doc) => ({
         label: `${doc.data().name} - ${doc.data().uf}`,
         value: doc.data().cityId,
+        logoUrl: doc.data().cityLogoUrl || undefined,
+        typesOfProjects: doc.data().typesOfProjects || [],
+        extraFields: doc.data().extraFields || undefined,
       })).sort((a, b) => a.label.localeCompare(b.label));
       setCities(citiesList);
     } catch (error) {
@@ -325,20 +346,189 @@ const Management = () => {
     }
   }, [selectedCityId]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const loadImageAsBase64 = (src: string): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve(null); return; }
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  };
+
   const generatePDF = async () => {
-    const res = await fetch("/api/generate-pdf");
-    if (!res.ok) {
-      alert("Failed to generate PDF");
-      return;
-    }
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "report.pdf";
-    a.click();
-    window.URL.revokeObjectURL(url);
+    const doc = new jsPDF({ orientation: "landscape" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    const cityLabel = cities.find((c) => c.value === selectedCityId)?.label || selectedCityId || "";
+    const now = new Date();
+
+    // Load images
+    const pnabBase64 = await loadImageAsBase64("/assets/pnab.webp");
+    const selectedCity = cities.find((c) => c.value === selectedCityId);
+    const brasaoBase64 = selectedCity?.logoUrl ? await loadImageAsBase64(selectedCity.logoUrl) : null;
+
+    const pnabW = 30;
+    const pnabH = 30;
+    const brasaoW = 20;
+    const brasaoH = 20;
+
+    // Header height calculation
+    let headerTextBottom = 19;
+    if (statusFilter) headerTextBottom += 5;
+    if (searchTerm.trim()) headerTextBottom += 5;
+    const headerHeight = Math.max(headerTextBottom + 3, pnabH + 8);
+
+    // Draw header function (called on every page)
+    const drawHeader = () => {
+      if (pnabBase64) {
+        doc.addImage(pnabBase64, "PNG", 14, 3, pnabW, pnabH);
+      }
+      if (brasaoBase64) {
+        doc.addImage(brasaoBase64, "PNG", pageWidth - 14 - brasaoW, 5, brasaoW, brasaoH);
+      }
+      doc.setFontSize(14);
+      doc.text("Relatório de Projetos", pageWidth / 2, 12, { align: "center" });
+      doc.setFontSize(10);
+      doc.text(cityLabel, pageWidth / 2, 19, { align: "center" });
+
+      let infoY = 26;
+      if (statusFilter) {
+        const statusLabel = statusFilter === "rascunho" ? "Rascunhos" : statusFilter === "enviado" ? "Enviados" : statusFilter === "habilitacao" ? "Habilitação" : "Recurso";
+        doc.text(`Filtro de status: ${statusLabel}`, pageWidth / 2, infoY, { align: "center" });
+        infoY += 5;
+      }
+      if (searchTerm.trim()) {
+        doc.text(`Busca: "${searchTerm}"`, pageWidth / 2, infoY, { align: "center" });
+      }
+    };
+
+    // Draw header on first page
+    drawHeader();
+
+    // Build name → label map from city config
+    const typeLabels: Record<string, string> = {};
+    const cityTypes = selectedCity?.typesOfProjects || [];
+    cityTypes.forEach((t: { name: string; label: string }) => {
+      if (t.name && t.label) typeLabels[t.name] = t.label;
+    });
+
+    // Build module value → label map by searching for "escolha_o_modulo" field in all project type configs
+    const moduloLabels: Record<string, string> = {};
+    cityTypes.forEach((t: any) => {
+      const allFields: { name: string; options?: { value: string; label: string }[] }[] = [];
+      Object.values(t.fields || {}).forEach((sectionFields: any) => {
+        if (Array.isArray(sectionFields)) allFields.push(...sectionFields);
+      });
+      const moduloField = allFields.find((f: any) => f.name === "escolha_o_modulo");
+      if (moduloField?.options) {
+        moduloField.options.forEach((o: { value: string; label: string }) => {
+          if (o.value && o.label) moduloLabels[o.value] = o.label;
+        });
+      }
+    });
+
+    // Group projects by type
+    const grouped: Record<string, typeof filteredProjects> = {};
+    filteredProjects.forEach((p) => {
+      const type = p.projectType || "Sem tipo";
+      const displayLabel = typeLabels[type] || type;
+      if (!grouped[displayLabel]) grouped[displayLabel] = [];
+      grouped[displayLabel].push(p);
+    });
+
+    const typeNames = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
+    let currentY = headerHeight;
+
+    typeNames.forEach((typeName, idx) => {
+      const groupProjects = grouped[typeName];
+
+      // Each type starts on a new page (except the first)
+      if (idx > 0) {
+        doc.addPage();
+        drawHeader();
+        currentY = headerHeight;
+      }
+
+      // Section title for the type
+      const titleY = currentY + 2;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text(`${typeName} (${groupProjects.length})`, 14, titleY);
+      doc.setFont("helvetica", "normal");
+
+      // Helper: read modulo directly from generalInfo.escolha_o_modulo
+      const findModulo = (gi: Record<string, any> | undefined): string | undefined => {
+        return gi?.escolha_o_modulo || undefined;
+      };
+
+      // Group by module within this type
+      const byModule: Record<string, Project[]> = {};
+      groupProjects.forEach((p) => {
+        const mod = findModulo(p.generalInfo) || "Sem módulo";
+        const modLabel = moduloLabels[mod] || mod;
+        if (!byModule[modLabel]) byModule[modLabel] = [];
+        byModule[modLabel].push(p);
+      });
+      const moduleNames = Object.keys(byModule).sort((a, b) => a.localeCompare(b));
+
+      let moduleY = titleY + 8;
+
+      moduleNames.forEach((modName, mIdx) => {
+        const modProjects = byModule[modName];
+
+        // Module subtitle
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${modName} (${modProjects.length})`, 18, moduleY);
+        doc.setFont("helvetica", "normal");
+
+        const tableData = modProjects.map((p) => [
+          p.registrationNumber || "—",
+          p.projectTitle || "—",
+          p.proponentName || "—",
+          PROPONENT_TYPE_LABELS[p.proponentType || ""] || p.proponentType || "—",
+          p.projectStatus || "—",
+        ]);
+
+        autoTable(doc, {
+          startY: moduleY + 4,
+          head: [["Nº Inscrição", "Título do Projeto", "Proponente", "Tipo de Proponente", "Status"]],
+          body: tableData,
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [29, 74, 93], textColor: 255, fontStyle: "bold" },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          margin: { top: headerHeight },
+          didDrawPage: () => {
+            drawHeader();
+          },
+        });
+
+        moduleY = (doc as any).lastAutoTable.finalY + 10;
+
+        // Page break between modules if tight space
+        if (mIdx < moduleNames.length - 1 && moduleY > doc.internal.pageSize.getHeight() - 30) {
+          doc.addPage();
+          drawHeader();
+          moduleY = headerHeight;
+        }
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 8;
+    });
+
+    doc.setFontSize(8);
+    doc.text(`Total geral: ${filteredProjects.length} projeto(s)`, 14, (doc as any).lastAutoTable.finalY + 8);
+
+    doc.save(`projetos_${cityLabel.replace(/\s/g, "_")}_${now.toISOString().slice(0, 10)}.pdf`);
   };
 
   // Filtered projects (search + status filter)
@@ -450,6 +640,11 @@ const Management = () => {
         {dbUser?.userRole.includes("admin") && (
           <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
             <Button label="Reportar Problema" size="medium" variant="red" />
+            <Button
+              label="Gerar Lista de Inscritos"
+              size="medium"
+              onClick={generatePDF}
+            />
           </div>
         )}
       </div>
