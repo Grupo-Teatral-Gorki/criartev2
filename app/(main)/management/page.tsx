@@ -26,6 +26,7 @@ type Project = {
   projectType?: string;
   generalInfo?: Record<string, any>;
   updatedAt?: any;
+  sentDate?: any;
 };
 
 const PROPONENT_TYPE_LABELS: Record<string, string> = {
@@ -174,6 +175,7 @@ const Management = () => {
             proponentType: proponentInfo.tipo || undefined,
             generalInfo: data.generalInfo || undefined,
             updatedAt: data.updatedAt ?? null,
+            sentDate: data.sentDate ?? null,
           };
         })
       );
@@ -436,9 +438,26 @@ const Management = () => {
       }
     });
 
-    // Group projects by type
-    const grouped: Record<string, typeof filteredProjects> = {};
+    // Deduplicate: keep only latest sentDate per (title + proponent)
+    const dedupedMap = new Map<string, Project>();
     filteredProjects.forEach((p) => {
+      const key = `${p.projectTitle || ""}::${p.proponentName || ""}`;
+      const existing = dedupedMap.get(key);
+      if (!existing) {
+        dedupedMap.set(key, p);
+      } else {
+        const existingDate = existing.sentDate?.toDate?.() || existing.sentDate || new Date(0);
+        const pDate = p.sentDate?.toDate?.() || p.sentDate || new Date(0);
+        if (pDate > existingDate) {
+          dedupedMap.set(key, p);
+        }
+      }
+    });
+    const dedupedProjects = Array.from(dedupedMap.values());
+
+    // Group projects by type
+    const grouped: Record<string, typeof dedupedProjects> = {};
+    dedupedProjects.forEach((p) => {
       const type = p.projectType || "Sem tipo";
       const displayLabel = typeLabels[type] || type;
       if (!grouped[displayLabel]) grouped[displayLabel] = [];
