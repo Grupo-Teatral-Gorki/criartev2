@@ -12,6 +12,7 @@ import JSZip from "jszip";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
 import { useRouter } from "next/navigation";
 import ProjectsTab from "./components/ProjectsTab";
 
@@ -374,6 +375,256 @@ const Management = () => {
     });
   };
 
+  const generateExcel = () => {
+    const cityLabel = cities.find((c) => c.value === selectedCityId)?.label || selectedCityId || "";
+    const now = new Date();
+
+    const selectedCity = cities.find((c) => c.value === selectedCityId);
+
+    // Build name → label map from city config
+    const typeLabels: Record<string, string> = {};
+    const cityTypes = selectedCity?.typesOfProjects || [];
+    cityTypes.forEach((t: { name: string; label: string }) => {
+      if (t.name && t.label) typeLabels[t.name] = t.label;
+    });
+
+    // Build module value → label map
+    const moduloLabels: Record<string, string> = {};
+    cityTypes.forEach((t: any) => {
+      const allFields: { name: string; options?: { value: string; label: string }[] }[] = [];
+      Object.values(t.fields || {}).forEach((sectionFields: any) => {
+        if (Array.isArray(sectionFields)) allFields.push(...sectionFields);
+      });
+      const moduloField = allFields.find((f: any) => f.name === "escolha_o_modulo");
+      if (moduloField?.options) {
+        moduloField.options.forEach((o: { value: string; label: string }) => {
+          if (o.value && o.label) moduloLabels[o.value] = o.label;
+        });
+      }
+    });
+
+    // Deduplicate: keep only latest sentDate per (title + proponent)
+    const dedupedMap = new Map<string, Project>();
+    filteredProjects.forEach((p) => {
+      const key = `${p.projectTitle || ""}::${p.proponentName || ""}`;
+      const existing = dedupedMap.get(key);
+      if (!existing) {
+        dedupedMap.set(key, p);
+      } else {
+        const existingDate = existing.sentDate?.toDate?.() || existing.sentDate || new Date(0);
+        const pDate = p.sentDate?.toDate?.() || p.sentDate || new Date(0);
+        if (pDate > existingDate) dedupedMap.set(key, p);
+      }
+    });
+    const dedupedProjects = Array.from(dedupedMap.values());
+
+    // Group projects by type
+    const grouped: Record<string, typeof dedupedProjects> = {};
+    dedupedProjects.forEach((p) => {
+      const type = p.projectType || "Sem tipo";
+      const displayLabel = typeLabels[type] || type;
+      if (!grouped[displayLabel]) grouped[displayLabel] = [];
+      grouped[displayLabel].push(p);
+    });
+
+    const wb = XLSX.utils.book_new();
+
+    const headerStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" }, sz: 10 },
+      fill: { fgColor: { rgb: "1D4A5D" } },
+      alignment: { horizontal: "center" as const, vertical: "center" as const },
+      border: {
+        top: { style: "thin" as const, color: { rgb: "1D4A5D" } },
+        bottom: { style: "thin" as const, color: { rgb: "1D4A5D" } },
+        left: { style: "thin" as const, color: { rgb: "1D4A5D" } },
+        right: { style: "thin" as const, color: { rgb: "1D4A5D" } },
+      },
+    };
+
+    const subHeaderStyle = {
+      font: { bold: true, sz: 12, color: { rgb: "1D4A5D" } },
+      fill: { fgColor: { rgb: "F0F4F7" } },
+      alignment: { horizontal: "left" as const, vertical: "center" as const },
+      border: {
+        top: { style: "thin" as const, color: { rgb: "1D4A5D" } },
+        bottom: { style: "thin" as const, color: { rgb: "1D4A5D" } },
+      },
+    };
+
+    const moduleStyle = {
+      font: { bold: true, sz: 10, color: { rgb: "1D4A5D" } },
+      alignment: { horizontal: "left" as const, vertical: "center" as const },
+      fill: { fgColor: { rgb: "D8E2E8" } },
+      border: {
+        top: { style: "thin" as const, color: { rgb: "B8C8D0" } },
+        bottom: { style: "thin" as const, color: { rgb: "B8C8D0" } },
+      },
+    };
+
+    const evenRowStyle = {
+      fill: { fgColor: { rgb: "F8FAFC" } },
+      border: {
+        top: { style: "thin" as const, color: { rgb: "E2E8F0" } },
+        bottom: { style: "thin" as const, color: { rgb: "E2E8F0" } },
+        left: { style: "thin" as const, color: { rgb: "E2E8F0" } },
+        right: { style: "thin" as const, color: { rgb: "E2E8F0" } },
+      },
+    };
+
+    const oddRowStyle = {
+      border: {
+        top: { style: "thin" as const, color: { rgb: "E2E8F0" } },
+        bottom: { style: "thin" as const, color: { rgb: "E2E8F0" } },
+        left: { style: "thin" as const, color: { rgb: "E2E8F0" } },
+        right: { style: "thin" as const, color: { rgb: "E2E8F0" } },
+      },
+    };
+
+    const typeNames = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
+    const usedSheetNames = new Set<string>();
+
+    typeNames.forEach((typeName) => {
+      const wsData: any[][] = [];
+      const merges: XLSX.Range[] = [];
+      const cellStyles: { r: number; c: number; style: any }[] = [];
+
+      // Title rows
+      wsData.push(["Relatório de Projetos"]);
+      cellStyles.push({ r: 0, c: 0, style: { font: { bold: true, sz: 14 }, alignment: { horizontal: "center" } } });
+      merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } });
+
+      wsData.push([cityLabel]);
+      cellStyles.push({ r: 1, c: 0, style: { font: { sz: 10 }, alignment: { horizontal: "center" } } });
+      merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 3 } });
+
+      let infoRow = 2;
+      if (statusFilter) {
+        const statusLabel = statusFilter === "rascunho" ? "Rascunhos" : statusFilter === "enviado" ? "Enviados" : statusFilter === "habilitacao" ? "Habilitação" : "Recurso";
+        wsData.push([`Filtro de status: ${statusLabel}`]);
+        cellStyles.push({ r: infoRow, c: 0, style: { font: { sz: 9 }, alignment: { horizontal: "center" } } });
+        merges.push({ s: { r: infoRow, c: 0 }, e: { r: infoRow, c: 3 } });
+        infoRow++;
+      }
+      if (searchTerm.trim()) {
+        wsData.push([`Busca: "${searchTerm}"`]);
+        cellStyles.push({ r: infoRow, c: 0, style: { font: { sz: 9 }, alignment: { horizontal: "center" } } });
+        merges.push({ s: { r: infoRow, c: 0 }, e: { r: infoRow, c: 3 } });
+        infoRow++;
+      }
+
+      wsData.push([]);
+      infoRow++;
+
+      const typeRow = infoRow;
+      wsData.push([`${typeName} (${grouped[typeName].length})`]);
+      cellStyles.push({ r: typeRow, c: 0, style: subHeaderStyle });
+      merges.push({ s: { r: typeRow, c: 0 }, e: { r: typeRow, c: 3 } });
+      infoRow++;
+
+      // Group by module within this type
+      const findModulo = (gi: Record<string, any> | undefined): string | undefined => gi?.escolha_o_modulo || undefined;
+      const byModule: Record<string, Project[]> = {};
+      grouped[typeName].forEach((p) => {
+        const mod = findModulo(p.generalInfo) || "Sem módulo";
+        const modLabel = moduloLabels[mod] || mod;
+        if (!byModule[modLabel]) byModule[modLabel] = [];
+        byModule[modLabel].push(p);
+      });
+      const moduleNames = Object.keys(byModule).sort((a, b) => a.localeCompare(b));
+
+      moduleNames.forEach((modName) => {
+        const modProjects = byModule[modName];
+
+        // Module subtitle
+        wsData.push([`${modName} (${modProjects.length})`]);
+        cellStyles.push({ r: infoRow, c: 0, style: moduleStyle });
+        merges.push({ s: { r: infoRow, c: 0 }, e: { r: infoRow, c: 3 } });
+        infoRow++;
+
+        // Table headers
+        wsData.push(["Nº Inscrição", "Título do Projeto", "Proponente", "Tipo de Proponente"]);
+        for (let c = 0; c < 4; c++) {
+          cellStyles.push({ r: infoRow, c, style: headerStyle });
+        }
+        infoRow++;
+
+        // Table rows with alternating colors
+        modProjects.forEach((p, rowIdx) => {
+          wsData.push([
+            p.registrationNumber || "—",
+            p.projectTitle || "—",
+            p.proponentName || "—",
+            PROPONENT_TYPE_LABELS[p.proponentType || ""] || p.proponentType || "—",
+          ]);
+          const rowStyle = rowIdx % 2 === 0 ? evenRowStyle : oddRowStyle;
+          for (let c = 0; c < 4; c++) {
+            cellStyles.push({ r: infoRow, c, style: rowStyle });
+          }
+          infoRow++;
+        });
+
+        wsData.push([]);
+        infoRow++;
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      ws["!merges"] = merges;
+
+      // Apply column widths
+      ws["!cols"] = [
+        { wch: 14 },
+        { wch: 45 },
+        { wch: 35 },
+        { wch: 20 },
+      ];
+
+      // Apply styles to cells
+      cellStyles.forEach(({ r, c, style }) => {
+        const addr = XLSX.utils.encode_cell({ r, c });
+        if (!ws[addr]) ws[addr] = { v: wsData[r][c] || "" };
+        ws[addr].s = style;
+      });
+
+      // Ensure all cells have a value
+      wsData.forEach((row, r) => {
+        row.forEach((val, c) => {
+          const addr = XLSX.utils.encode_cell({ r, c });
+          if (!ws[addr]) ws[addr] = { v: val || "" };
+        });
+      });
+
+      let safeTypeName = typeName.replace(/[\\/*?\[\]:]/g, "").substring(0, 31);
+      let idx = 1;
+      let uniqueName = safeTypeName;
+      while (usedSheetNames.has(uniqueName)) {
+        uniqueName = `${safeTypeName.substring(0, 29)}_${idx}`;
+        idx++;
+      }
+      usedSheetNames.add(uniqueName);
+      XLSX.utils.book_append_sheet(wb, ws, uniqueName);
+    });
+
+    // Summary sheet
+    const summaryData: any[][] = [["Resumo"], [], ["Total geral de projetos", dedupedProjects.length]];
+    if (statusFilter) {
+      const statusLabel = statusFilter === "rascunho" ? "Rascunhos" : statusFilter === "enviado" ? "Enviados" : statusFilter === "habilitacao" ? "Habilitação" : "Recurso";
+      summaryData.push(["Status filtrado", statusLabel]);
+    }
+    if (searchTerm.trim()) {
+      summaryData.push(["Termo de busca", searchTerm]);
+    }
+    summaryData.push(["Cidade", cityLabel]);
+    summaryData.push(["Gerado em", now.toLocaleString("pt-BR")]);
+
+    const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+    summaryWs["!cols"] = [{ wch: 25 }, { wch: 40 }];
+    XLSX.utils.book_append_sheet(wb, summaryWs, "Resumo");
+
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([wbout], { type: "application/octet-stream" });
+    saveAs(blob, `projetos_${cityLabel.replace(/\s/g, "_")}_${now.toISOString().slice(0, 10)}.xlsx`);
+  };
+
   const generatePDF = async () => {
     const doc = new jsPDF({ orientation: "landscape" });
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -670,6 +921,11 @@ const Management = () => {
               label="Gerar Lista de Inscritos"
               size="medium"
               onClick={generatePDF}
+            />
+            <Button
+              label="Exportar Excel"
+              size="medium"
+              onClick={generateExcel}
             />
           </div>
         )}
