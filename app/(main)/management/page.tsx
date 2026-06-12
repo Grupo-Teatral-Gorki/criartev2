@@ -353,12 +353,20 @@ const Management = () => {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
+        const MAX = 200;
+        let w = img.naturalWidth;
+        let h = img.naturalHeight;
+        if (w > MAX || h > MAX) {
+          const scale = Math.min(MAX / w, MAX / h);
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
         const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
+        canvas.width = w;
+        canvas.height = h;
         const ctx = canvas.getContext("2d");
         if (!ctx) { resolve(null); return; }
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, w, h);
         resolve(canvas.toDataURL("image/png"));
       };
       img.onerror = () => resolve(null);
@@ -515,12 +523,11 @@ const Management = () => {
           p.projectTitle || "—",
           p.proponentName || "—",
           PROPONENT_TYPE_LABELS[p.proponentType || ""] || p.proponentType || "—",
-          p.projectStatus || "—",
         ]);
 
         autoTable(doc, {
           startY: moduleY + 4,
-          head: [["Nº Inscrição", "Título do Projeto", "Proponente", "Tipo de Proponente", "Status"]],
+          head: [["Nº Inscrição", "Título do Projeto", "Proponente", "Tipo de Proponente"]],
           body: tableData,
           styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [29, 74, 93], textColor: 255, fontStyle: "bold" },
