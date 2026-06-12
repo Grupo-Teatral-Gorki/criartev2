@@ -593,7 +593,7 @@ const Management = () => {
         });
       });
 
-      let safeTypeName = typeName.replace(/[\\/*?\[\]:]/g, "").substring(0, 31);
+      const safeTypeName = typeName.replace(/[\\/*?\[\]:]/g, "").substring(0, 31);
       let idx = 1;
       let uniqueName = safeTypeName;
       while (usedSheetNames.has(uniqueName)) {
