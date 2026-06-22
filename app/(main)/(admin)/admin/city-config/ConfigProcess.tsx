@@ -12,12 +12,19 @@ import { SelectInput } from "@/app/components/SelectInput";
 import Button from "@/app/components/Button";
 import EmailService from "@/app/services/emailService";
 
+type ProjectType = {
+  name: string;
+  label: string;
+  available?: boolean;
+};
+
 type City = {
   id: string;
   name: string;
   uf: string;
   processStage?: string;
   homeLink?: string;
+  typesOfProjects?: ProjectType[];
 };
 
 const stages = [
@@ -37,6 +44,9 @@ const ConfigProcess = () => {
   const [isSavingHomeLink, setIsSavingHomeLink] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [emailStatus, setEmailStatus] = useState<{ success: number; failed: number } | null>(null);
+  const [editalAvailability, setEditalAvailability] = useState<Record<string, boolean>>({});
+  const [savedEditalAvailability, setSavedEditalAvailability] = useState<Record<string, boolean>>({});
+  const [isSavingEditals, setIsSavingEditals] = useState(false);
 
   const db = getFirestore();
   const emailService = EmailService.getInstance();
@@ -81,6 +91,13 @@ const ConfigProcess = () => {
     const link = city?.homeLink || "";
     setHomeLink(link);
     setSavedHomeLink(link);
+
+    const availability: Record<string, boolean> = {};
+    (city?.typesOfProjects || []).forEach((project) => {
+      availability[project.name] = project.available !== false;
+    });
+    setEditalAvailability(availability);
+    setSavedEditalAvailability(availability);
   }, [selectedCity, cities]);
 
   const handleSaveHomeLink = async () => {
@@ -105,6 +122,46 @@ const ConfigProcess = () => {
 
   const handleStageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedStage(e.target.value);
+  };
+
+  const handleEditalAvailabilityChange = (projectName: string, open: boolean) => {
+    setEditalAvailability((prev) => ({ ...prev, [projectName]: open }));
+  };
+
+  const editalAvailabilityChanged = () => {
+    const keys = new Set([
+      ...Object.keys(editalAvailability),
+      ...Object.keys(savedEditalAvailability),
+    ]);
+    for (const key of keys) {
+      if (editalAvailability[key] !== savedEditalAvailability[key]) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const handleSaveEditalAvailability = async () => {
+    if (!selectedCity || !editalAvailabilityChanged()) return;
+
+    setIsSavingEditals(true);
+    try {
+      const city = cities.find((c) => c.id === selectedCity);
+      const updatedTypes = (city?.typesOfProjects || []).map((project) => ({
+        ...project,
+        available: editalAvailability[project.name] !== false,
+      }));
+
+      const cityRef = doc(db, "cities", selectedCity);
+      await updateDoc(cityRef, { typesOfProjects: updatedTypes });
+      setSavedEditalAvailability({ ...editalAvailability });
+      await fetchCities();
+      window.dispatchEvent(new Event("city-config-updated"));
+    } catch (error) {
+      console.error("Error saving edital availability:", error);
+    } finally {
+      setIsSavingEditals(false);
+    }
   };
 
   const fetchUsersByCity = async (cityId: string): Promise<string[]> => {
@@ -235,6 +292,56 @@ const ConfigProcess = () => {
                   Nenhum usuário cadastrado nesta cidade.
                 </p>
               )}
+            </div>
+          )}
+
+          {(cities.find((c) => c.id === selectedCity)?.typesOfProjects || []).length > 0 && (
+            <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
+              <h3 className="text-lg font-semibold mb-2">Inscrições por edital</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                Feche inscrições de editais específicos sem alterar a etapa geral do município.
+                O município precisa estar em &quot;Inscrições Abertas&quot; para que editais abertos aceitem novas inscrições.
+              </p>
+              <div className="flex flex-col gap-3 mb-4">
+                {(cities.find((c) => c.id === selectedCity)?.typesOfProjects || []).map(
+                  (project) => (
+                    <div
+                      key={project.name}
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700"
+                    >
+                      <div>
+                        <span className="font-medium">{project.label}</span>
+                        <span className="ml-2 text-xs text-slate-500">({project.name})</span>
+                      </div>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name={`edital-${project.name}`}
+                            checked={editalAvailability[project.name] !== false}
+                            onChange={() => handleEditalAvailabilityChange(project.name, true)}
+                          />
+                          Abertas
+                        </label>
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name={`edital-${project.name}`}
+                            checked={editalAvailability[project.name] === false}
+                            onChange={() => handleEditalAvailabilityChange(project.name, false)}
+                          />
+                          Fechadas
+                        </label>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+              <Button
+                label={isSavingEditals ? "Salvando..." : "Salvar inscrições por edital"}
+                onClick={handleSaveEditalAvailability}
+                disabled={!editalAvailabilityChanged() || isSavingEditals}
+              />
             </div>
           )}
         </div>

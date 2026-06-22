@@ -9,6 +9,7 @@ import { getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import { useCity } from "@/app/context/CityConfigContext";
 import { useLogging } from "@/app/hooks/useLogging";
+import { hasAnyOpenInscription } from "@/app/utils/inscriptionUtils";
 
 const MeusProjetos = () => {
   const [projectsFromApi, setProjectsFromApi] = useState<any[]>([]);
@@ -68,7 +69,7 @@ const MeusProjetos = () => {
             router.push("/selecionar-tipo");
           }}
           size="medium"
-          disabled={city?.processStage !== "open"}
+          disabled={!hasAnyOpenInscription(city)}
         />
       </div>
 

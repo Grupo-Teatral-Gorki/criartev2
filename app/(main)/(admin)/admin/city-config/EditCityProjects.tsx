@@ -393,7 +393,9 @@ const EditCityProjects = () => {
   const handleToggleAvailable = (projectIdx: number) => {
     setProjects((prev) =>
       prev.map((p, idx) =>
-        idx === projectIdx ? { ...p, available: !p.available } : p
+        idx === projectIdx
+          ? { ...p, available: p.available === false }
+          : p
       )
     );
   };
@@ -712,7 +714,7 @@ const EditCityProjects = () => {
         <h1>${project.label}</h1>
         <div class="info">
           <p><strong>Nome interno:</strong> ${project.name}</p>
-          <p><strong>Status:</strong> <span class="status ${project.available ? "active" : "inactive"}">${project.available ? "Ativo" : "Inativo"}</span></p>
+          <p><strong>Status:</strong> <span class="status ${project.available !== false ? "active" : "inactive"}">${project.available !== false ? "Inscrições abertas" : "Inscrições fechadas"}</span></p>
           <p><strong>Tipos de proponente:</strong> ${proponentTypes}</p>
         </div>
         <h2>Descrição</h2>
@@ -1175,24 +1177,24 @@ const EditCityProjects = () => {
                       </div>
                       <span
                         className={`text-xs px-2 py-1 rounded ${
-                          project.available
+                          project.available !== false
                             ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
                             : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
                         }`}
                       >
-                        {project.available ? "Ativo" : "Inativo"}
+                        {project.available !== false ? "Inscrições abertas" : "Inscrições fechadas"}
                       </span>
                     </div>
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => handleToggleAvailable(projectIdx)}
                         className={`px-3 py-1 text-sm rounded ${
-                          project.available
+                          project.available !== false
                             ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
                             : "bg-green-100 text-green-700 hover:bg-green-200"
                         }`}
                       >
-                        {project.available ? "Desativar" : "Ativar"}
+                        {project.available !== false ? "Fechar inscrições" : "Abrir inscrições"}
                       </button>
                       <button
                         onClick={() => handleCloneProject(projectIdx)}

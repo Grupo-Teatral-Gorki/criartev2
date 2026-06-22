@@ -17,6 +17,10 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useCity } from "@/app/context/CityConfigContext";
 import { useEffect, useState } from "react";
 import { ProjectTypesType } from "@/app/utils/interfaces";
+import {
+  isCityInscriptionOpen,
+  isProjectTypeInscriptionOpen,
+} from "@/app/utils/inscriptionUtils";
 
 const SelecionarTipoProjeto = () => {
   const [projectTypes, setProjectTypes] = useState<ProjectTypesType[]>([]);
@@ -26,7 +30,7 @@ const SelecionarTipoProjeto = () => {
   const { city } = useCity();
   const cityId = dbUser?.cityId;
   const loggingService = useLogging();
-  const isInscriptionOpen = city?.processStage === "open";
+  const isCityOpen = isCityInscriptionOpen(city);
 
   useEffect(() => {
     const fetchCity = async () => {
@@ -57,9 +61,9 @@ const SelecionarTipoProjeto = () => {
   }, [cityId]);
 
   const createEmptyProjectForUser = async (type: string) => {
-    if (!isInscriptionOpen) {
-      console.error("Inscriptions are closed");
-      return { success: false, error: "Inscriptions are closed" };
+    if (!isProjectTypeInscriptionOpen(city, type)) {
+      console.error("Inscriptions are closed for this edital");
+      return { success: false, error: "Inscriptions are closed for this edital" };
     }
 
     if (!dbUser) {
@@ -147,17 +151,33 @@ const SelecionarTipoProjeto = () => {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
         {loading && <p className="text-2xl">Carregando tipos de projeto...</p>}
+        {!isCityOpen && !loading && (
+          <p className="col-span-full text-center text-lg text-slate-600 dark:text-slate-400">
+            As inscrições estão fechadas para este município.
+          </p>
+        )}
         {projectTypes &&
-          projectTypes.map((type) => (
-            <TypeProjectCard
-              key={type.name}
-              available={type.available}
-              description={type.description}
-              label={type.label}
-              name={type.name}
-              onClick={() => createEmptyProjectForUser(type.name)}
-            />
-          ))}
+          projectTypes.map((type) => {
+            const typeOpen = isProjectTypeInscriptionOpen(city, type.name);
+            return (
+              <TypeProjectCard
+                key={type.name}
+                available={type.available}
+                description={type.description}
+                label={type.label}
+                name={type.name}
+                disabled={!typeOpen}
+                disabledReason={
+                  !isCityOpen
+                    ? "Inscrições fechadas para o município."
+                    : type.available === false
+                      ? "Inscrições fechadas para este edital."
+                      : undefined
+                }
+                onClick={() => createEmptyProjectForUser(type.name)}
+              />
+            );
+          })}
       </div>
       {!projectTypes && (
         <p className="text-2xl">

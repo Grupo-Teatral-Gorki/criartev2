@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Especificação Técnica - CriArte v2</title>
+  <style>
+    @page { size: A4; margin: 2cm; }
+    * { box-sizing: border-box; }
+    body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; max-width: 210mm; margin: 0 auto; padding: 2cm; background: #fff; }
+    h1 { font-size: 22pt; color: #1d4a5d; border-bottom: 3px solid #1d4a5d; padding-bottom: 12px; margin-top: 0; page-break-after: avoid; }
+    h2 { font-size: 16pt; color: #1d4a5d; margin-top: 28px; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; page-break-after: avoid; }
+    h3 { font-size: 13pt; color: #334155; margin-top: 20px; page-break-after: avoid; }
+    h4 { font-size: 11.5pt; color: #475569; margin-top: 16px; page-break-after: avoid; }
+    p { margin: 8px 0; text-align: justify; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 10pt; page-break-inside: avoid; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px 10px; text-align: left; }
+    th { background: #f1f5f9; font-weight: 600; color: #1d4a5d; }
+    tr:nth-child(even) { background: #f8fafc; }
+    code { font-family: "Consolas", "Monaco", monospace; background: #f1f5f9; padding: 1px 4px; border-radius: 3px; font-size: 9.5pt; color: #0c4a6e; }
+    pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; overflow-x: auto; font-size: 9pt; line-height: 1.4; page-break-inside: avoid; }
+    pre code { background: none; padding: 0; }
+    ul, ol { margin: 8px 0; padding-left: 24px; }
+    li { margin: 4px 0; }
+    .cover { text-align: center; padding-top: 120px; page-break-after: always; }
+    .cover h1 { border: none; font-size: 28pt; margin-bottom: 20px; }
+    .cover .subtitle { font-size: 14pt; color: #64748b; margin-bottom: 60px; }
+    .cover .meta { font-size: 11pt; color: #94a3b8; line-height: 2; }
+    .page-break { page-break-before: always; }
+    .no-break { page-break-inside: avoid; }
+    @media print { body { padding: 0; } .no-print { display: none; } }
+    .print-btn { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: #1d4a5d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11pt; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .print-btn:hover { background: #0c4a6e; }
+  </style>
+</head>
+<body>
+  <button class="print-btn no-print" onclick="window.print()">🖨️ Imprimir / Salvar como PDF</button>
+
+  <div class="cover">
+    <h1>Especificação Técnica</h1>
+    <div class="subtitle">CriArte v2 — Plataforma de Gestão de Projetos Culturais</div>
+    <div class="meta">
+      <strong>Versão:</strong> 0.1.0<br>
+      <strong>Data:</strong> Junho de 2026<br>
+      <strong>Tecnologia:</strong> Next.js 15 + React 19 + TypeScript + Firebase
+    </div>
+  </div>
+
+  <h2>1. Visão Geral</h2>
+  <p><strong>CriArte v2</strong> é uma plataforma web multi-município para gestão de projetos culturais. Permite cadastro de proponentes, submissão de projetos, avaliação e administração de editais culturais.</p>
+
+  <h2>2. Stack Tecnológico</h2>
+  <table>
+    <tr><th>Categoria</th><th>Tecnologia</th><th>Versão</th><th>Função</th></tr>
+    <tr><td rowspan="3">Framework</td><td>Next.js</td><td>15.5.12</td><td>Full-stack React com App Router</td></tr>
+    <tr><td>React</td><td>19.0.0</td><td>UI declarativa</td></tr>
+    <tr><td>TypeScript</td><td>5.x</td><td>Tipagem estática</td></tr>
+    <tr><td>Estilização</td><td>Tailwind CSS</td><td>3.4.1</td><td>CSS utilitário</td></tr>
+    <tr><td>Ícones</td><td>Lucide React</td><td>0.475.0</td><td>Ícones modernos</td></tr>
+    <tr><td rowspan="2">Backend</td><td>Firebase</td><td>11.6.0</td><td>Auth, Firestore, Storage</td></tr>
+    <tr><td>Firebase Admin</td><td>13.4.0</td><td>SDK server-side</td></tr>
+    <tr><td>Storage</td><td>AWS S3 SDK</td><td>3.758.0</td><td>Armazenamento de arquivos</td></tr>
+    <tr><td>PDF</td><td>pdf-lib</td><td>1.17.1</td><td>Manipulação de PDFs</td></tr>
+    <tr><td rowspan="2">E-mail</td><td>Resend</td><td>6.0.2</td><td>E-mails transacionais</td></tr>
+    <tr><td>Nodemailer</td><td>8.0.1</td><td>SMTP</td></tr>
+    <tr><td>Formulários</td><td>React Hook Form + Yup + Zod</td><td>—</td><td>Validação e estado de forms</td></tr>
+    <tr><td>Segurança</td><td>DOMPurify</td><td>2.26.0</td><td>Anti-XSS</td></tr>
+    <tr><td>Testes</td><td>Jest + Testing Library</td><td>30.2.0</td><td>Testes unitários</td></tr>
+  </table>
+
+  <h2 class="page-break">3. Arquitetura</h2>
+  <pre>
+CLIENTE          →  Next.js (React) + Tailwind + Firebase SDK
+                      ↕ HTTPS / WebSocket
+SERVIDOR           →  App Router + API Routes + Middlewares
+                      ↕
+BANCO DE DADOS     →  Firebase Auth + Firestore + Storage
+STORAGE            →  AWS S3 (arquivos grandes)
+E-MAIL             →  Resend API / Nodemailer
+  </pre>
+
+  <h3>3.1 Padrão de Renderização</h3>
+  <ul>
+    <li><strong>Server Components (RSC)</strong>: Páginas estáticas e dados iniciais</li>
+    <li><strong>Client Components</strong>: Formulários, autenticação, UI interativa</li>
+    <li><strong>Streaming</strong>: Next.js 15 com streaming de componentes</li>
+  </ul>
+
+  <h2>4. Autenticação e Autorização</h2>
+
+  <h3>4.1 Firebase Auth</h3>
+  <ul>
+    <li>Método: E-mail/senha</li>
+    <li>Persistência: Local (sessão persistente)</li>
+    <li>Contexto: <code>AuthContext</code> (user + dbUser)</li>
+  </ul>
+
+  <h3>4.2 Papéis</h3>
+  <table>
+    <tr><th>Papel</th><th>Permissões</th></tr>
+    <tr><td>admin / administrador</td><td>Acesso total</td></tr>
+    <tr><td>user</td><td>Criar projetos, submeter, gerenciar proponentes</td></tr>
+    <tr><td>reviewer</td><td>Avaliar projetos designados</td></tr>
+  </table>
+
+  <h3>4.3 Segurança</h3>
+  <ul>
+    <li><strong>Rate Limiting:</strong> 100 req/15min por IP</li>
+    <li><strong>Session Timeout:</strong> 30 minutos de inatividade</li>
+    <li><strong>Headers:</strong> CSP, X-Frame-Options, X-Content-Type-Options</li>
+    <li><strong>Sanitização:</strong> DOMPurify para inputs HTML</li>
+  </ul>
+
+  <h2 class="page-break">5. Modelo de Dados (Firestore)</h2>
+
+  <h3>Coleções Principais</h3>
+  <table>
+    <tr><th>Coleção</th><th>Descrição</th><th>Chave</th></tr>
+    <tr><td><code>users</code></td><td>Perfis de usuários (UID, e-mail, papéis, cidade)</td><td>Firebase UID</td></tr>
+    <tr><td><code>cities</code></td><td>Municípios (IBGE, nome, UF, logo, tipos de projeto)</td><td>cityId</td></tr>
+    <tr><td><code>proponentes</code></td><td>Proponentes (física/jurídica/coletivo) por cidade</td><td>userId + cityId</td></tr>
+    <tr><td><code>userProjects</code></td><td>Submissões de projetos com status e avaliações</td><td>userId</td></tr>
+    <tr><td><code>logs</code></td><td>Auditoria de ações (login, upload, criação)</td><td>userEmail</td></tr>
+  </table>
+
+  <h3>Relacionamentos</h3>
+  <pre>
+City (1) → (*) Project
+City (1) → (*) Proponente
+User (1) → (*) Proponente
+User (1) → (*) UserProject
+Project (1) → (*) UserProject (submissions)
+  </pre>
+
+  <h2 class="page-break">6. Funcionalidades</h2>
+
+  <h3>6.1 Cadastro de Proponentes</h3>
+  <table>
+    <tr><th>Tipo</th><th>Etapa</th><th>Seções</th></tr>
+    <tr><td rowspan="5">Pessoa Física</td><td>1</td><td>Dados pessoais, contato</td></tr>
+    <tr><td>2</td><td>Endereço</td></tr>
+    <tr><td>3</td><td>Perfil demográfico</td></tr>
+    <tr><td>4</td><td>Experiência</td></tr>
+    <tr><td>5</td><td>Aspectos financeiros e objetivos</td></tr>
+    <tr><td rowspan="7">Pessoa Jurídica</td><td>1</td><td>Dados da PJ, contato</td></tr>
+    <tr><td>2</td><td>Responsável legal</td></tr>
+    <tr><td>3</td><td>Endereço da PJ</td></tr>
+    <tr><td>4</td><td>Perfil da PJ (características, estrutura)</td></tr>
+    <tr><td>5</td><td>Experiências, parcerias e impacto</td></tr>
+    <tr><td>6</td><td>Perfil do responsável</td></tr>
+    <tr><td>7</td><td>Financeiro e objetivos</td></tr>
+    <tr><td rowspan="5">Coletivo</td><td>1</td><td>Dados do coletivo, contato</td></tr>
+    <tr><td>2</td><td>Responsável legal</td></tr>
+    <tr><td>3</td><td>Endereço do coletivo</td></tr>
+    <tr><td>4</td><td>Perfil do responsável</td></tr>
+    <tr><td>5</td><td>Financeiro e objetivos</td></tr>
+  </table>
+
+  <h3>6.2 Criação de Projetos</h3>
+  <table>
+    <tr><th>Seção</th><th>Descrição</th></tr>
+    <tr><td>Informações Gerais</td><td>Campos dinâmicos configurados pelo admin da cidade (texto, select, multiselect, radio, textarea, data)</td></tr>
+    <tr><td>Ficha Técnica</td><td>Membros da equipe com nome, cargo e CPF (validação de unicidade opcional)</td></tr>
+    <tr><td>Planilha Orçamentária</td><td>Itens com descrição, valor unitário, quantidade e total</td></tr>
+    <tr><td>Documentos</td><td>Upload de arquivos (PNG, JPG, WEBP, PDF) — limite 10MB com compressão automática</td></tr>
+    <tr><td>Proponente</td><td>Seleção de proponente pré-cadastrado, filtrado por tipo aceito</td></tr>
+  </table>
+
+  <h3>6.3 Administração</h3>
+  <ul>
+    <li><strong>Configuração de Cidades:</strong> Cadastro de municípios, upload de logo, definição de tipos de projetos</li>
+    <li><strong>Edição de Projetos:</strong> CRUD de tipos de projetos, drag-and-drop de campos entre seções, configuração de campos extras (Eixo, Módulo, Categoria)</li>
+    <li><strong>Configuração de Avaliação:</strong> Critérios de avaliação por nota (0-10)</li>
+    <li><strong>Atribuição de Avaliadores:</strong> Designar revisores a projetos com status "enviado"</li>
+    <li><strong>Gestão de Usuários:</strong> Visualização e controle de permissões</li>
+    <li><strong>Logs:</strong> Auditoria completa de ações</li>
+    <li><strong>PDF:</strong> Geração de resumo do projeto em PDF (print-to-PDF)</li>
+  </ul>
+
+  <h2 class="page-break">7. Componentes Principais</h2>
+
+  <h3>7.1 Reutilizáveis</h3>
+  <table>
+    <tr><th>Componente</th><th>Função</th></tr>
+    <tr><td>Button</td><td>Botões com variantes (filled, outlined, loading)</td></tr>
+    <tr><td>TextInput / MaskedInput</td><td>Inputs de texto e com máscara (CPF, CEP, telefone)</td></tr>
+    <tr><td>SelectInput</td><td>Dropdown com opções configuráveis</td></tr>
+    <tr><td>Toast</td><td>Notificações temporárias (sucesso/erro)</td></tr>
+    <tr><td>Modal</td><td>Overlay para confirmações e formulários</td></tr>
+    <tr><td>EvaluationTable</td><td>Tabela de critérios com inputs de nota 0-10</td></tr>
+    <tr><td>FileUploader / SecureFileUpload</td><td>Upload com drag-and-drop, validação e compressão</td></tr>
+  </table>
+
+  <h3>7.2 De Página</h3>
+  <table>
+    <tr><th>Componente</th><th>Função</th></tr>
+    <tr><td>Header</td><td>Navegação, seletor de cidade, menu mobile, perfil</td></tr>
+    <tr><td>AuthContext</td><td>Estado global de autenticação (user, dbUser, logout)</td></tr>
+    <tr><td>useSecureAuth</td><li>Hook de permissões (RBAC) e timeout de sessão</li></td></tr>
+    <tr><td>ProponenteService</td><td>CRUD de proponentes e estatísticas</td></tr>
+    <tr><td>LoggingService</td><td>Auditoria e notificações por e-mail</td></tr>
+    <tr><td>EmailService</td><td>Envio de e-mails transacionais (Resend/Nodemailer)</td></tr>
+  </table>
+
+  <h2 class="page-break">8. Segurança e Performance</h2>
+
+  <h3>8.1 Segurança</h3>
+  <table>
+    <tr><th>Medida</th><th>Implementação</th></tr>
+    <tr><td>Rate Limiting</td><td>100 req/15min por IP (middleware.ts)</td></tr>
+    <tr><td>Session Timeout</td><td>30 min inatividade → logout automático</td></tr>
+    <tr><td>XSS Prevention</td><td>DOMPurify + CSP headers + regex de detecção</td></tr>
+    <tr><td>File Validation</td><td>Tipos permitidos (PNG/JPG/WEBP/PDF), limite 10MB</td></tr>
+    <tr><td>File Compression</td><td>Imagens redimensionadas para 1920px, PDFs via pdf-lib</td></tr>
+    <tr><td>Headers</td><td>X-Frame-Options, X-Content-Type-Options, Referrer-Policy, CSP</td></tr>
+  </table>
+
+  <h3>8.2 Performance</h3>
+  <table>
+    <tr><th>Otimização</th><th>Detalhe</th></tr>
+    <tr><td>Code Splitting</td><td>Chunks vendor/common via Webpack</td></tr>
+    <tr><td>Image Optimization</td><td>Redimensionamento automático no upload</td></tr>
+    <tr><td>Static Generation</td><td>Páginas públicas pré-renderizadas</td></tr>
+    <tr><td>Timeouts</td><td>WebSocket 2min, static generation 180s</td></tr>
+  </table>
+
+  <h2>9. Variáveis de Ambiente</h2>
+  <pre>
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=
+AWS_BUCKET_NAME=
+RESEND_API_KEY=
+NEXT_PUBLIC_LOGGING_DEBUG=true/false
+  </pre>
+
+  <h2 class="page-break">10. Fluxogramas</h2>
+
+  <h3>10.1 Submissão de Projeto</h3>
+  <ol>
+    <li>Usuário seleciona tipo de projeto configurado pela cidade</li>
+    <li>Sistema carrega campos dinâmicos (configuração por cidade)</li>
+    <li>Usuário preenche Informações Gerais → Ficha Técnica → Orçamento → Documentos → Proponente</li>
+    <li>Validação em tempo real de campos obrigatórios</li>
+    <li>Upload de documentos com compressão automática se > limite</li>
+    <li>Salvamento automático em rascunho (Firestore)</li>
+    <li>Ao enviar: status = "enviado", notificação por e-mail</li>
+    <li>Admin designa avaliador → Revisor avalia (notas 0-10) → Status = "avaliado"</li>
+  </ol>
+
+  <h3>10.2 Upload de Arquivos</h3>
+  <ol>
+    <li>Seleção (drag-and-drop ou click)</li>
+    <li>Validação de tipo (whitelist: PNG/JPG/WEBP/PDF)</li>
+    <li>Validação de tamanho (máx. 10MB)</li>
+    <li>Se imagem > limite: canvas resize para 1920px + compressão</li>
+    <li>Se PDF > limite: compressão via pdf-lib</li>
+    <li>Upload para Firebase Storage → URL salva no projeto</li>
+    <li>Log de upload gerado (sucesso/falha)</li>
+  </ol>
+
+  <h2>11. Manutenção e Evolução</h2>
+
+  <h3>11.1 Pontos de Extensão</h3>
+  <ul>
+    <li><strong>Campos Dinâmicos:</strong> Novos tipos em <code>EditCityProjects.tsx</code></li>
+    <li><strong>Tipos de Proponente:</strong> Adicionar consts em <code>proponentes/consts/</code></li>
+    <li><strong>Novas Cidades:</strong> Cadastro via painel admin</li>
+    <li><strong>Seções de Projeto:</strong> Configuráveis no admin por cidade</li>
+  </ul>
+
+  <h3>11.2 Roadmap Sugerido</h3>
+  <ul>
+    <li>Implementar cache com React Query/SWR</li>
+    <li>Adicionar testes E2E com Playwright</li>
+    <li>Implementar PWA para acesso offline</li>
+    <li>Adicionar internacionalização (i18n)</li>
+    <li>Migrar operações críticas para Server Actions</li>
+  </ul>
+
+  <hr style="margin-top: 40px;">
+  <p style="font-size: 9pt; color: #94a3b8; text-align: center;">
+    Documento gerado em Junho de 2026 | CriArte v2 | Especificação Técnica
+  </p>
+</body>
+</html>

@@ -15,6 +15,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/app/config/firebaseconfig";
 import Toast from "@/app/components/Toast";
 import { useCity } from "@/app/context/CityConfigContext";
+import { isProjectTypeInscriptionOpen } from "@/app/utils/inscriptionUtils";
 
 const DISMISS_KEY_PREFIX = "criarte_dismiss_submit_reminder_";
 
@@ -32,7 +33,8 @@ const CriarContent = () => {
   const [showSubmitReminder, setShowSubmitReminder] = useState(false);
   const loggingService = useLogging();
   const { city } = useCity();
-  const isInscriptionOpen = city?.processStage === "open";
+  const projectTypeName = type || projectData?.projectType;
+  const isInscriptionOpen = isProjectTypeInscriptionOpen(city, projectTypeName);
   const validTypes = ["fomento", "premiacao", "culturaViva", "areasPerifericas", "subsidio"] as const;
   const availableProjectTypes: any[] = Array.isArray(city?.typesOfProjects)
     ? city.typesOfProjects
@@ -71,7 +73,7 @@ const CriarContent = () => {
 
     // Block submission if inscriptions are closed
     if (updateStatus === "enviado" && !isInscriptionOpen) {
-      setToastMessage("Não é possível enviar projetos. As inscrições estão fechadas.");
+      setToastMessage("Não é possível enviar projetos. As inscrições estão fechadas para este edital.");
       setToastType("error");
       setShowToast(true);
       return;
