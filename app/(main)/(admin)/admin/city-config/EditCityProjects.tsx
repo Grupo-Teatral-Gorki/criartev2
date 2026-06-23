@@ -62,6 +62,7 @@ interface Project {
   extraGeneralInfo?: boolean;
   extraFields?: ExtraFieldsConfig;
   hasBudget?: boolean;
+  hasFichaTecnica?: boolean;
   editalLink?: string;
   baseType?: string;
 }
@@ -1305,6 +1306,23 @@ const EditCityProjects = () => {
                             />
                             <span>
                               Habilitar Planilha Orçamentária
+                            </span>
+                          </label>
+
+                          <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 mt-2">
+                            <input
+                              type="checkbox"
+                              checked={project.hasFichaTecnica !== false}
+                              onChange={() =>
+                                setProjects((prev) =>
+                                  prev.map((p, idx) =>
+                                    idx === projectIdx ? { ...p, hasFichaTecnica: !(p.hasFichaTecnica !== false) } : p
+                                  )
+                                )
+                              }
+                            />
+                            <span>
+                              Habilitar Ficha Técnica
                             </span>
                           </label>
 

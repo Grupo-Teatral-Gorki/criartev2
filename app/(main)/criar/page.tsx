@@ -212,16 +212,20 @@ const CriarContent = () => {
             }
           }
 
-          // Validate ficha técnica
-          const fichaTecnica = Array.isArray(projectData.fichaTecnica) ? projectData.fichaTecnica : [];
-          const validFichaRows = fichaTecnica.filter(
-            (row: any) => row.nome?.trim() && row.cargo?.trim()
-          );
-          if (validFichaRows.length === 0) {
-            setToastMessage("Preencha a Ficha Técnica (ao menos uma entrada com nome e cargo) antes de enviar o projeto.");
-            setToastType("error");
-            setShowToast(true);
-            return;
+          // Validate ficha técnica only if enabled for this project type
+          const hasFichaTecnica = projectTypeConfig?.hasFichaTecnica !== false;
+
+          if (hasFichaTecnica) {
+            const fichaTecnica = Array.isArray(projectData.fichaTecnica) ? projectData.fichaTecnica : [];
+            const validFichaRows = fichaTecnica.filter(
+              (row: any) => row.nome?.trim() && row.cargo?.trim()
+            );
+            if (validFichaRows.length === 0) {
+              setToastMessage("Preencha a Ficha Técnica (ao menos uma entrada com nome e cargo) antes de enviar o projeto.");
+              setToastType("error");
+              setShowToast(true);
+              return;
+            }
           }
         }
       } catch (error) {

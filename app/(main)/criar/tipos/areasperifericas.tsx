@@ -22,6 +22,7 @@ const AreasPerifericas = () => {
     : [];
   const hasGeneralInfo = generalInfoFields.length > 0 || Boolean(projectDetails?.extraGeneralInfo);
   const hasBudget = projectDetails?.hasBudget !== false;
+  const hasFichaTecnica = projectDetails?.hasFichaTecnica !== false;
 
   const tabs = [
     {
@@ -48,10 +49,14 @@ const AreasPerifericas = () => {
           },
         ]
       : []),
-    {
-      label: "Ficha Técnica",
-      content: <FichaTecnica />,
-    },
+    ...(hasFichaTecnica
+      ? [
+          {
+            label: "Ficha Técnica",
+            content: <FichaTecnica />,
+          },
+        ]
+      : []),
   ];
   return <Tabs tabs={tabs} />;
 };
