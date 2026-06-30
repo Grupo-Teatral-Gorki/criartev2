@@ -144,13 +144,13 @@ const SelecionarTipoProjeto = () => {
           onClick={() => router.push("/meusprojetos")}
           size="medium"
         />
-        <h2 className="text-xl sm:text-2xl font-bold text-center order-first sm:order-none">
+        <h2 className="text-xl sm:text-2xl font-bold text-center order-first sm:order-none text-slate-900 dark:text-white">
           Selecione o tipo de projeto
         </h2>
         <div className="hidden sm:block w-[100px]"></div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-        {loading && <p className="text-2xl">Carregando tipos de projeto...</p>}
+        {loading && <p className="text-2xl text-slate-900 dark:text-slate-100">Carregando tipos de projeto...</p>}
         {!isCityOpen && !loading && (
           <p className="col-span-full text-center text-lg text-slate-600 dark:text-slate-400">
             As inscrições estão fechadas para este município.

@@ -62,6 +62,7 @@ interface Project {
   extraGeneralInfo?: boolean;
   extraFields?: ExtraFieldsConfig;
   hasBudget?: boolean;
+  budgetDescription?: string;
   hasFichaTecnica?: boolean;
   editalLink?: string;
   baseType?: string;
@@ -1308,6 +1309,30 @@ const EditCityProjects = () => {
                               Habilitar Planilha Orçamentária
                             </span>
                           </label>
+
+                          {project.hasBudget !== false && (
+                            <div className="mt-2 ml-6">
+                              <label className="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-400">
+                                Descrição opcional para a aba Planilha Orçamentária
+                              </label>
+                              <textarea
+                                value={project.budgetDescription || ""}
+                                onChange={(e) =>
+                                  setProjects((prev) =>
+                                    prev.map((p, idx) =>
+                                      idx === projectIdx ? { ...p, budgetDescription: e.target.value } : p
+                                    )
+                                  )
+                                }
+                                rows={3}
+                                placeholder="Ex: Envie a planilha em formato XLSX ou XLS com os itens orçados."
+                                className="w-full border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                              />
+                              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                Essa mensagem aparece na aba durante a criação do projeto.
+                              </p>
+                            </div>
+                          )}
 
                           <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 mt-2">
                             <input

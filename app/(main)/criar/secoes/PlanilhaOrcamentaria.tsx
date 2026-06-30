@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Download } from "lucide-react";
+import { useCity } from "@/app/context/CityConfigContext";
 
 type UploadedPlanilhaWithPath = {
   name: string;
@@ -30,8 +31,18 @@ const PlanilhaOrcamentaria = () => {
   const [uploadedPlanilhas, setUploadedPlanilhas] = useState<string[]>([]);
   const [planilhaMessage, setPlanilhaMessage] = useState("");
   const projectId = searchParams.get("projectId");
+  const projectType = searchParams.get("state") || searchParams.get("projectType");
   const { dbUser } = useAuth();
   const loggingService = useLogging();
+  const city = useCity();
+
+  const projectDetails = Array.isArray(city?.city?.typesOfProjects)
+    ? city.city.typesOfProjects.find((project: any) => project?.name === projectType)
+    : null;
+  const budgetDescription =
+    typeof projectDetails?.budgetDescription === "string"
+      ? projectDetails.budgetDescription.trim()
+      : "";
 
   const handleFileChange = (name: string, files: File[]) => {
     setSelectedFiles((prev) => ({ ...prev, [name]: files }));
@@ -228,6 +239,13 @@ const PlanilhaOrcamentaria = () => {
         <p className="col-span-full text-white-600 mt-4 text-xl text-center">
           {planilhaMessage}
         </p>
+      )}
+
+      {budgetDescription && (
+        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800/50 dark:bg-blue-950/20 dark:text-blue-200">
+          <p className="font-medium">Informações importantes</p>
+          <p className="mt-1 whitespace-pre-line">{budgetDescription}</p>
+        </div>
       )}
       
       {renderPlanilhaCard()}
