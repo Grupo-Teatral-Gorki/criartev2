@@ -15,6 +15,7 @@ import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import { useRouter } from "next/navigation";
 import ProjectsTab from "./components/ProjectsTab";
+import { buildProjectExportSections } from "./exportUtils";
 
 type Project = {
   projectId: string;
@@ -41,13 +42,24 @@ const Management = () => {
   const { city: userCity } = useCity();
   const router = useRouter();
 
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [cities, setCities] = useState<{
+  type CityOption = {
     label: string;
     value: string;
     logoUrl?: string;
-    typesOfProjects?: { name: string; label: string; fields?: Record<string, { name: string; label: string; options?: { value: string; label: string }[] }[]> }[]
-  }[]>([]);
+    typesOfProjects?: {
+      name: string;
+      label: string;
+      fields?: Record<string, { name: string; label: string; options?: { value: string; label: string }[] }[]>;
+    }[];
+    extraFields?: {
+      eixo?: { options?: { value: string; label: string }[] };
+      moduloEixo1?: { options?: { value: string; label: string }[] };
+      moduloEixo2?: { options?: { value: string; label: string }[] };
+    };
+  };
+
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [cities, setCities] = useState<CityOption[]>([]);
   const [selectedCityId, setSelectedCityId] = useState<string | null>(null);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [statusCounts, setStatusCounts] = useState({
@@ -388,18 +400,57 @@ const Management = () => {
       if (t.name && t.label) typeLabels[t.name] = t.label;
     });
 
-    // Build module value → label map
+    // Build axis value → label map from city config
+    const axisLabels: Record<string, string> = {};
+    if (selectedCity?.extraFields?.eixo?.options) {
+      selectedCity.extraFields.eixo.options.forEach((o: { value: string; label: string }) => {
+        if (o.value && o.label) axisLabels[o.value] = o.label;
+      });
+    }
+
+    // Build module value → label map from city config
     const moduloLabels: Record<string, string> = {};
+    const addOptionsToMap = (
+      labels: Record<string, string>,
+      options?: { value: string; label: string }[]
+    ) => {
+      if (!Array.isArray(options)) return;
+      options.forEach((o) => {
+        if (o.value && o.label) labels[o.value] = o.label;
+      });
+    };
+
+    if (selectedCity?.extraFields?.moduloEixo1?.options) {
+      addOptionsToMap(moduloLabels, selectedCity.extraFields.moduloEixo1.options);
+    }
+    if (selectedCity?.extraFields?.moduloEixo2?.options) {
+      addOptionsToMap(moduloLabels, selectedCity.extraFields.moduloEixo2.options);
+    }
+
     cityTypes.forEach((t: any) => {
       const allFields: { name: string; options?: { value: string; label: string }[] }[] = [];
       Object.values(t.fields || {}).forEach((sectionFields: any) => {
         if (Array.isArray(sectionFields)) allFields.push(...sectionFields);
       });
-      const moduloField = allFields.find((f: any) => f.name === "escolha_o_modulo");
+      const moduloField = allFields.find(
+        (f: any) =>
+          f.name === "escolha_o_modulo" ||
+          f.name === "extra_modulo" ||
+          f.name === "modulo" ||
+          f.name === "moduloEixo1" ||
+          f.name === "moduloEixo2"
+      );
       if (moduloField?.options) {
-        moduloField.options.forEach((o: { value: string; label: string }) => {
-          if (o.value && o.label) moduloLabels[o.value] = o.label;
-        });
+        addOptionsToMap(moduloLabels, moduloField.options);
+      }
+      const eixoField = allFields.find(
+        (f: any) =>
+          f.name === "escolha_o_eixo" ||
+          f.name === "extra_eixo" ||
+          f.name === "eixo"
+      );
+      if (eixoField?.options) {
+        addOptionsToMap(axisLabels, eixoField.options);
       }
     });
 
@@ -418,13 +469,11 @@ const Management = () => {
     });
     const dedupedProjects = Array.from(dedupedMap.values());
 
-    // Group projects by type
-    const grouped: Record<string, typeof dedupedProjects> = {};
-    dedupedProjects.forEach((p) => {
-      const type = p.projectType || "Sem tipo";
-      const displayLabel = typeLabels[type] || type;
-      if (!grouped[displayLabel]) grouped[displayLabel] = [];
-      grouped[displayLabel].push(p);
+    const exportSections = buildProjectExportSections(dedupedProjects, {
+      cityId: selectedCityId ?? undefined,
+      projectTypeLabels: typeLabels,
+      axisLabels,
+      moduleLabels: moduloLabels,
     });
 
     const wb = XLSX.utils.book_new();
@@ -480,15 +529,14 @@ const Management = () => {
       },
     };
 
-    const typeNames = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
     const usedSheetNames = new Set<string>();
 
-    typeNames.forEach((typeName) => {
+    exportSections.forEach((section) => {
+      const { typeName, axisGroups } = section;
       const wsData: any[][] = [];
       const merges: XLSX.Range[] = [];
       const cellStyles: { r: number; c: number; style: any }[] = [];
 
-      // Title rows
       wsData.push(["Relatório de Projetos"]);
       cellStyles.push({ r: 0, c: 0, style: { font: { bold: true, sz: 14 }, alignment: { horizontal: "center" } } });
       merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } });
@@ -515,62 +563,58 @@ const Management = () => {
       wsData.push([]);
       infoRow++;
 
+      const projectCount = axisGroups.reduce(
+        (sum, axisGroup) => sum + axisGroup.moduleGroups.reduce((moduleSum, moduleGroup) => moduleSum + moduleGroup.projects.length, 0),
+        0
+      );
       const typeRow = infoRow;
-      wsData.push([`${typeName} (${grouped[typeName].length})`]);
+      wsData.push([`${typeName} (${projectCount})`]);
       cellStyles.push({ r: typeRow, c: 0, style: subHeaderStyle });
       merges.push({ s: { r: typeRow, c: 0 }, e: { r: typeRow, c: 3 } });
       infoRow++;
 
-      // Group by module within this type
-      const findModulo = (gi: Record<string, any> | undefined): string | undefined => gi?.escolha_o_modulo || undefined;
-      const byModule: Record<string, Project[]> = {};
-      grouped[typeName].forEach((p) => {
-        const mod = findModulo(p.generalInfo) || "Sem módulo";
-        const modLabel = moduloLabels[mod] || mod;
-        if (!byModule[modLabel]) byModule[modLabel] = [];
-        byModule[modLabel].push(p);
-      });
-      const moduleNames = Object.keys(byModule).sort((a, b) => a.localeCompare(b));
-
-      moduleNames.forEach((modName) => {
-        const modProjects = byModule[modName];
-
-        // Module subtitle
-        wsData.push([`${modName} (${modProjects.length})`]);
+      axisGroups.forEach((axisGroup) => {
+        wsData.push([axisGroup.axisName]);
         cellStyles.push({ r: infoRow, c: 0, style: moduleStyle });
         merges.push({ s: { r: infoRow, c: 0 }, e: { r: infoRow, c: 3 } });
         infoRow++;
 
-        // Table headers
-        wsData.push(["Nº Inscrição", "Título do Projeto", "Proponente", "Tipo de Proponente"]);
-        for (let c = 0; c < 4; c++) {
-          cellStyles.push({ r: infoRow, c, style: headerStyle });
-        }
-        infoRow++;
+        axisGroup.moduleGroups.forEach((moduleGroup) => {
+          const modProjects = moduleGroup.projects;
 
-        // Table rows with alternating colors
-        modProjects.forEach((p, rowIdx) => {
-          wsData.push([
-            p.registrationNumber || "—",
-            p.projectTitle || "—",
-            p.proponentName || "—",
-            PROPONENT_TYPE_LABELS[p.proponentType || ""] || p.proponentType || "—",
-          ]);
-          const rowStyle = rowIdx % 2 === 0 ? evenRowStyle : oddRowStyle;
+          wsData.push([`${moduleGroup.moduleName} (${modProjects.length})`]);
+          cellStyles.push({ r: infoRow, c: 0, style: { ...moduleStyle, fill: { fgColor: { rgb: "E7EEF2" } } } });
+          merges.push({ s: { r: infoRow, c: 0 }, e: { r: infoRow, c: 3 } });
+          infoRow++;
+
+          wsData.push(["Nº Inscrição", "Título do Projeto", "Proponente", "Tipo de Proponente"]);
           for (let c = 0; c < 4; c++) {
-            cellStyles.push({ r: infoRow, c, style: rowStyle });
+            cellStyles.push({ r: infoRow, c, style: headerStyle });
           }
           infoRow++;
-        });
 
-        wsData.push([]);
-        infoRow++;
+          modProjects.forEach((p, rowIdx) => {
+            wsData.push([
+              p.registrationNumber || "—",
+              p.projectTitle || "—",
+              p.proponentName || "—",
+              PROPONENT_TYPE_LABELS[p.proponentType || ""] || p.proponentType || "—",
+            ]);
+            const rowStyle = rowIdx % 2 === 0 ? evenRowStyle : oddRowStyle;
+            for (let c = 0; c < 4; c++) {
+              cellStyles.push({ r: infoRow, c, style: rowStyle });
+            }
+            infoRow++;
+          });
+
+          wsData.push([]);
+          infoRow++;
+        });
       });
 
       const ws = XLSX.utils.aoa_to_sheet(wsData);
       ws["!merges"] = merges;
 
-      // Apply column widths
       ws["!cols"] = [
         { wch: 14 },
         { wch: 45 },
@@ -578,14 +622,12 @@ const Management = () => {
         { wch: 20 },
       ];
 
-      // Apply styles to cells
       cellStyles.forEach(({ r, c, style }) => {
         const addr = XLSX.utils.encode_cell({ r, c });
         if (!ws[addr]) ws[addr] = { v: wsData[r][c] || "" };
         ws[addr].s = style;
       });
 
-      // Ensure all cells have a value
       wsData.forEach((row, r) => {
         row.forEach((val, c) => {
           const addr = XLSX.utils.encode_cell({ r, c });
@@ -682,18 +724,54 @@ const Management = () => {
       if (t.name && t.label) typeLabels[t.name] = t.label;
     });
 
-    // Build module value → label map by searching for "escolha_o_modulo" field in all project type configs
+    // Build axis and module label maps by searching for the select field definitions in all project types
+    const axisLabels: Record<string, string> = {};
     const moduloLabels: Record<string, string> = {};
+
+    const addOptionsToMap = (
+      labels: Record<string, string>,
+      options?: { value: string; label: string }[]
+    ) => {
+      if (!Array.isArray(options)) return;
+      options.forEach((o) => {
+        if (o.value && o.label) labels[o.value] = o.label;
+      });
+    };
+
+    if (selectedCity?.extraFields?.eixo?.options) {
+      addOptionsToMap(axisLabels, selectedCity.extraFields.eixo.options);
+    }
+    if (selectedCity?.extraFields?.moduloEixo1?.options) {
+      addOptionsToMap(moduloLabels, selectedCity.extraFields.moduloEixo1.options);
+    }
+    if (selectedCity?.extraFields?.moduloEixo2?.options) {
+      addOptionsToMap(moduloLabels, selectedCity.extraFields.moduloEixo2.options);
+    }
+
     cityTypes.forEach((t: any) => {
       const allFields: { name: string; options?: { value: string; label: string }[] }[] = [];
       Object.values(t.fields || {}).forEach((sectionFields: any) => {
         if (Array.isArray(sectionFields)) allFields.push(...sectionFields);
       });
-      const moduloField = allFields.find((f: any) => f.name === "escolha_o_modulo");
+      const moduloField = allFields.find(
+        (f: any) =>
+          f.name === "escolha_o_modulo" ||
+          f.name === "extra_modulo" ||
+          f.name === "modulo" ||
+          f.name === "moduloEixo1" ||
+          f.name === "moduloEixo2"
+      );
       if (moduloField?.options) {
-        moduloField.options.forEach((o: { value: string; label: string }) => {
-          if (o.value && o.label) moduloLabels[o.value] = o.label;
-        });
+        addOptionsToMap(moduloLabels, moduloField.options);
+      }
+      const eixoField = allFields.find(
+        (f: any) =>
+          f.name === "escolha_o_eixo" ||
+          f.name === "extra_eixo" ||
+          f.name === "eixo"
+      );
+      if (eixoField?.options) {
+        addOptionsToMap(axisLabels, eixoField.options);
       }
     });
 
@@ -714,85 +792,76 @@ const Management = () => {
     });
     const dedupedProjects = Array.from(dedupedMap.values());
 
-    // Group projects by type
-    const grouped: Record<string, typeof dedupedProjects> = {};
-    dedupedProjects.forEach((p) => {
-      const type = p.projectType || "Sem tipo";
-      const displayLabel = typeLabels[type] || type;
-      if (!grouped[displayLabel]) grouped[displayLabel] = [];
-      grouped[displayLabel].push(p);
+    const exportSections = buildProjectExportSections(dedupedProjects, {
+      cityId: selectedCityId ?? undefined,
+      projectTypeLabels: typeLabels,
+      axisLabels,
+      moduleLabels: moduloLabels,
     });
 
-    const typeNames = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
     let currentY = headerHeight;
 
-    typeNames.forEach((typeName, idx) => {
-      const groupProjects = grouped[typeName];
+    exportSections.forEach((section, idx) => {
+      const groupProjects = section.axisGroups.flatMap((axisGroup) => axisGroup.moduleGroups.flatMap((moduleGroup) => moduleGroup.projects));
 
-      // Each type starts on a new page (except the first)
       if (idx > 0) {
         doc.addPage();
         drawHeader();
         currentY = headerHeight;
       }
 
-      // Section title for the type
       const titleY = currentY + 2;
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
-      doc.text(`${typeName} (${groupProjects.length})`, 14, titleY);
+      doc.text(`${section.typeName} (${groupProjects.length})`, 14, titleY);
       doc.setFont("helvetica", "normal");
-
-      // Helper: read modulo directly from generalInfo.escolha_o_modulo
-      const findModulo = (gi: Record<string, any> | undefined): string | undefined => {
-        return gi?.escolha_o_modulo || undefined;
-      };
-
-      // Group by module within this type
-      const byModule: Record<string, Project[]> = {};
-      groupProjects.forEach((p) => {
-        const mod = findModulo(p.generalInfo) || "Sem módulo";
-        const modLabel = moduloLabels[mod] || mod;
-        if (!byModule[modLabel]) byModule[modLabel] = [];
-        byModule[modLabel].push(p);
-      });
-      const moduleNames = Object.keys(byModule).sort((a, b) => a.localeCompare(b));
 
       let moduleY = titleY + 8;
 
-      moduleNames.forEach((modName, mIdx) => {
-        const modProjects = byModule[modName];
-
-        // Module subtitle
+      section.axisGroups.forEach((axisGroup, axisIdx) => {
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.text(`${modName} (${modProjects.length})`, 18, moduleY);
+        doc.text(axisGroup.axisName, 18, moduleY);
         doc.setFont("helvetica", "normal");
+        moduleY += 5;
 
-        const tableData = modProjects.map((p) => [
-          p.registrationNumber || "—",
-          p.projectTitle || "—",
-          p.proponentName || "—",
-          PROPONENT_TYPE_LABELS[p.proponentType || ""] || p.proponentType || "—",
-        ]);
+        axisGroup.moduleGroups.forEach((moduleGroup, mIdx) => {
+          const modProjects = moduleGroup.projects;
+          doc.setFontSize(8.5);
+          doc.setFont("helvetica", "bold");
+          doc.text(`${moduleGroup.moduleName} (${modProjects.length})`, 24, moduleY);
+          doc.setFont("helvetica", "normal");
 
-        autoTable(doc, {
-          startY: moduleY + 4,
-          head: [["Nº Inscrição", "Título do Projeto", "Proponente", "Tipo de Proponente"]],
-          body: tableData,
-          styles: { fontSize: 8, cellPadding: 2 },
-          headStyles: { fillColor: [29, 74, 93], textColor: 255, fontStyle: "bold" },
-          alternateRowStyles: { fillColor: [248, 250, 252] },
-          margin: { top: headerHeight },
-          didDrawPage: () => {
+          const tableData = modProjects.map((p) => [
+            p.registrationNumber || "—",
+            p.projectTitle || "—",
+            p.proponentName || "—",
+            PROPONENT_TYPE_LABELS[p.proponentType || ""] || p.proponentType || "—",
+          ]);
+
+          autoTable(doc, {
+            startY: moduleY + 4,
+            head: [["Nº Inscrição", "Título do Projeto", "Proponente", "Tipo de Proponente"]],
+            body: tableData,
+            styles: { fontSize: 8, cellPadding: 2 },
+            headStyles: { fillColor: [29, 74, 93], textColor: 255, fontStyle: "bold" },
+            alternateRowStyles: { fillColor: [248, 250, 252] },
+            margin: { top: headerHeight },
+            didDrawPage: () => {
+              drawHeader();
+            },
+          });
+
+          moduleY = (doc as any).lastAutoTable.finalY + 10;
+
+          if (mIdx < axisGroup.moduleGroups.length - 1 && moduleY > doc.internal.pageSize.getHeight() - 30) {
+            doc.addPage();
             drawHeader();
-          },
+            moduleY = headerHeight;
+          }
         });
 
-        moduleY = (doc as any).lastAutoTable.finalY + 10;
-
-        // Page break between modules if tight space
-        if (mIdx < moduleNames.length - 1 && moduleY > doc.internal.pageSize.getHeight() - 30) {
+        if (axisIdx < section.axisGroups.length - 1 && moduleY > doc.internal.pageSize.getHeight() - 30) {
           doc.addPage();
           drawHeader();
           moduleY = headerHeight;
